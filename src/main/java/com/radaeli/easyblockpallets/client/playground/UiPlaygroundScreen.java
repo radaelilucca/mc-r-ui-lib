@@ -43,7 +43,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     private static final String[] PALETTE_TYPES = {
             "label", "button", "toggle", "chip", "textfield", "searchfield",
             "slider", "itemcard", "tabs", "scroll", "clip", "row", "column",
-            "stack", "grid", "itemgrid", "spacer", "absolute"
+            "stack", "grid", "itemgrid", "table", "spacer", "absolute"
     };
 
     private PlaygroundDocument document = PlaygroundDocument.empty("untitled");
@@ -282,7 +282,8 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     private void drawInspectorLabels(GuiGraphics graphics, int x) {
         graphics.drawString(font, selected != null && selected.type.equals("itemcard")
-                ? "Item label" : "Text / label", x, 48, 0xFFADB7C5, false);
+                ? "Item label" : selected != null && selected.type.equals("table")
+                ? "Headers (CSV)" : "Text / label", x, 48, 0xFFADB7C5, false);
         graphics.drawString(font, selected != null && selected.type.equals("itemcard")
                 ? "Item ID" : "Color ARGB", x, 68, 0xFFADB7C5, false);
         graphics.drawString(font, "X", x, 88, 0xFFADB7C5, false);
@@ -293,6 +294,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (selected != null) {
             String rangeLabel = selected.type.equals("slider") ? "Min, max, step"
                     : selected.usesItemStack() ? "Stack count"
+                    : selected.type.equals("table") ? "Table columns"
                     : selected.supportsColumns() ? "Grid columns" : null;
             if (rangeLabel != null) graphics.drawString(font, rangeLabel, x, 150, 0xFFADB7C5, false);
         }
@@ -806,7 +808,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         textField.setValue(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack())
+                || selected.usesItemStack() || selected.type.equals("table"))
                 ? selected.text : "");
         colorField.setValue(!hasSelection ? "FFFFFFFF"
                 : selected.usesItemStack() ? selected.itemId : String.format("%08X", selected.color));
@@ -827,7 +829,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         textField.setEditable(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack()));
+                || selected.usesItemStack() || selected.type.equals("table")));
         colorField.setEditable(hasSelection && (selected.type.equals("label") || selected.usesItemStack()));
         gapField.setEditable(hasSelection && selected.isContainer() && !selected.isAbsolute());
         xField.setEditable(hasSelection && selected.parent != null && selected.parent.isAbsolute());
@@ -937,7 +939,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             if (selected.type.equals("label") || selected.type.equals("button")
                     || selected.type.equals("toggle") || selected.type.equals("chip")
                     || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                    || selected.usesItemStack()) {
+                    || selected.usesItemStack() || selected.type.equals("table")) {
                 selected.text = nextText;
             }
             selected.itemId = nextItemId;

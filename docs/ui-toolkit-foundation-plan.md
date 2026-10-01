@@ -2,7 +2,7 @@
 
 **Projeto hospedeiro:** Easy Block Pallets  
 **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
-**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast` e `ToastHost` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
+**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost` e `Table` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 
@@ -187,6 +187,18 @@ já construídos pelo consumidor e mantém callbacks Java somente em memória.
   continuam chegando à árvore principal.
 - O playground tem um botão Toast que percorre INFO, SUCCESS, WARNING e ERROR.
 
+### Table
+
+**Estado:** `Table<T>` e `TableColumn<T>` implementados e disponíveis na paleta
+do playground.
+
+- Colunas definem título, largura fixa ou medida pelo conteúdo, alinhamento e
+  renderer de `Component`; linhas e seleção pertencem ao consumidor.
+- Cabeçalho fixo, linhas uniformes, hover, seleção única, callback de clique e
+  rolagem vertical pelo wheel. Células são recortadas para respeitar os limites.
+- O playground demonstra três colunas e linhas de exemplo; o inspector aceita
+  cabeçalhos separados por vírgula e quantidade de colunas configurável.
+
 ### Etapa 4 — Validar com um showcase pequeno
 
 **Estado:** implementada como playground editável, acessível por F7 no ambiente
@@ -207,7 +219,7 @@ execução do cliente e do servidor dedicado continua pendente.
 `ItemRenderer`, `ItemCard` e `ItemGrid` estão na API; `Grid`, `Spacer`,
 `ItemCard` e `ItemGrid` também estão disponíveis na paleta, no modelo JSON e na
 fábrica do playground. Toast e ToastHost estão integrados ao `UiScreen` e há
-um botão de demonstração no playground. A próxima etapa é Table; a ordem
+um botão de demonstração no playground. Table também está na paleta. A próxima etapa é ProgressBar; a ordem
 priorizada e o plano técnico mínimo dos demais itens estão em
 [Minecraft UI Toolkit PRD](minecraft-ui-toolkit-prd.md), seção 63. Implementar e
 revisar um marco por vez e começar abstrações especulativas somente quando

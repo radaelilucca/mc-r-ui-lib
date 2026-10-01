@@ -16,6 +16,8 @@ import com.radaeli.easyblockpallets.ui.ScrollView;
 import com.radaeli.easyblockpallets.ui.SearchField;
 import com.radaeli.easyblockpallets.ui.Slider;
 import com.radaeli.easyblockpallets.ui.Stack;
+import com.radaeli.easyblockpallets.ui.Table;
+import com.radaeli.easyblockpallets.ui.TableColumn;
 import com.radaeli.easyblockpallets.ui.Tabs;
 import com.radaeli.easyblockpallets.ui.TextField;
 import com.radaeli.easyblockpallets.ui.Toggle;
@@ -29,6 +31,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.IdentityHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -65,6 +69,7 @@ final class PlaygroundComponentFactory {
             case "grid" -> new Grid(node.columns, node.gap);
             case "itemgrid" -> new ItemGrid(node.columns, node.gap,
                     (index, stack) -> onButtonClick.accept(node));
+            case "table" -> createTable(node, onButtonClick);
             case "absolute" -> new AbsoluteLayout();
             default -> throw new IllegalArgumentException("Unsupported component type: " + node.type);
         };
@@ -115,6 +120,35 @@ final class PlaygroundComponentFactory {
         Component label = Component.literal(node.text == null || node.text.isBlank()
                 ? stack.getHoverName().getString() : node.text);
         return new ItemCard(stack, label, node.selected, () -> onClick.accept(node));
+    }
+
+    private static Table<String[]> createTable(PlaygroundNode node, Consumer<PlaygroundNode> onClick) {
+        String[] configuredHeaders = node.text == null ? new String[0] : node.text.split(",", -1);
+        int columnCount = Math.max(1, Math.min(16, node.columns));
+        Table<String[]> table = new Table<>();
+        for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+            final int index = columnIndex;
+            String title = index < configuredHeaders.length ? configuredHeaders[index].trim() : "Column " + (index + 1);
+            if (title.isEmpty()) title = "Column " + (index + 1);
+            table.addColumn(TableColumn.preferred(Component.literal(title), Alignment.START,
+                    row -> Component.literal(row[index])));
+        }
+        List<String[]> rows = new ArrayList<>();
+        String[] sampleNames = {"Copper Ore", "Iron Plate", "Brass Ingot", "Zinc Nugget",
+                "Andesite Alloy", "Precision Mechanism", "Train Schedule", "Empty Basin"};
+        for (int rowIndex = 0; rowIndex < sampleNames.length; rowIndex++) {
+            String[] row = new String[columnCount];
+            for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+                row[columnIndex] = switch (columnIndex) {
+                    case 0 -> sampleNames[rowIndex];
+                    case 1 -> Integer.toString((rowIndex + 1) * 8);
+                    case 2 -> rowIndex % 3 == 0 ? "Ready" : "Queued";
+                    default -> "Row " + (rowIndex + 1);
+                };
+            }
+            rows.add(row);
+        }
+        return table.setRows(rows).setOnRowClicked((index, row) -> onClick.accept(node));
     }
 
     static boolean itemExists(String itemId) {

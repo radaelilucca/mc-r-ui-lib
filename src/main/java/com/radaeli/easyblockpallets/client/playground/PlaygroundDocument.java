@@ -39,6 +39,7 @@ final class PlaygroundDocument {
                 || node.type.equals("toggle") || node.type.equals("chip")
                 || node.type.equals("textfield") || node.type.equals("searchfield")
                 || node.type.equals("slider") || node.type.equals("itemcard")
+                || node.type.equals("table")
                 || node.type.equals("spacer") || node.isContainer())) {
             throw new IllegalArgumentException("Unsupported component type: " + node.type);
         }

@@ -8,6 +8,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 - A tecla pode ser alterada em **Opções → Controles → Easy Block Pallets**.
 - A tela só é registrada em execução de desenvolvimento. Ela não fica disponível no mod instalado em produção.
 - **Toast** percorre os quatro níveis de notificação. Avisos no canto superior direito somem após quatro segundos; clique esquerdo sobre um aviso o dispensa.
+- **Table** traz linhas de exemplo, seleção e rolagem vertical. No inspector, edite os cabeçalhos separados por vírgula e o número de colunas.
 
 ## Montar um layout
 

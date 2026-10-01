@@ -1993,7 +1993,7 @@ consumidor concreto.
 Implementados na API: `Label` (texto), `Button`, `Toggle`, `Tabs`, `Chip`,
 `TextField`, `SearchField`, `Slider`, `ScrollView`, `ClipStack`, `Row`,
 `Column`, `Stack`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`,
-`Toast` e `ToastHost`.
+`Toast`, `ToastHost` e `Table`.
 
 Ainda sem componente público próprio: `Panel`, `Card`, `IconButton`, `Divider`,
 `Tooltip` e `Modal`; helpers de pintura existentes não equivalem às APIs de
@@ -2010,7 +2010,7 @@ não nó de layout; seu caminho é exercitado por `ItemCard`.
 | Ordem | Componente | Resultado do primeiro corte |
 |---:|---|---|
 | 1 | Toast | Implementado; avisos efêmeros em overlay |
-| 2 | Table | Dados em colunas e linhas, com seleção básica |
+| 2 | Table | Implementado; dados em colunas e linhas, com seleção e rolagem |
 | 3 | ProgressBar | Progresso determinado, indeterminado opcional |
 | 4 | Radial menu | Geometria, segmentos, hit test e seleção |
 | 5 | Dropdown / Select | Seleção única, overlay e navegação por teclado |
@@ -2020,8 +2020,9 @@ não nó de layout; seu caminho é exercitado por `ItemCard`.
 ## 63.3. Plano técnico dos seis primeiros
 
 **Estado:** marco Toast concluído na API `Toast`/`ToastHost`, integrado ao
-`UiScreen` e demonstrável no playground pelo botão Toast. A próxima etapa da
-sequência é Table.
+`UiScreen` e demonstrável no playground pelo botão Toast. Table também foi
+implementado e está disponível na paleta do playground; a próxima etapa é
+ProgressBar.
 
 ### Toast
 
@@ -2036,12 +2037,11 @@ sequência é Table.
 
 ### Table
 
-- Definir colunas com título, largura fixa/preferida, alinhamento e renderer;
-  dados e identidade das linhas vêm do consumidor.
-- Implementar cabeçalho, linhas uniformes, hover, seleção única e callback de
-  clique; ordenação simples por coluna pode ser opcional.
-- Reusar clipping e `ScrollView` vertical. Edição, redimensionamento de coluna e
-  virtualização ficam fora do primeiro marco.
+- `Table<T>` aceita colunas com título, largura fixa ou preferida, alinhamento e
+  renderer; cada consumidor fornece suas linhas.
+- Cabeçalho, linhas uniformes, hover, seleção única, callback de clique e
+  rolagem vertical estão implementados. Ordenação, edição, resize de coluna e
+  virtualização continuam fora do primeiro marco.
 
 ### ProgressBar
 

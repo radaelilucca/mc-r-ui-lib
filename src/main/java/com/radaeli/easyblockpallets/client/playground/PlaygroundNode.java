@@ -87,6 +87,12 @@ final class PlaygroundNode {
                 node.columns = 3;
                 node.gap = 4;
             }
+            case "table" -> {
+                node.text = "Name, Amount, Status";
+                node.width = 220;
+                node.height = 112;
+                node.columns = 3;
+            }
             case "spacer" -> {
                 node.text = "Spacer";
                 node.width = 16;
@@ -124,7 +130,7 @@ final class PlaygroundNode {
     }
 
     boolean supportsColumns() {
-        return type.equals("grid") || type.equals("itemgrid");
+        return type.equals("grid") || type.equals("itemgrid") || type.equals("table");
     }
 
     boolean supportsAlignment() {
