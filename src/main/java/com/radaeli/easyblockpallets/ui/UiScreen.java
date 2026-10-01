@@ -13,6 +13,7 @@ import java.util.Objects;
 public class UiScreen extends Screen {
     private final UiComponent root;
     private final UiTheme theme;
+    private final ToastHost toastHost = new ToastHost();
     private UiComponent focusedComponent;
     private UiComponent pressedComponent;
 
@@ -28,19 +29,39 @@ public class UiScreen extends Screen {
 
     @Override
     protected void init() {
+        toastHost.layout(font, theme, new Bounds(0, 0, width, height));
         root.layout(font, theme, new Bounds(0, 0, width, height));
         clearToolkitFocus();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        toastHost.tick();
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
         root.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
+        renderToastOverlay(graphics, mouseX, mouseY);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
+    }
+
+    protected void renderToastOverlay(GuiGraphics graphics, int mouseX, int mouseY) {
+        toastHost.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
+    }
+
+    protected boolean handleToastClick(double mouseX, double mouseY, int button) {
+        if (!toastHost.mouseClicked(mouseX, mouseY, button)) return false;
+        clearToolkitFocus();
+        pressedComponent = null;
+        return true;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (handleToastClick(mouseX, mouseY, button)) return true;
         UiComponent target = root.hitTest(mouseX, mouseY);
         clearToolkitFocus();
         if (target == null) {
@@ -131,5 +152,9 @@ public class UiScreen extends Screen {
 
     public UiTheme theme() {
         return theme;
+    }
+
+    public ToastHost toastHost() {
+        return toastHost;
     }
 }

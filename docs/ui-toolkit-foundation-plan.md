@@ -2,7 +2,7 @@
 
 **Projeto hospedeiro:** Easy Block Pallets  
 **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
-**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard` e `ItemGrid` implementados e disponíveis no playground; validação manual in-game pendente
+**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast` e `ToastHost` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 
@@ -175,6 +175,18 @@ items.addItem(new ItemStack(Items.HOPPER), Component.literal("Entrada"));
 O toolkit continua sem importar classes do domínio do mod. A API recebe stacks
 já construídos pelo consumidor e mantém callbacks Java somente em memória.
 
+### Toast notifications
+
+**Estado:** `Toast` e `ToastHost` implementados e anexados a cada `UiScreen`.
+
+- `ToastHost` oferece `show(Toast)`, atalhos por nível e remove avisos após o
+  número configurado de ticks enquanto a tela está ativa.
+- Até quatro avisos são empilhados no canto superior direito; mensagens são
+  quebradas em até três linhas e o layout se recalcula após resize/expiração.
+- Clique esquerdo dentro de um aviso o dispensa e é consumido; cliques fora
+  continuam chegando à árvore principal.
+- O playground tem um botão Toast que percorre INFO, SUCCESS, WARNING e ERROR.
+
 ### Etapa 4 — Validar com um showcase pequeno
 
 **Estado:** implementada como playground editável, acessível por F7 no ambiente
@@ -194,7 +206,9 @@ execução do cliente e do servidor dedicado continua pendente.
 
 `ItemRenderer`, `ItemCard` e `ItemGrid` estão na API; `Grid`, `Spacer`,
 `ItemCard` e `ItemGrid` também estão disponíveis na paleta, no modelo JSON e na
-fábrica do playground. A ordem priorizada e o plano técnico mínimo de todos os itens futuros estão em
+fábrica do playground. Toast e ToastHost estão integrados ao `UiScreen` e há
+um botão de demonstração no playground. A próxima etapa é Table; a ordem
+priorizada e o plano técnico mínimo dos demais itens estão em
 [Minecraft UI Toolkit PRD](minecraft-ui-toolkit-prd.md), seção 63. Implementar e
 revisar um marco por vez e começar abstrações especulativas somente quando
 houver consumidor concreto.

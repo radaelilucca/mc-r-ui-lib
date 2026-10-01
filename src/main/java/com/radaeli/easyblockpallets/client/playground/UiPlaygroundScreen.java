@@ -12,6 +12,7 @@ import com.radaeli.easyblockpallets.ui.UiContext;
 import com.radaeli.easyblockpallets.ui.UiPaint;
 import com.radaeli.easyblockpallets.ui.UiScreen;
 import com.radaeli.easyblockpallets.ui.UiTheme;
+import com.radaeli.easyblockpallets.ui.Toast;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -53,6 +54,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     private UiComponent pressedPreviewComponent;
     private String status = "Arraste componentes da paleta para o canvas.";
     private int clickCount;
+    private int toastDemoIndex;
     private boolean previewMode;
     private int paletteScrollOffset;
 
@@ -112,7 +114,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         nameField.setMaxLength(40);
         nameField.setValue(document.name);
         cursorX += nameWidth + 3;
-        int topButtonWidth = Math.max(24, (width - cursorX - 18) / 5);
+        int topButtonWidth = Math.max(20, (width - cursorX - 21) / 6);
         String newLabel = compactToolbar ? "N" : "New";
         String saveLabel = compactToolbar ? "S" : "Save";
         String loadLabel = compactToolbar ? "L" : "Load";
@@ -122,6 +124,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         cursorX = addTopButton(cursorX, saveLabel, topButtonWidth, this::saveDocument);
         cursorX = addTopButton(cursorX, loadLabel, topButtonWidth, this::openLoadPicker);
         cursorX = addTopButton(cursorX, modeLabel, topButtonWidth, this::toggleMode);
+        String toastLabel = compactToolbar ? "T" : "Toast";
+        cursorX = addTopButton(cursorX, toastLabel, topButtonWidth, this::showToastDemo);
         addTopButton(cursorX, closeLabel, topButtonWidth, this::onClose);
 
         inspectorWidgets.clear();
@@ -156,6 +160,16 @@ public final class UiPlaygroundScreen extends UiScreen {
                 Component.literal(label), button -> action.run())
                 .bounds(x, 5, buttonWidth, 20).build());
         return x + buttonWidth + 3;
+    }
+
+    private void showToastDemo() {
+        int level = toastDemoIndex++ % 4;
+        switch (level) {
+            case 0 -> toastHost().show(Toast.info(Component.literal("Info toast preview")));
+            case 1 -> toastHost().show(Toast.success(Component.literal("Success toast preview")));
+            case 2 -> toastHost().show(Toast.warning(Component.literal("Warning toast preview")));
+            default -> toastHost().show(Toast.error(Component.literal("Error toast preview")));
+        }
     }
 
     private void createInspectorWidgets(int screenWidth) {
@@ -221,6 +235,7 @@ public final class UiPlaygroundScreen extends UiScreen {
                     THEME.palette().mutedText(), false);
         }
         graphics.disableScissor();
+        renderToastOverlay(graphics, mouseX, mouseY);
         graphics.drawString(font, status, 8, height - 12, 0xFFD3DCE8, false);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
     }
@@ -312,6 +327,11 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (handleToastClick(mouseX, mouseY, button)) {
+            clearPreviewFocus();
+            pressedPreviewComponent = null;
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && !previewMode && inPalette(mouseX, mouseY)) {
             setFocused(null);
             setDragging(false);

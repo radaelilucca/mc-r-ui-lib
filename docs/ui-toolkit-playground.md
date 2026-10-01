@@ -7,6 +7,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 - Inicie o cliente pelo `runClient` e pressione **F7**.
 - A tecla pode ser alterada em **Opções → Controles → Easy Block Pallets**.
 - A tela só é registrada em execução de desenvolvimento. Ela não fica disponível no mod instalado em produção.
+- **Toast** percorre os quatro níveis de notificação. Avisos no canto superior direito somem após quatro segundos; clique esquerdo sobre um aviso o dispensa.
 
 ## Montar um layout
 

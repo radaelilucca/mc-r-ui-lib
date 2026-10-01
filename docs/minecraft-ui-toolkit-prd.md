@@ -1992,7 +1992,8 @@ consumidor concreto.
 
 Implementados na API: `Label` (texto), `Button`, `Toggle`, `Tabs`, `Chip`,
 `TextField`, `SearchField`, `Slider`, `ScrollView`, `ClipStack`, `Row`,
-`Column`, `Stack`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard` e `ItemGrid`.
+`Column`, `Stack`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`,
+`Toast` e `ToastHost`.
 
 Ainda sem componente público próprio: `Panel`, `Card`, `IconButton`, `Divider`,
 `Tooltip` e `Modal`; helpers de pintura existentes não equivalem às APIs de
@@ -2008,7 +2009,7 @@ não nó de layout; seu caminho é exercitado por `ItemCard`.
 
 | Ordem | Componente | Resultado do primeiro corte |
 |---:|---|---|
-| 1 | Toast | Avisos efêmeros em overlay |
+| 1 | Toast | Implementado; avisos efêmeros em overlay |
 | 2 | Table | Dados em colunas e linhas, com seleção básica |
 | 3 | ProgressBar | Progresso determinado, indeterminado opcional |
 | 4 | Radial menu | Geometria, segmentos, hit test e seleção |
@@ -2018,10 +2019,15 @@ não nó de layout; seu caminho é exercitado por `ItemCard`.
 
 ## 63.3. Plano técnico dos seis primeiros
 
+**Estado:** marco Toast concluído na API `Toast`/`ToastHost`, integrado ao
+`UiScreen` e demonstrável no playground pelo botão Toast. A próxima etapa da
+sequência é Table.
+
 ### Toast
 
-- Usar `ToastHost` por tela e `Toast.show(Component, level, duration)`; evitar
-  singleton global ou threads próprias.
+- Usar `ToastHost` por tela e publicar por `toastHost.show(Toast)` (com atalhos
+  `info`, `success`, `warning` e `error`); evitar singleton global ou threads
+  próprias.
 - Empilhar quantidade limitada, medir texto vanilla, expirar pelo relógio da UI,
   pausar quando a tela não estiver ativa e dispensar por clique.
 - Começar com `INFO`, `SUCCESS`, `WARNING` e `ERROR`, sem persistência entre
