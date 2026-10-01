@@ -1,0 +1,218 @@
+# Plano de ação — fundação do UI Toolkit
+
+**Projeto hospedeiro:** Easy Block Pallets  
+**Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
+**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard` e `ItemGrid` implementados e disponíveis no playground; validação manual in-game pendente
+
+## Origem e limites
+
+O pedido do usuário é criar neste projeto uma biblioteca de UI, usar Logistics Network como inspiração, guardar seu JAR em `references/` e transformar o PRD anexado em um plano para a fundação e os primeiros primitives.
+
+O arquivo `minecraft-ui-toolkit-prd.md` é tratado como documento de requisitos em rascunho. Ele define a direção client-side, a camada pequena sobre as APIs do Minecraft, composição, temas e a lista ampla de componentes futuros. As fases e prioridades abaixo são uma proposta de execução para começar com uma base verificável; não são requisitos adicionais atribuídos ao PRD.
+
+## Decisões recomendadas para o primeiro corte
+
+1. **Manter NeoForge e Minecraft 1.21.1**, alinhados ao build existente.
+2. **Manter a biblioteca dentro do projeto hospedeiro por enquanto**, em um pacote isolado `com.radaeli.easyblockpallets.ui`, com separação clara entre API pública e internals. Não abrir agora um segundo módulo Gradle; reavaliar a extração após uma tela real comprovar a API.
+3. **Impor dependência em uma direção:** código da UI não importa pacotes de domínio, blocos, rede ou regras do Easy Block Pallets. O mod pode consumir a UI; a UI não conhece o mod.
+4. **Tratar toda integração com `Screen`, `GuiGraphics`, entrada e widgets como client-side.** O construtor comum do mod e a inicialização do servidor não devem carregar classes exclusivas do cliente.
+5. **Usar as APIs vanilla onde já resolvem o comportamento** — fonte, `ItemStack`, renderer de itens, tooltips e edição de texto — e controlar a aparência própria dos painéis e controles.
+6. **Não assumir que o JAR de Logistics Network fornece código reutilizável.** Ele é uma referência local de comportamento e organização visual; a página do projeto indica “All Rights Reserved”. Não copiar código, recursos ou identidade visual para o mod.
+
+## Sequência de trabalho
+
+### Etapa 0 — Fechar a fronteira da biblioteca
+
+- Registrar a localização do pacote, o contrato de ausência de dependências do domínio e a fronteira client-side.
+- Fazer um spike curto nas APIs da versão configurada para confirmar lifecycle de `Screen`, render com `GuiGraphics`, coordenadas de GUI e clipping antes de abstrair essas áreas.
+- Manter o escopo sem dependências externas e sem suporte a outros loaders.
+
+**Saída:** uma decisão de integração que compile dentro do mod hospedeiro sem introduzir inicialização de UI no servidor.
+
+### Etapa 1 — Geometria, tema e pintura
+
+**Estado:** implementada no pacote `com.radaeli.easyblockpallets.ui`.
+
+`Bounds` usa retângulos em coordenadas escaladas de GUI; tema e tokens são
+imutáveis; `UiContext`, `UiPaint` e `UiText` usam `GuiGraphics` e `Font` vanilla.
+
+Implementar apenas a base usada por todos os componentes:
+
+- `Bounds` e `Insets`, com hit test, bordas, centro e inset;
+- `UiPalette`, `UiTokens` e `UiTheme`, inicialmente com uma paleta escura;
+- `UiContext`, reunindo `GuiGraphics`, `Font`, tema, ponteiro e dimensões relevantes da tela;
+- `UiPaint` para retângulo, contorno, fundo de painel/cartão, divisor e estados de hover/foco;
+- helper de texto fino sobre `Font`, sem substituir medição e desenho de texto do Minecraft.
+
+**Saída:** uma tela de demonstração consegue desenhar título, painel, cartão, divisor e foco usando o tema central; nenhum componente consumidor precisa desenhar shapes diretamente.
+
+### Etapa 2 — Árvore de componentes e layout pequeno
+
+**Estado:** implementada. `UiComponent` define medida/layout/render/input;
+`UiContainer` mantém a ordem de render e faz hit testing do filho superior
+primeiro. `Column`, `Row`, `Stack` e `Label` compõem a árvore; `UiScreen`
+refaz o layout quando o lifecycle da `Screen` inicializa ou redimensiona.
+
+- Definir `UiComponent` com ciclo explícito de medida, layout, render e input necessário.
+- Definir `UiContainer` e travessia em ordem consistente para render e hit testing.
+- Criar `UiScreen` como ponte fina para o lifecycle de `Screen`.
+- Implementar primeiro `Column`, `Row` e `Stack`, mais alinhamento e espaçamento fixos.
+- Fazer os bounds finais serem responsabilidade do layout; consumidores não posicionam cada filho com coordenadas absolutas.
+
+**Saída:** montar uma tela aninhada com título, painel, conteúdo e ação sem repetir cálculo manual de posição na screen hospedeira.
+
+### Etapa 3 — Primeiro controle interativo
+
+**Estado:** implementada para o controle `Button`. O foco percorre controles
+habilitados em ordem de árvore; Tab/Shift+Tab navegam e Enter, Numpad Enter ou
+Espaço ativam o botão focado. O clique captura o botão até o release.
+
+- Criar `Button` com estados normal, hover, pressionado, focado e desabilitado.
+- Centralizar hit testing e despacho simples no componente/árvore: filho superior primeiro; parar quando o evento for consumido.
+- Adicionar foco por mouse e teclado básico, incluindo Tab/Shift+Tab e ativação do controle focado.
+- Delegar texto, fonte e comportamento de tooltip ao Minecraft quando possível.
+
+**Saída:** botão consistente visualmente e utilizável por mouse e teclado, sem lógica de hit test duplicada na `Screen`.
+
+### API inicial disponível
+
+```java
+Column content = new Column(8);
+content.add(new Label(Component.literal("Título")));
+content.add(new Button(Component.literal("Confirmar"), this::confirm));
+UiScreen screen = new UiScreen(Component.literal("Exemplo"), content);
+```
+
+Toda classe que integra `Screen`, `Font` ou `GuiGraphics` fica no pacote client-side
+da biblioteca. A classe comum `EasyBlockPallets` não importa esse pacote. Layouts
+usam tamanhos intrínsecos medidos e alinhamentos fixos; não há flex-grow ou
+rolagem neste corte.
+
+### Primitives interativos adicionais
+
+**Estado:** `Toggle`, `Tabs` e `Chip` adicionados ao conjunto inicial.
+
+- `Toggle` expõe seleção binária e notifica `Consumer<Boolean>` quando alternado.
+- `Chip` oferece a mesma seleção binária em formato compacto para filtros/opções.
+- `Tabs` contém páginas nomeadas, renderiza apenas a página selecionada e permite
+  trocar por clique ou pelas setas esquerda/direita quando focado.
+- Os três estão disponíveis na paleta do playground. Estados de seleção fazem
+  parte do JSON; callbacks Java continuam locais e nunca são serializados.
+
+### Clipping, rolagem e entrada textual
+
+**Estado:** `ClipStack`, `ScrollView`, `TextField` e `SearchField` adicionados.
+
+- `ClipStack` posiciona filhos sobrepostos dentro do mesmo retângulo e usa o
+  scissor de `GuiGraphics` para impedir que o desenho ultrapasse seus limites.
+- `ScrollView` organiza os filhos verticalmente, recorta o conteúdo, oferece
+  rolagem pela roda do mouse e uma scrollbar que pode ser arrastada.
+- `TextField` delega edição a `EditBox` vanilla, preservando cursor, seleção,
+  clipboard e IME. A árvore do toolkit encaminha teclado, caracteres e arraste.
+- `SearchField` é uma especialização de `TextField` com hint padrão, ícone de
+  lupa e espaço reservado para o prefixo; ambos respondem a mudanças de valor.
+- Os textos ficam centralizados verticalmente pelo `EditBox` vanilla. O campo
+  base mantém 8 px de padding mínimo à esquerda, além do espaço do ícone na busca.
+- Os quatro tipos estão na paleta do playground. O valor de campos é persistido
+  como texto comum no JSON.
+
+### Slider de faixa
+
+**Estado:** `Slider` adicionado à API e à paleta do playground.
+
+- O range recebe mínimo, máximo e passo configuráveis; passo zero representa
+  uma faixa contínua. O valor é limitado ao range e alinhado ao passo quando
+  ele é positivo.
+- Mouse, arraste e teclado ajustam o valor; setas alteram um passo (ou 1% do
+  range contínuo), Page Up/Down alteram dez passos, e Home/End vão aos limites.
+- O inspetor edita mínimo, máximo e passo como `min, max, step`. O valor atual e
+  o range ficam persistidos no JSON do playground; callbacks Java não são salvos.
+
+### Grid e Spacer
+
+**Estado:** implementados como layouts públicos do toolkit.
+
+- `Grid(columns, gap)` usa um número fixo de colunas, células de largura igual
+  e altura uniforme por linha. A última linha pode ficar incompleta.
+- `Spacer.fixed(width, height)` cria espaço sem desenho; `Spacer.fixed(size)`
+  cria um espaçador quadrado.
+- `Spacer.flex()` divide igualmente o espaço restante no eixo principal de um
+  `Row` ou `Column`; em outros contêineres mede como vazio.
+
+Exemplo:
+
+```java
+Row actions = new Row(8);
+actions.add(new Button(Component.literal("Voltar"), this::back));
+actions.add(Spacer.flex());
+actions.add(new Button(Component.literal("Salvar"), this::save));
+
+Grid palette = new Grid(6, 6);
+```
+
+### Integração com itens vanilla
+
+**Estado:** `ItemRenderer`, `ItemCard` e `ItemGrid` implementados.
+
+- `ItemRenderer` delega desenho de `ItemStack`, contagem e tooltip às APIs
+  vanilla de `GuiGraphics`.
+- `ItemCard` é um cartão focável e selecionável que guarda uma cópia do stack,
+  mostra o nome e a contagem do item e recebe ativação por mouse, Enter ou
+  Espaço.
+- `ItemGrid(columns, gap)` oferece `addItem(stack)` e `addItem(stack, label)`;
+  seu callback recebe o índice e uma cópia do item clicado.
+- `ItemCard.stack()` também devolve uma cópia para que consumidores não alterem
+  acidentalmente o estado interno do componente.
+
+Exemplo:
+
+```java
+ItemGrid items = new ItemGrid(4, 6, (index, stack) -> selectItem(index, stack));
+items.addItem(new ItemStack(Items.CHEST));
+items.addItem(new ItemStack(Items.HOPPER), Component.literal("Entrada"));
+```
+
+O toolkit continua sem importar classes do domínio do mod. A API recebe stacks
+já construídos pelo consumidor e mantém callbacks Java somente em memória.
+
+### Etapa 4 — Validar com um showcase pequeno
+
+**Estado:** implementada como playground editável, acessível por F7 no ambiente
+de desenvolvimento. Layouts podem ser salvos como JSON em
+`config/easy_block_pallets/ui-playground/`; os detalhes de uso estão em
+[Playground do UI Toolkit](ui-toolkit-playground.md). A validação visual em
+execução do cliente e do servidor dedicado continua pendente.
+
+- Criar uma tela de desenvolvimento temporária usando apenas a API pública: título, painéis/cartões, texto, layout e botões.
+- Validar resize, GUI scales 1–4, janela pequena e resolução comum; conferir que foco, hover e clique continuam alinhados após resize.
+- Confirmar que a classe principal do mod não referencia tipos client-only e que o servidor dedicado inicializa sem carregar a UI.
+- Remover ou restringir o ponto de entrada do showcase antes de tratá-lo como recurso de jogador.
+
+**Critério de saída:** a tela demonstra os primitives sem posicionamento manual na aplicação, conserva comportamento após resize/GUI scale e não introduz classes da biblioteca no caminho de inicialização do servidor.
+
+## Roadmap depois do primeiro checkpoint
+
+`ItemRenderer`, `ItemCard` e `ItemGrid` estão na API; `Grid`, `Spacer`,
+`ItemCard` e `ItemGrid` também estão disponíveis na paleta, no modelo JSON e na
+fábrica do playground. A ordem priorizada e o plano técnico mínimo de todos os itens futuros estão em
+[Minecraft UI Toolkit PRD](minecraft-ui-toolkit-prd.md), seção 63. Implementar e
+revisar um marco por vez e começar abstrações especulativas somente quando
+houver consumidor concreto.
+
+## Fora deste corte
+
+- Flexbox/CSS, parser de estilos ou layouts declarativos;
+- virtualização, drag-and-drop geral, animações complexas ou state management;
+- integração completa com `AbstractContainerScreen`;
+- Fabric, Forge 1.20.1 ou abstração cross-loader;
+- dependência runtime de framework de UI de terceiros;
+- decisão de publicação/distribuição da biblioteca independente.
+
+## Riscos e decisões a revisitar
+
+- **Ciclo de input e foco:** conciliar a árvore própria com o ciclo de `Screen` sem duplicar eventos nem perder compatibilidade com widgets vanilla.
+- **Escala e clipping:** validar a convenção de coordenadas antes de implementar clipping aninhado ou scrollbar.
+- **Limite da API pública:** manter pequeno o conjunto exportado e mover renderers/helpers internos para `internal`.
+- **Extração futura:** considerar um subprojeto/artifact próprio quando um segundo mod for consumidor e a API estiver provada; até lá, manter isolamento por pacote e ausência de referências ao domínio.
+- **Nome e namespace de publicação:** permanecem abertos; este plano não fixa coordenadas Maven nem nome público definitivo.
+
