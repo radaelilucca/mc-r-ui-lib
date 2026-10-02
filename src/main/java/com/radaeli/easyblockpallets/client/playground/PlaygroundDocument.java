@@ -38,7 +38,8 @@ final class PlaygroundDocument {
         if (!(node.type.equals("label") || node.type.equals("button")
                 || node.type.equals("toggle") || node.type.equals("chip")
                 || node.type.equals("textfield") || node.type.equals("searchfield")
-                || node.type.equals("slider") || node.type.equals("itemcard")
+                || node.type.equals("slider") || node.type.equals("progressbar")
+                || node.type.equals("radial") || node.type.equals("itemcard")
                 || node.type.equals("table")
                 || node.type.equals("spacer") || node.isContainer())) {
             throw new IllegalArgumentException("Unsupported component type: " + node.type);
@@ -75,6 +76,14 @@ final class PlaygroundDocument {
             if (node.step > 0) {
                 node.value = Math.max(node.minimum, Math.min(node.maximum,
                         node.minimum + Math.round((node.value - node.minimum) / node.step) * node.step));
+            }
+        }
+        if (node.type.equals("progressbar")) {
+            if (!Double.isFinite(node.minimum) || !Double.isFinite(node.maximum) || !Double.isFinite(node.value)) {
+                throw new IllegalArgumentException("ProgressBar values must be finite");
+            }
+            if (node.maximum > node.minimum) {
+                node.value = Math.max(node.minimum, Math.min(node.maximum, node.value));
             }
         }
         node.parent = parent;

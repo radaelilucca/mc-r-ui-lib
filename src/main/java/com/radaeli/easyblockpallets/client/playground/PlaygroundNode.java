@@ -74,6 +74,16 @@ final class PlaygroundNode {
                 node.width = 160;
                 node.height = 22;
             }
+            case "progressbar" -> {
+                node.text = "Progress";
+                node.width = 180;
+                node.height = 18;
+            }
+            case "radial" -> {
+                node.text = "North, East, South, West";
+                node.width = 144;
+                node.height = 144;
+            }
             case "itemcard" -> {
                 node.text = "Diamond";
                 node.itemId = "minecraft:diamond";

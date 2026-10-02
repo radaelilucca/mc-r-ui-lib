@@ -2,7 +2,7 @@
 
 **Projeto hospedeiro:** Easy Block Pallets  
 **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
-**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost` e `Table` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
+**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar` e `RadialMenu` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 
@@ -199,6 +199,18 @@ do playground.
 - O playground demonstra três colunas e linhas de exemplo; o inspector aceita
   cabeçalhos separados por vírgula e quantidade de colunas configurável.
 
+### ProgressBar
+
+**Estado:** implementado e disponível na paleta do playground.
+
+- Progresso determinado em qualquer faixa finita; valores são limitados ao
+  intervalo e faixas inválidas/invertidas renderizam vazias.
+- Altura da barra e cores do trilho/preenchimento são configuráveis; formatter
+  opcional recebe o valor atual e fornece um `Component` centralizado.
+- Não captura mouse nem teclado e não usa timer ou animação própria.
+- No playground, o inspetor aceita `mínimo, máximo, valor` e o preview mostra
+  o valor atual formatado.
+
 ### Etapa 4 — Validar com um showcase pequeno
 
 **Estado:** implementada como playground editável, acessível por F7 no ambiente
@@ -219,9 +231,10 @@ execução do cliente e do servidor dedicado continua pendente.
 `ItemRenderer`, `ItemCard` e `ItemGrid` estão na API; `Grid`, `Spacer`,
 `ItemCard` e `ItemGrid` também estão disponíveis na paleta, no modelo JSON e na
 fábrica do playground. Toast e ToastHost estão integrados ao `UiScreen` e há
-um botão de demonstração no playground. Table também está na paleta. A próxima etapa é ProgressBar; a ordem
-priorizada e o plano técnico mínimo dos demais itens estão em
-[Minecraft UI Toolkit PRD](minecraft-ui-toolkit-prd.md), seção 63. Implementar e
+um botão de demonstração no playground. Table, ProgressBar e RadialMenu estão
+disponíveis na paleta. A ordem priorizada e o plano técnico mínimo dos demais itens estão em
+[Minecraft UI Toolkit PRD](minecraft-ui-toolkit-prd.md), seção 63. Radial menu
+foi concluído como o quarto marco; o próximo é Dropdown / Select. Implementar e
 revisar um marco por vez e começar abstrações especulativas somente quando
 houver consumidor concreto.
 

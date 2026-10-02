@@ -11,6 +11,9 @@ import com.radaeli.easyblockpallets.ui.Label;
 import com.radaeli.easyblockpallets.ui.Grid;
 import com.radaeli.easyblockpallets.ui.ItemCard;
 import com.radaeli.easyblockpallets.ui.ItemGrid;
+import com.radaeli.easyblockpallets.ui.ProgressBar;
+import com.radaeli.easyblockpallets.ui.RadialMenu;
+import com.radaeli.easyblockpallets.ui.RadialSegment;
 import com.radaeli.easyblockpallets.ui.Row;
 import com.radaeli.easyblockpallets.ui.ScrollView;
 import com.radaeli.easyblockpallets.ui.SearchField;
@@ -55,6 +58,10 @@ final class PlaygroundComponentFactory {
             case "searchfield" -> textField(node, true);
             case "slider" -> new Slider(node.minimum, node.maximum, node.value, node.step,
                     value -> node.value = value);
+            case "progressbar" -> new ProgressBar(node.minimum, node.maximum, node.value)
+                    .setFormatter(value -> Component.literal(java.math.BigDecimal.valueOf(value)
+                            .stripTrailingZeros().toPlainString()));
+            case "radial" -> createRadialMenu(node, onButtonClick);
             case "itemcard" -> createItemCard(node, onButtonClick);
             case "spacer" -> node.flexible ? Spacer.flex() : Spacer.fixed(node.width, node.height);
             case "row" -> new Row(node.gap, safeAlignment(node.horizontalAlignment),
@@ -149,6 +156,19 @@ final class PlaygroundComponentFactory {
             rows.add(row);
         }
         return table.setRows(rows).setOnRowClicked((index, row) -> onClick.accept(node));
+    }
+
+    private static RadialMenu createRadialMenu(PlaygroundNode node, Consumer<PlaygroundNode> onClick) {
+        RadialMenu menu = new RadialMenu();
+        String[] labels = node.text == null ? new String[0] : node.text.split(",", -1);
+        for (String label : labels) {
+            String cleanLabel = label.trim();
+            if (!cleanLabel.isEmpty()) {
+                menu.addSegment(new RadialSegment(Component.literal(cleanLabel), true,
+                        () -> onClick.accept(node)));
+            }
+        }
+        return menu;
     }
 
     static boolean itemExists(String itemId) {

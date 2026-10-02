@@ -2011,18 +2011,17 @@ não nó de layout; seu caminho é exercitado por `ItemCard`.
 |---:|---|---|
 | 1 | Toast | Implementado; avisos efêmeros em overlay |
 | 2 | Table | Implementado; dados em colunas e linhas, com seleção e rolagem |
-| 3 | ProgressBar | Progresso determinado, indeterminado opcional |
-| 4 | Radial menu | Geometria, segmentos, hit test e seleção |
+| 3 | ProgressBar | Implementado; progresso determinado, indeterminado opcional |
+| 4 | Radial menu | Implementado; geometria, segmentos, hit test e seleção por gesto |
 | 5 | Dropdown / Select | Seleção única, overlay e navegação por teclado |
 | 6 | Context menu | Ações ancoradas, teclado e fechamento previsível |
 | 7 | Demais itens | Implementar em lotes pequenos conforme seção 63.4–63.6 |
 
 ## 63.3. Plano técnico dos seis primeiros
 
-**Estado:** marco Toast concluído na API `Toast`/`ToastHost`, integrado ao
-`UiScreen` e demonstrável no playground pelo botão Toast. Table também foi
-implementado e está disponível na paleta do playground; a próxima etapa é
-ProgressBar.
+**Estado:** marcos Toast (`Toast`/`ToastHost`), Table e ProgressBar foram
+implementados e estão demonstráveis pela API e no playground; RadialMenu também
+está implementado, e a próxima etapa é Dropdown / Select.
 
 ### Toast
 
@@ -2045,6 +2044,10 @@ ProgressBar.
 
 ### ProgressBar
 
+- **Estado:** implementada como componente determinado, não interativo, com
+  range/value limitados, altura e cores configuráveis e formatter opcional.
+  Range inválido ou invertido é renderizado vazio; o playground expõe
+  `mínimo, máximo, valor` no inspetor.
 - Expor `minimum`, `maximum`, `value`, altura/estilo e formatter opcional; clamp
   definido também para range inválido.
 - Pintar trilho/preenchimento com `UiPaint`; a variante determinada é obrigatória.
@@ -2053,6 +2056,11 @@ ProgressBar.
 
 ### Radial menu
 
+- **Estado:** `RadialGeometry`, `RadialSegment` e `RadialMenu` implementados e
+  disponíveis no playground. O primeiro segmento começa ao norte e os demais
+  seguem no sentido horário; mouse down + drag + release escolhe o setor, e a
+  dead zone central ou soltura fora do raio cancela a ação. O consumidor abre e
+  fecha o menu e os callbacks permanecem em memória.
 - `RadialGeometry`: funções puras para centro, raios, ângulos, setores e hit
   test; cobrir matematicamente fronteiras e wrap do ângulo.
 - `RadialSegment`: label, ícone vanilla opcional, habilitado e callback em

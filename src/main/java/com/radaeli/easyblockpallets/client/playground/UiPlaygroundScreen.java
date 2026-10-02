@@ -42,7 +42,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     private static final int TOOLBAR_HEIGHT = 28;
     private static final String[] PALETTE_TYPES = {
             "label", "button", "toggle", "chip", "textfield", "searchfield",
-            "slider", "itemcard", "tabs", "scroll", "clip", "row", "column",
+            "slider", "progressbar", "radial", "itemcard", "tabs", "scroll", "clip", "row", "column",
             "stack", "grid", "itemgrid", "table", "spacer", "absolute"
     };
 
@@ -283,7 +283,8 @@ public final class UiPlaygroundScreen extends UiScreen {
     private void drawInspectorLabels(GuiGraphics graphics, int x) {
         graphics.drawString(font, selected != null && selected.type.equals("itemcard")
                 ? "Item label" : selected != null && selected.type.equals("table")
-                ? "Headers (CSV)" : "Text / label", x, 48, 0xFFADB7C5, false);
+                ? "Headers (CSV)" : selected != null && selected.type.equals("radial")
+                ? "Segments (CSV)" : "Text / label", x, 48, 0xFFADB7C5, false);
         graphics.drawString(font, selected != null && selected.type.equals("itemcard")
                 ? "Item ID" : "Color ARGB", x, 68, 0xFFADB7C5, false);
         graphics.drawString(font, "X", x, 88, 0xFFADB7C5, false);
@@ -293,6 +294,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         graphics.drawString(font, "Gap", x, 128, 0xFFADB7C5, false);
         if (selected != null) {
             String rangeLabel = selected.type.equals("slider") ? "Min, max, step"
+                    : selected.type.equals("progressbar") ? "Min, max, value"
                     : selected.usesItemStack() ? "Stack count"
                     : selected.type.equals("table") ? "Table columns"
                     : selected.supportsColumns() ? "Grid columns" : null;
@@ -808,7 +810,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         textField.setValue(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack() || selected.type.equals("table"))
+                || selected.usesItemStack() || selected.type.equals("table")
+                || selected.type.equals("radial"))
                 ? selected.text : "");
         colorField.setValue(!hasSelection ? "FFFFFFFF"
                 : selected.usesItemStack() ? selected.itemId : String.format("%08X", selected.color));
@@ -821,15 +824,20 @@ public final class UiPlaygroundScreen extends UiScreen {
                 : selected.type.equals("slider")
                     ? formatNumber(selected.minimum) + ", " + formatNumber(selected.maximum) + ", "
                         + formatNumber(selected.step)
+                    : selected.type.equals("progressbar")
+                    ? formatNumber(selected.minimum) + ", " + formatNumber(selected.maximum) + ", "
+                        + formatNumber(selected.value)
                     : selected.usesItemStack() ? Integer.toString(selected.itemCount)
                     : selected.supportsColumns() ? Integer.toString(selected.columns) : "0, 100, 1");
         boolean rangeEditable = hasSelection && (selected.type.equals("slider")
+                || selected.type.equals("progressbar")
                 || selected.usesItemStack() || selected.supportsColumns());
         rangeField.setEditable(rangeEditable);
         textField.setEditable(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack() || selected.type.equals("table")));
+                || selected.usesItemStack() || selected.type.equals("table")
+                || selected.type.equals("radial")));
         colorField.setEditable(hasSelection && (selected.type.equals("label") || selected.usesItemStack()));
         gapField.setEditable(hasSelection && selected.isContainer() && !selected.isAbsolute());
         xField.setEditable(hasSelection && selected.parent != null && selected.parent.isAbsolute());
@@ -916,17 +924,21 @@ public final class UiPlaygroundScreen extends UiScreen {
             int nextItemCount = selected.itemCount;
             double nextMinimum = selected.minimum;
             double nextMaximum = selected.maximum;
+            double nextValue = selected.value;
             double nextStep = selected.step;
             if (selected.isContainer() && !selected.isAbsolute()) {
                 nextGap = parseBoundedInt(gapField.getValue(), 0, 4096);
             }
-            if (selected.type.equals("slider")) {
+            if (selected.type.equals("slider") || selected.type.equals("progressbar")) {
                 String[] rangeParts = rangeField.getValue().split(",", -1);
-                if (rangeParts.length != 3) throw new IllegalArgumentException("Use min, max, step");
+                if (rangeParts.length != 3) throw new IllegalArgumentException(selected.type.equals("slider")
+                        ? "Use min, max, step" : "Use min, max, value");
                 nextMinimum = parseFiniteDouble(rangeParts[0]);
                 nextMaximum = parseFiniteDouble(rangeParts[1]);
-                nextStep = parseFiniteDouble(rangeParts[2]);
-                if (nextMaximum <= nextMinimum || nextStep < 0) {
+                double thirdValue = parseFiniteDouble(rangeParts[2]);
+                if (selected.type.equals("slider")) nextStep = thirdValue;
+                else nextValue = thirdValue;
+                if (nextMaximum <= nextMinimum || (selected.type.equals("slider") && nextStep < 0)) {
                     throw new IllegalArgumentException("Min deve ser menor que max; step não pode ser negativo");
                 }
             }
@@ -939,7 +951,8 @@ public final class UiPlaygroundScreen extends UiScreen {
             if (selected.type.equals("label") || selected.type.equals("button")
                     || selected.type.equals("toggle") || selected.type.equals("chip")
                     || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                    || selected.usesItemStack() || selected.type.equals("table")) {
+                    || selected.usesItemStack() || selected.type.equals("table")
+                    || selected.type.equals("radial")) {
                 selected.text = nextText;
             }
             selected.itemId = nextItemId;
@@ -956,6 +969,10 @@ public final class UiPlaygroundScreen extends UiScreen {
                 selected.maximum = nextMaximum;
                 selected.step = nextStep;
                 selected.value = normalizeSliderValue(selected.value, nextMinimum, nextMaximum, nextStep);
+            } else if (selected.type.equals("progressbar")) {
+                selected.minimum = nextMinimum;
+                selected.maximum = nextMaximum;
+                selected.value = Math.max(nextMinimum, Math.min(nextMaximum, nextValue));
             }
             rebuildCanvas();
             refreshInspector();
