@@ -12,6 +12,8 @@ public final class Modal extends UiComponent {
     private final int preferredDialogWidth;
     private final int preferredDialogHeight;
     private boolean closeOnOutsideClick;
+    private boolean closing;
+    private double transitionOpacity;
     private Runnable onClose = () -> { };
 
     public Modal(Component title, UiComponent content) {
@@ -40,6 +42,18 @@ public final class Modal extends UiComponent {
     public UiComponent content() { return content; }
     public boolean closeOnOutsideClick() { return closeOnOutsideClick; }
     public void closed() { onClose.run(); }
+    void beginOpen() {
+        closing = false;
+        transitionOpacity = 0;
+        clearAnimation("modal-opacity");
+        clearContentFocus();
+    }
+    void beginClose() { closing = true; }
+    boolean closeTransitionComplete() { return closing && transitionOpacity <= 0.001; }
+
+    void clearContentFocus() {
+        content.visitFocusable(component -> component.setFocused(false));
+    }
 
     public void layoutInScreen(Font font, UiTheme theme, int screenWidth, int screenHeight) {
         int dialogWidth = Math.min(preferredDialogWidth, Math.max(1, screenWidth - 16));
@@ -66,15 +80,20 @@ public final class Modal extends UiComponent {
 
     @Override
     public void render(UiContext context) {
-        UiPaint.rect(context, new Bounds(0, 0, context.screenWidth(), context.screenHeight()), 0x99000000);
-        UiPaint.panel(context, bounds());
+        double opacity = animateFrom(context, "modal-opacity", closing ? 0 : 1, closing ? 1 : 0);
+        transitionOpacity = opacity;
+        if (opacity <= 0) return;
+        UiPaint.rect(context, new Bounds(0, 0, context.screenWidth(), context.screenHeight()),
+                UiPaint.withAlpha(0x99000000, opacity));
+        UiPaint.panel(context, bounds(), opacity);
         Insets padding = context.theme().tokens().panelPadding();
         UiPaint.text(context, title, bounds().x() + padding.left(), bounds().y() + padding.top(),
-                context.theme().palette().text());
+                UiPaint.withAlpha(context.theme().palette().text(), opacity));
         int dividerY = bounds().y() + padding.top() + context.font().lineHeight + 3;
-        UiPaint.divider(context, new Bounds(bounds().x() + padding.left(), dividerY,
-                Math.max(0, bounds().width() - padding.left() - padding.right()), 1));
-        content.render(context);
+        UiPaint.rect(context, new Bounds(bounds().x() + padding.left(), dividerY,
+                Math.max(0, bounds().width() - padding.left() - padding.right()), 1),
+                UiPaint.withAlpha(context.theme().palette().divider(), opacity));
+        content.render(context.withOpacity(opacity));
     }
 
     @Override

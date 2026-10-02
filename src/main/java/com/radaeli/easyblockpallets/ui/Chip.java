@@ -42,7 +42,9 @@ public final class Chip extends UiComponent {
     @Override
     public void render(UiContext context) {
         boolean hovered = isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
-        UiPaint.chip(context, bounds(), selected, hovered, isEnabled(), isFocused());
+        UiPaint.chip(context, bounds(), animate(context, "selected", selected ? 1 : 0),
+                animate(context, "hover", hovered ? 1 : 0), isEnabled(),
+                animate(context, "focus", isFocused() ? 1 : 0));
         UiPaint.textCentered(context, label, bounds().centerX(),
                 bounds().centerY() - context.font().lineHeight / 2,
                 isEnabled() ? context.theme().palette().text() : context.theme().palette().mutedText());

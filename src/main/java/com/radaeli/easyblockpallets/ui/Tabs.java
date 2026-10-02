@@ -82,10 +82,14 @@ public final class Tabs extends UiContainer {
             if (width <= 0) break;
             Bounds tabBounds = new Bounds(x, bounds().y(), width, stripHeight);
             boolean selected = i == selectedIndex;
-            UiPaint.tab(context, tabBounds, selected, selected && isFocused());
+            double selectedProgress = animate(context, "selected-tab-" + i, selected ? 1 : 0);
+            double focusProgress = animate(context, "focus-tab-" + i,
+                    selected && isFocused() ? 1 : 0);
+            UiPaint.tab(context, tabBounds, selectedProgress, focusProgress);
             UiPaint.textCentered(context, title, tabBounds.centerX(),
                     tabBounds.centerY() - context.font().lineHeight / 2,
-                    selected ? context.theme().palette().text() : context.theme().palette().mutedText());
+                    UiPaint.mixColor(context.theme().palette().mutedText(), context.theme().palette().text(),
+                            selectedProgress));
             x += width;
         }
         tabs.get(selectedIndex).content().render(context);

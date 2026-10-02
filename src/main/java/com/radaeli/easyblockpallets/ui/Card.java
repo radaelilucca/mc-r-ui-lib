@@ -48,7 +48,9 @@ public final class Card extends UiFrame {
     @Override
     public void render(UiContext context) {
         boolean hovered = hoverEnabled && isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
-        UiPaint.card(context, bounds(), hovered, selected, isFocused());
+        UiPaint.card(context, bounds(), animate(context, "hover", hovered ? 1 : 0),
+                animate(context, "selected", selected ? 1 : 0),
+                animate(context, "focus", isFocused() ? 1 : 0));
         if (title != null) {
             UiPaint.text(context, title, bounds().x() + padding().left(),
                     bounds().y() + padding().top(), context.theme().palette().text());

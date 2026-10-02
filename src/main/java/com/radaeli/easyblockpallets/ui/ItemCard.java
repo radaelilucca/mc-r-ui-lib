@@ -58,10 +58,14 @@ public final class ItemCard extends UiComponent {
     @Override
     public void render(UiContext context) {
         boolean hovered = isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
+        double hover = animate(context, "hover", hovered ? 1 : 0);
+        double focus = animate(context, "focus", isFocused() ? 1 : 0);
+        double selection = animate(context, "selected", selected ? 1 : 0);
+        double press = animate(context, "press", pressed ? 1 : 0);
         if (selected) {
-            UiPaint.chip(context, bounds(), true, hovered, isEnabled(), isFocused());
+            UiPaint.chip(context, bounds(), selection, hover, isEnabled(), focus);
         } else {
-            UiPaint.button(context, bounds(), hovered, pressed, isEnabled(), isFocused());
+            UiPaint.button(context, bounds(), hover, press, isEnabled(), focus);
         }
 
         int iconX = bounds().x() + HORIZONTAL_PADDING;
@@ -71,7 +75,8 @@ public final class ItemCard extends UiComponent {
         int color = isEnabled() ? context.theme().palette().text() : context.theme().palette().mutedText();
         int textX = iconX + ICON_SIZE + GAP;
         int textY = bounds().centerY() - context.font().lineHeight / 2;
-        context.graphics().drawString(context.font(), label, textX, textY, color, true);
+        context.graphics().drawString(context.font(), label, textX, textY,
+                UiPaint.withAlpha(color, context.opacity()), true);
         if (hovered) ItemRenderer.renderTooltip(context, stack);
     }
 

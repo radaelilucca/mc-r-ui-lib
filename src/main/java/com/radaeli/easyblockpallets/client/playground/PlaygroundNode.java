@@ -14,6 +14,7 @@ final class PlaygroundNode {
     boolean enabled = true;
     boolean selected;
     boolean flexible;
+    boolean percentage;
     int selectedTab;
     int columns = 3;
     int itemCount = 1;

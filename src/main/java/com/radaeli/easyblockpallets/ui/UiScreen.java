@@ -18,6 +18,7 @@ public class UiScreen extends Screen {
     private UiComponent focusedComponent;
     private UiComponent pressedComponent;
     private Modal modal;
+    private Modal closingModal;
 
     public UiScreen(Component title, UiComponent root) {
         this(title, root, UiTheme.DARK);
@@ -34,6 +35,7 @@ public class UiScreen extends Screen {
         toastHost.layout(font, theme, new Bounds(0, 0, width, height));
         root.layout(font, theme, new Bounds(0, 0, width, height));
         if (modal != null) modal.layoutInScreen(font, theme, width, height);
+        if (closingModal != null) closingModal.layoutInScreen(font, theme, width, height);
         clearToolkitFocus();
     }
 
@@ -46,11 +48,13 @@ public class UiScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
-        root.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
+        UiContext context = new UiContext(graphics, font, theme, mouseX, mouseY, width, height);
+        root.render(context);
         renderToastOverlay(graphics, mouseX, mouseY);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
-        if (modal != null) modal.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
-        UiComponent hovered = activeRoot().hitTest(mouseX, mouseY);
+        renderClosingModal(context);
+        if (modal != null) modal.render(context);
+        UiComponent hovered = closingModal == null ? activeRoot().hitTest(mouseX, mouseY) : null;
         if (hovered != null && hovered.tooltip() != null) {
             graphics.renderTooltip(font, hovered.tooltip().lines(), Optional.empty(), mouseX, mouseY);
         }
@@ -58,6 +62,15 @@ public class UiScreen extends Screen {
 
     protected void renderToastOverlay(GuiGraphics graphics, int mouseX, int mouseY) {
         toastHost.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
+    }
+
+    protected void renderClosingModal(UiContext context) {
+        if (closingModal == null) return;
+        closingModal.render(context);
+        if (closingModal.closeTransitionComplete()) {
+            closingModal.clearContentFocus();
+            closingModal = null;
+        }
     }
 
     protected boolean handleToastClick(double mouseX, double mouseY, int button) {
@@ -80,6 +93,7 @@ public class UiScreen extends Screen {
             pressedComponent = target != null && target.mouseClicked(mouseX, mouseY, button) ? target : null;
             return true;
         }
+        if (closingModal != null) return true;
         if (handleToastClick(mouseX, mouseY, button)) return true;
         UiComponent target = root.hitTest(mouseX, mouseY);
         clearToolkitFocus();
@@ -96,6 +110,7 @@ public class UiScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (closingModal != null) return true;
         UiComponent target = pressedComponent;
         pressedComponent = null;
         return target != null && target.mouseReleased(mouseX, mouseY, button)
@@ -104,6 +119,7 @@ public class UiScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (closingModal != null) return true;
         return pressedComponent != null
                 && pressedComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)
                 || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -115,12 +131,14 @@ public class UiScreen extends Screen {
             modal.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
             return true;
         }
+        if (closingModal != null) return true;
         return root.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
                 || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (closingModal != null) return true;
         if (modal != null && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             closeModal();
             return true;
@@ -141,6 +159,7 @@ public class UiScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (closingModal != null) return true;
         return focusedComponent != null && focusedComponent.charTyped(codePoint, modifiers)
                 || super.charTyped(codePoint, modifiers);
     }
@@ -182,6 +201,8 @@ public class UiScreen extends Screen {
         Objects.requireNonNull(modal, "modal");
         closeModal();
         this.modal = modal;
+        closingModal = null;
+        modal.beginOpen();
         modal.layoutInScreen(font, theme, width, height);
         pressedComponent = null;
         clearToolkitFocus();
@@ -194,8 +215,10 @@ public class UiScreen extends Screen {
         Modal closing = modal;
         if (closing == null) return;
         modal = null;
+        closing.beginClose();
+        closingModal = closing;
         pressedComponent = null;
-        clearToolkitFocus();
+        focusedComponent = null;
         closing.closed();
     }
 

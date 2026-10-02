@@ -7,6 +7,7 @@ import net.minecraft.util.FormattedCharSequence;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Per-screen overlay that stacks, expires, and dismisses toast notifications. */
 public final class ToastHost extends UiComponent {
@@ -18,9 +19,11 @@ public final class ToastHost extends UiComponent {
     private static final int PADDING_X = 9;
     private static final int PADDING_Y = 6;
     private static final int GAP = 5;
+    private static final AtomicLong NEXT_TOAST_ID = new AtomicLong();
 
     private final List<ActiveToast> activeToasts = new ArrayList<>();
     private Font layoutFont;
+    private int transitionDurationMillis = 140;
 
     @Override
     protected UiSize measureIntrinsic(Font font, UiTheme theme, int maxWidth, int maxHeight) {
@@ -30,13 +33,15 @@ public final class ToastHost extends UiComponent {
     @Override
     protected void layoutChildren(Font font, UiTheme theme) {
         layoutFont = font;
+        transitionDurationMillis = theme.tokens().transitionDurationMillis();
         layoutToasts();
     }
 
     public void show(Toast toast) {
         activeToasts.add(0, new ActiveToast(Objects.requireNonNull(toast, "toast")));
         while (activeToasts.size() > MAX_TOASTS) {
-            activeToasts.remove(activeToasts.size() - 1);
+            ActiveToast removed = activeToasts.remove(activeToasts.size() - 1);
+            clearAnimation("toast-opacity-" + removed.id);
         }
         layoutToasts();
     }
@@ -62,9 +67,15 @@ public final class ToastHost extends UiComponent {
         if (activeToasts.isEmpty()) return;
         for (int index = activeToasts.size() - 1; index >= 0; index--) {
             ActiveToast active = activeToasts.get(index);
-            active.remainingTicks--;
-            if (active.remainingTicks <= 0) {
+            if (active.remainingTicks > 0) {
+                active.remainingTicks--;
+                if (active.remainingTicks == 0) active.exitTicks = exitDurationTicks();
+            } else if (active.exitTicks > 0) {
+                active.exitTicks--;
+            }
+            if (active.remainingTicks <= 0 && active.exitTicks <= 0) {
                 activeToasts.remove(index);
+                clearAnimation("toast-opacity-" + active.id);
             }
         }
         layoutToasts();
@@ -82,13 +93,20 @@ public final class ToastHost extends UiComponent {
         }
         for (ActiveToast active : activeToasts) {
             if (active.bounds.width() == 0 || active.lines.isEmpty()) continue;
-            UiPaint.card(context, active.bounds);
-            UiPaint.rect(context, new Bounds(active.bounds.x(), active.bounds.y(), 3, active.bounds.height()),
-                    accentColor(active.toast.level(), context));
+            double opacity = animateFrom(context, "toast-opacity-" + active.id,
+                    active.remainingTicks > 0 ? 1 : 0, 0);
+            if (opacity <= 0) continue;
+            int slide = (int) Math.round((1 - opacity) * 14);
+            Bounds visualBounds = new Bounds(active.bounds.x() + slide, active.bounds.y(),
+                    active.bounds.width(), active.bounds.height());
+            UiPaint.panel(context, visualBounds, opacity);
+            UiPaint.rect(context, new Bounds(visualBounds.x(), visualBounds.y(), 3, visualBounds.height()),
+                    UiPaint.withAlpha(accentColor(active.toast.level(), context), opacity));
             int textY = active.bounds.y() + PADDING_Y;
             for (FormattedCharSequence line : active.lines) {
                 context.graphics().drawString(context.font(), line,
-                        active.bounds.x() + PADDING_X, textY, context.theme().palette().text(), false);
+                        visualBounds.x() + PADDING_X, textY,
+                        UiPaint.withAlpha(context.theme().palette().text(), opacity), false);
                 textY += context.font().lineHeight;
             }
         }
@@ -98,9 +116,11 @@ public final class ToastHost extends UiComponent {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) return false;
         for (int index = 0; index < activeToasts.size(); index++) {
-            if (activeToasts.get(index).bounds.contains(mouseX, mouseY)) {
-                activeToasts.remove(index);
-                layoutToasts();
+            ActiveToast active = activeToasts.get(index);
+            if (!active.dismissing && active.bounds.contains(mouseX, mouseY)) {
+                active.dismissing = true;
+                active.remainingTicks = 0;
+                active.exitTicks = exitDurationTicks();
                 return true;
             }
         }
@@ -135,6 +155,10 @@ public final class ToastHost extends UiComponent {
         }
     }
 
+    private int exitDurationTicks() {
+        return Math.max(1, (transitionDurationMillis + 49) / 50);
+    }
+
     private static int accentColor(Toast.Level level, UiContext context) {
         return switch (level) {
             case INFO -> context.theme().palette().accent();
@@ -145,8 +169,11 @@ public final class ToastHost extends UiComponent {
     }
 
     private static final class ActiveToast {
+        private final long id = NEXT_TOAST_ID.incrementAndGet();
         private final Toast toast;
         private int remainingTicks;
+        private int exitTicks;
+        private boolean dismissing;
         private Bounds bounds = Bounds.EMPTY;
         private List<FormattedCharSequence> lines = List.of();
 

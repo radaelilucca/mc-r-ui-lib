@@ -3,6 +3,9 @@ package com.radaeli.easyblockpallets.ui;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /** Base node for measurement, layout, rendering and input in a toolkit tree. */
 public abstract class UiComponent {
     private Bounds bounds = Bounds.EMPTY;
@@ -11,6 +14,51 @@ public abstract class UiComponent {
     private Integer preferredWidth;
     private Integer preferredHeight;
     private Tooltip tooltip;
+    private final Map<String, TransitionState> transitions = new HashMap<>();
+
+    /** Interpolates a visual property using the shared duration from the active theme. */
+    protected final double animate(UiContext context, String property, double target) {
+        return animateFrom(context, property, target, target);
+    }
+
+    /** Like {@link #animate(UiContext, String, double)}, but selects the first-frame visual value. */
+    protected final double animateFrom(UiContext context, String property, double target, double initial) {
+        long now = context.frameTimeNanos();
+        int durationMillis = context.theme().tokens().transitionDurationMillis();
+        TransitionState state = transitions.computeIfAbsent(property,
+                ignored -> new TransitionState(initial, now));
+        double current = state.valueAt(now, durationMillis);
+        if (Double.compare(target, state.target) != 0) {
+            state.from = current;
+            state.target = target;
+            state.startedAt = now;
+        }
+        return state.valueAt(now, durationMillis);
+    }
+
+    protected final void clearAnimation(String property) {
+        transitions.remove(property);
+    }
+
+    private static final class TransitionState {
+        private double from;
+        private double target;
+        private long startedAt;
+
+        private TransitionState(double initial, long now) {
+            from = initial;
+            target = initial;
+            startedAt = now;
+        }
+
+        private double valueAt(long now, int durationMillis) {
+            if (durationMillis == 0) return target;
+            double durationNanos = durationMillis * 1_000_000.0;
+            double progress = Math.max(0, Math.min(1, (now - startedAt) / durationNanos));
+            double eased = progress * progress * (3 - 2 * progress);
+            return from + (target - from) * eased;
+        }
+    }
 
     public final UiSize measure(Font font, UiTheme theme, int maxWidth, int maxHeight) {
         UiSize intrinsic = measureIntrinsic(font, theme, maxWidth, maxHeight);

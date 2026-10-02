@@ -74,7 +74,7 @@ public class TextField extends UiComponent {
         editBox = new EditBox(font, bounds().x() + 4 + editorInsetLeft(),
                 bounds().y() + (bounds().height() - editorHeight) / 2,
                 Math.max(1, bounds().width() - 8 - editorInsetLeft()), editorHeight, hint);
-        editBox.setBordered(true);
+        editBox.setBordered(false);
         editBox.setMaxLength(maxLength);
         editBox.setValue(value);
         editBox.setResponder(this::onValueChanged);
@@ -94,9 +94,10 @@ public class TextField extends UiComponent {
         ensureEditBox(context.font());
         syncEditBoxState();
         boolean hovered = isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
-        UiPaint.input(context, bounds(), hovered, isEnabled(), isFocused());
-        editBox.setTextColor(context.theme().palette().text());
-        editBox.setTextColorUneditable(context.theme().palette().mutedText());
+        UiPaint.input(context, bounds(), animate(context, "hover", hovered ? 1 : 0), isEnabled(),
+                animate(context, "focus", isFocused() ? 1 : 0));
+        editBox.setTextColor(UiPaint.withAlpha(context.theme().palette().text(), context.opacity()));
+        editBox.setTextColorUneditable(UiPaint.withAlpha(context.theme().palette().mutedText(), context.opacity()));
         renderPrefix(context);
         editBox.render(context.graphics(), (int) context.mouseX(), (int) context.mouseY(), 0);
     }

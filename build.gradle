@@ -21,6 +21,8 @@ neoForge {
         client {
             client()
             gameDirectory = project.file('runs/client')
+            programArgument '--quickPlaySingleplayer'
+            programArgument 'New World'
         }
         server {
             server()

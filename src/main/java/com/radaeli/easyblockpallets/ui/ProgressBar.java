@@ -15,6 +15,7 @@ public final class ProgressBar extends UiComponent {
     private Integer trackColor;
     private Integer fillColor;
     private Function<Double, Component> formatter;
+    private boolean percentage;
 
     public ProgressBar(double minimum, double maximum, double value) {
         validateFinite(minimum, "minimum");
@@ -59,6 +60,16 @@ public final class ProgressBar extends UiComponent {
         return this;
     }
 
+    public boolean isPercentage() {
+        return percentage;
+    }
+
+    /** Displays the normalized progress as a whole-number percentage label. */
+    public ProgressBar setPercentage(boolean percentage) {
+        this.percentage = percentage;
+        return this;
+    }
+
     public int barHeight() {
         return barHeight;
     }
@@ -77,7 +88,7 @@ public final class ProgressBar extends UiComponent {
         return this;
     }
 
-    /** A null formatter hides the optional text label. */
+    /** Sets a custom value label; percentage mode instead renders its normalized whole-number label. */
     public ProgressBar setFormatter(Function<Double, Component> formatter) {
         this.formatter = formatter;
         return this;
@@ -85,7 +96,7 @@ public final class ProgressBar extends UiComponent {
 
     @Override
     protected UiSize measureIntrinsic(Font font, UiTheme theme, int maxWidth, int maxHeight) {
-        int height = Math.max(barHeight, formatter == null ? 0 : font.lineHeight + 4);
+        int height = Math.max(barHeight, formatter == null && !percentage ? 0 : font.lineHeight + 4);
         return new UiSize(120, height).constrain(maxWidth, maxHeight);
     }
 
@@ -99,10 +110,14 @@ public final class ProgressBar extends UiComponent {
         int track = isEnabled() ? (trackColor == null ? palette.divider() : trackColor) : palette.disabled();
         int fill = isEnabled() ? (fillColor == null ? palette.accent() : fillColor) : palette.mutedText();
         UiPaint.rect(context, new Bounds(bounds.x(), y, bounds.width(), height), track);
-        int fillWidth = (int) Math.round(bounds.width() * progress());
+        double displayedProgress = animate(context, "progress", progress());
+        int fillWidth = (int) Math.round(bounds.width() * displayedProgress);
         if (fillWidth > 0) UiPaint.rect(context, new Bounds(bounds.x(), y, fillWidth, height), fill);
-        if (formatter != null) {
-            Component label = Objects.requireNonNull(formatter.apply(value), "formatter result");
+        if (percentage || formatter != null) {
+            double displayedValue = minimum + displayedProgress * (maximum - minimum);
+            Component label = percentage
+                    ? Component.literal(Math.round(displayedProgress * 100) + "%")
+                    : Objects.requireNonNull(formatter.apply(displayedValue), "formatter result");
             int textX = bounds.centerX() - context.font().width(label) / 2;
             int textY = bounds.centerY() - context.font().lineHeight / 2;
             UiPaint.text(context, label, textX, textY, isEnabled() ? palette.text() : palette.mutedText());

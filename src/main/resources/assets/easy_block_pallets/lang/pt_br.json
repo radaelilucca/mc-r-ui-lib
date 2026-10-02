@@ -1,4 +1,5 @@
 {
   "key.categories.easy_block_pallets": "Easy Block Pallets",
-  "key.easy_block_pallets.open_ui_playground": "Abrir playground do UI Toolkit"
+  "key.easy_block_pallets.open_ui_playground": "Abrir playground do UI Toolkit",
+  "key.easy_block_pallets.dispatch_test_toast": "Exibir toast de teste do UI Toolkit"
 }

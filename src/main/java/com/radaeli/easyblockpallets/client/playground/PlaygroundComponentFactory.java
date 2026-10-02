@@ -69,8 +69,10 @@ final class PlaygroundComponentFactory {
             case "slider" -> new Slider(node.minimum, node.maximum, node.value, node.step,
                     value -> node.value = value);
             case "progressbar" -> new ProgressBar(node.minimum, node.maximum, node.value)
-                    .setFormatter(value -> Component.literal(java.math.BigDecimal.valueOf(value)
-                            .stripTrailingZeros().toPlainString()));
+                    .setPercentage(node.percentage)
+                    .setFormatter(node.percentage ? null : value -> Component.literal(
+                            java.math.BigDecimal.valueOf(value)
+                                    .setScale(0, java.math.RoundingMode.HALF_UP).toPlainString()));
             case "radial" -> createRadialMenu(node, onButtonClick);
             case "itemcard" -> createItemCard(node, onButtonClick);
             case "spacer" -> node.flexible ? Spacer.flex() : Spacer.fixed(node.width, node.height);

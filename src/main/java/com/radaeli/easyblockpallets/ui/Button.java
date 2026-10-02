@@ -29,7 +29,9 @@ public final class Button extends UiComponent {
     @Override
     public void render(UiContext context) {
         boolean hovered = isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
-        UiPaint.button(context, bounds(), hovered, pressed, isEnabled(), isFocused());
+        UiPaint.button(context, bounds(), animate(context, "hover", hovered ? 1 : 0),
+                animate(context, "press", pressed ? 1 : 0), isEnabled(),
+                animate(context, "focus", isFocused() ? 1 : 0));
         int color = isEnabled() ? context.theme().palette().text() : context.theme().palette().mutedText();
         UiPaint.textCentered(context, label, bounds().centerX(),
                 bounds().centerY() - context.font().lineHeight / 2, color);

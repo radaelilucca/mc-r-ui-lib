@@ -14,11 +14,15 @@ public final class UiPlaygroundClientTick {
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
-        if (FMLEnvironment.production || !UiPlaygroundKeyRegistration.OPEN_PLAYGROUND.consumeClick()) {
-            return;
-        }
+        if (FMLEnvironment.production) return;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && !(minecraft.screen instanceof UiPlaygroundScreen)) {
+        UiPlaygroundToastOverlay.tick();
+        if (minecraft.player == null) return;
+        if (UiPlaygroundKeyRegistration.DISPATCH_TEST_TOAST.consumeClick()) {
+            UiPlaygroundToastOverlay.dispatchDemoToast();
+        }
+        if (UiPlaygroundKeyRegistration.OPEN_PLAYGROUND.consumeClick()
+                && !(minecraft.screen instanceof UiPlaygroundScreen)) {
             minecraft.setScreen(new UiPlaygroundScreen());
         }
     }

@@ -19,6 +19,13 @@ public final class UiPlaygroundKeyRegistration {
             GLFW.GLFW_KEY_F7,
             "key.categories.easy_block_pallets"
     );
+    static final KeyMapping DISPATCH_TEST_TOAST = new KeyMapping(
+            "key.easy_block_pallets.dispatch_test_toast",
+            KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F6,
+            "key.categories.easy_block_pallets"
+    );
 
     private UiPlaygroundKeyRegistration() {
     }
@@ -27,6 +34,7 @@ public final class UiPlaygroundKeyRegistration {
     public static void registerKeyMapping(RegisterKeyMappingsEvent event) {
         if (!FMLEnvironment.production) {
             event.register(OPEN_PLAYGROUND);
+            event.register(DISPATCH_TEST_TOAST);
         }
     }
 }

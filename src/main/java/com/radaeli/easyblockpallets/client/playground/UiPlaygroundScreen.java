@@ -10,13 +10,13 @@ import com.radaeli.easyblockpallets.ui.Button;
 import com.radaeli.easyblockpallets.ui.Column;
 import com.radaeli.easyblockpallets.ui.Label;
 import com.radaeli.easyblockpallets.ui.Modal;
+import com.radaeli.easyblockpallets.ui.ProgressBar;
 import com.radaeli.easyblockpallets.ui.Row;
 import com.radaeli.easyblockpallets.ui.UiComponent;
 import com.radaeli.easyblockpallets.ui.UiContext;
 import com.radaeli.easyblockpallets.ui.UiPaint;
 import com.radaeli.easyblockpallets.ui.UiScreen;
 import com.radaeli.easyblockpallets.ui.UiTheme;
-import com.radaeli.easyblockpallets.ui.Toast;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -34,8 +34,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Development-only visual editor for composing and exercising toolkit components. */
 public final class UiPlaygroundScreen extends UiScreen {
@@ -44,11 +46,16 @@ public final class UiPlaygroundScreen extends UiScreen {
     private static final int SIDEBAR_WIDTH = 98;
     private static final int INSPECTOR_WIDTH = 168;
     private static final int TOOLBAR_HEIGHT = 28;
-    private static final String[] PALETTE_TYPES = {
-            "label", "button", "iconbutton", "panel", "card", "divider", "toggle", "chip", "textfield", "searchfield",
-            "slider", "progressbar", "radial", "itemcard", "tabs", "scroll", "clip", "row", "column",
-            "stack", "grid", "itemgrid", "table", "spacer", "absolute"
-    };
+    private static final int PALETTE_BOTTOM_PADDING = 12;
+    private static final int PROGRESS_PREVIEW_CYCLE_TICKS = 120;
+    private static final List<PaletteCategory> PALETTE_CATEGORIES = List.of(
+            new PaletteCategory("Basic", List.of("label", "button", "iconbutton", "toggle", "chip")),
+            new PaletteCategory("Input", List.of("textfield", "searchfield", "slider")),
+            new PaletteCategory("Layout", List.of("panel", "card", "divider", "row", "column", "stack",
+                    "absolute", "grid", "spacer")),
+            new PaletteCategory("Data", List.of("itemcard", "itemgrid", "table", "tabs")),
+            new PaletteCategory("Status", List.of("progressbar", "radial")),
+            new PaletteCategory("Scroll", List.of("scroll", "clip")));
 
     private PlaygroundDocument document = PlaygroundDocument.empty("untitled");
     private PlaygroundNode selected;
@@ -58,9 +65,15 @@ public final class UiPlaygroundScreen extends UiScreen {
     private UiComponent pressedPreviewComponent;
     private String status = "Arraste componentes da paleta para o canvas.";
     private int clickCount;
-    private int toastDemoIndex;
     private boolean previewMode;
     private int paletteScrollOffset;
+    private final Set<String> collapsedPaletteCategories = new LinkedHashSet<>();
+    private int previewPanX;
+    private int previewPanY;
+    private int lastPanX;
+    private int lastPanY;
+    private boolean panningPreview;
+    private int progressPreviewTicks;
 
     private int sidebarWidth;
     private int inspectorWidth;
@@ -161,6 +174,32 @@ public final class UiPlaygroundScreen extends UiScreen {
         root().layout(font, THEME, new Bounds(canvasX, canvasY, canvasWidth, canvasHeight));
     }
 
+    @Override
+    public void tick() {
+        super.tick();
+        if (previewMode) {
+            progressPreviewTicks++;
+            // Feed the tween every client tick so its 140 ms transition overlaps updates
+            // instead of completing between samples and visibly pausing.
+            updatePreviewProgressBars(progressPreviewRatio());
+        }
+    }
+
+    private double progressPreviewRatio() {
+        double phase = (progressPreviewTicks % PROGRESS_PREVIEW_CYCLE_TICKS)
+                / (double) PROGRESS_PREVIEW_CYCLE_TICKS;
+        return phase <= 0.5 ? phase * 2 : (1 - phase) * 2;
+    }
+
+    private void updatePreviewProgressBars(double ratio) {
+        for (Map.Entry<PlaygroundNode, UiComponent> entry : componentMap.entrySet()) {
+            if (entry.getValue() instanceof ProgressBar progressBar) {
+                PlaygroundNode node = entry.getKey();
+                progressBar.setValue(node.minimum + (node.maximum - node.minimum) * ratio);
+            }
+        }
+    }
+
     private int addTopButton(int x, String label, int buttonWidth, Runnable action) {
         addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
                 Component.literal(label), button -> action.run())
@@ -169,13 +208,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     }
 
     private void showToastDemo() {
-        int level = toastDemoIndex++ % 4;
-        switch (level) {
-            case 0 -> toastHost().show(Toast.info(Component.literal("Info toast preview")));
-            case 1 -> toastHost().show(Toast.success(Component.literal("Success toast preview")));
-            case 2 -> toastHost().show(Toast.warning(Component.literal("Warning toast preview")));
-            default -> toastHost().show(Toast.error(Component.literal("Error toast preview")));
-        }
+        UiPlaygroundToastDemo.dispatch(toastHost());
     }
 
     private void showModalDemo() {
@@ -249,13 +282,15 @@ public final class UiPlaygroundScreen extends UiScreen {
             graphics.drawString(font, paletteDragType, mouseX - 14, mouseY - 5, 0xFFFFFFFF, false);
         }
         if (previewMode) {
-            graphics.drawString(font, "Preview · clicks: " + clickCount, canvasX + 4, canvasY + 4,
+            graphics.drawString(font, "Preview · clicks: " + clickCount + " · pan: middle-drag",
+                    canvasX + 4, canvasY + 4,
                     THEME.palette().mutedText(), false);
         }
         graphics.disableScissor();
         renderToastOverlay(graphics, mouseX, mouseY);
         graphics.drawString(font, status, 8, height - 12, 0xFFD3DCE8, false);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
+        renderClosingModal(context);
         if (modal() != null) modal().render(context);
         UiComponent hovered = (modal() == null ? root() : modal()).hitTest(mouseX, mouseY);
         if (hovered != null && hovered.tooltip() != null) {
@@ -264,10 +299,12 @@ public final class UiPlaygroundScreen extends UiScreen {
     }
 
     private void drawCanvasGrid(GuiGraphics graphics) {
-        for (int x = canvasX + 16; x < canvasX + canvasWidth; x += 16) {
+        int gridOffsetX = Math.floorMod(previewPanX, 16);
+        int gridOffsetY = Math.floorMod(previewPanY, 16);
+        for (int x = canvasX + gridOffsetX + 16; x < canvasX + canvasWidth; x += 16) {
             graphics.fill(x, canvasY, x + 1, canvasY + canvasHeight, 0x182F3C4A);
         }
-        for (int y = canvasY + 16; y < canvasY + canvasHeight; y += 16) {
+        for (int y = canvasY + gridOffsetY + 16; y < canvasY + canvasHeight; y += 16) {
             graphics.fill(canvasX, y, canvasX + canvasWidth, y + 1, 0x182F3C4A);
         }
     }
@@ -286,48 +323,75 @@ public final class UiPlaygroundScreen extends UiScreen {
         UiPaint.text(context, "COMPONENTS", 8, canvasY + 7, THEME.palette().mutedText());
         UiPaint.text(context, "INSPECTOR", width - inspectorWidth + 7, canvasY + 7, THEME.palette().mutedText());
         int paletteTop = canvasY + 22;
-        int paletteBottom = canvasY + canvasHeight;
+        int paletteBottom = canvasY + canvasHeight - PALETTE_BOTTOM_PADDING;
         graphics.enableScissor(8, paletteTop, sidebarWidth, paletteBottom);
         int first = paletteScrollOffset;
-        int last = Math.min(PALETTE_TYPES.length,
-                first + Math.max(1, (canvasHeight - 22 + 19) / 20));
+        List<PaletteEntry> entries = paletteEntries();
+        int last = Math.min(entries.size(), first + visiblePaletteSlots());
         for (int i = first; i < last; i++) {
             int y = paletteTop + (i - first) * 20;
-            int color = paletteDragType != null && paletteDragType.equals(PALETTE_TYPES[i])
-                    ? THEME.palette().buttonHover() : THEME.palette().button();
+            PaletteEntry entry = entries.get(i);
+            boolean categoryRow = entry.type == null;
+            boolean collapsed = collapsedPaletteCategories.contains(entry.category);
+            int color = !categoryRow && paletteDragType != null && paletteDragType.equals(entry.type)
+                    ? THEME.palette().buttonHover()
+                    : categoryRow ? THEME.palette().panel() : THEME.palette().button();
             UiPaint.rect(context, new Bounds(8, y, sidebarWidth - 8, 17), color);
-            UiPaint.outline(context, new Bounds(8, y, sidebarWidth - 8, 17), THEME.palette().border());
-            graphics.drawString(font, PALETTE_TYPES[i], 12, y + 5, THEME.palette().text(), false);
+            if (categoryRow) {
+                graphics.drawString(font, (collapsed ? "> " : "v ") + entry.category,
+                        11, y + 5, THEME.palette().accent(), false);
+            } else {
+                UiPaint.outline(context, new Bounds(8, y, sidebarWidth - 8, 17), THEME.palette().border());
+                graphics.drawString(font, entry.type, 17, y + 5, THEME.palette().text(), false);
+            }
         }
         graphics.disableScissor();
         drawInspectorLabels(graphics, width - inspectorWidth + 7);
     }
 
     private void drawInspectorLabels(GuiGraphics graphics, int x) {
-        graphics.drawString(font, selected != null && selected.type.equals("itemcard")
-                ? "Item label" : selected != null && selected.type.equals("table")
-                ? "Headers (CSV)" : selected != null && selected.type.equals("radial")
-                ? "Segments (CSV)" : "Text / label", x, 48, 0xFFADB7C5, false);
-        graphics.drawString(font, selected != null && selected.type.equals("itemcard")
-                ? "Item ID" : "Color ARGB", x, 68, 0xFFADB7C5, false);
-        graphics.drawString(font, "X", x, 88, 0xFFADB7C5, false);
-        graphics.drawString(font, "Y", x + Math.max(36, (inspectorWidth - 16) / 2) + 5, 88, 0xFFADB7C5, false);
-        graphics.drawString(font, "Width", x, 108, 0xFFADB7C5, false);
-        graphics.drawString(font, "Height", x + Math.max(36, (inspectorWidth - 16) / 2) + 5, 108, 0xFFADB7C5, false);
-        graphics.drawString(font, "Gap", x, 128, 0xFFADB7C5, false);
-        if (selected != null) {
-            String rangeLabel = selected.type.equals("slider") ? "Min, max, step"
-                    : selected.type.equals("progressbar") ? "Min, max, value"
-                    : selected.usesItemStack() ? "Stack count"
-                    : selected.type.equals("table") ? "Table columns"
-                    : selected.supportsColumns() ? "Grid columns" : null;
-            if (rangeLabel != null) graphics.drawString(font, rangeLabel, x, 150, 0xFFADB7C5, false);
+        int labelColor = 0xFFADB7C5;
+        if (textField.visible) graphics.drawString(font, textLabel(), x,
+                textField.getY() - 10, labelColor, false);
+        if (colorField.visible) graphics.drawString(font, selected != null && selected.usesItemStack()
+                ? "Item ID" : "Color ARGB", x, colorField.getY() - 10, labelColor, false);
+        if (xField.visible || yField.visible) {
+            int pairX = x + Math.max(36, (inspectorWidth - 16) / 2) + 5;
+            graphics.drawString(font, "X", x, xField.getY() - 10, labelColor, false);
+            graphics.drawString(font, "Y", pairX, yField.getY() - 10, labelColor, false);
         }
+        if (widthField.visible || heightField.visible) {
+            int pairX = x + Math.max(36, (inspectorWidth - 16) / 2) + 5;
+            graphics.drawString(font, "Width", x, widthField.getY() - 10, labelColor, false);
+            graphics.drawString(font, "Height", pairX, heightField.getY() - 10, labelColor, false);
+        }
+        if (gapField.visible) graphics.drawString(font, "Gap", x, gapField.getY() - 10, labelColor, false);
+        if (rangeField.visible) graphics.drawString(font, rangeLabel(), x,
+                rangeField.getY() - 10, labelColor, false);
         if (selected != null) {
-            graphics.drawString(font, selected.type.toUpperCase(), x, 32, THEME.palette().accent(), false);
+            graphics.drawString(font, selected.type.toUpperCase(), x, canvasY + 22,
+                    THEME.palette().accent(), false);
         } else {
-            graphics.drawString(font, "No selection", x, 32, THEME.palette().mutedText(), false);
+            graphics.drawString(font, "No selection", x, canvasY + 22,
+                    THEME.palette().mutedText(), false);
         }
+    }
+
+    private String rangeLabel() {
+        if (selected == null) return "Value";
+        return selected.type.equals("slider") ? "Min, max, step"
+                : selected.type.equals("progressbar") ? "Min, max, value"
+                : selected.usesItemStack() ? "Stack count"
+                : selected.type.equals("table") ? "Table columns"
+                : selected.supportsColumns() ? "Grid columns" : "Value";
+    }
+
+    private String textLabel() {
+        if (selected == null) return "Text";
+        if (selected.type.equals("itemcard")) return "Item label";
+        if (selected.type.equals("table")) return "Headers (CSV)";
+        if (selected.type.equals("radial")) return "Segments (CSV)";
+        return "Text / label";
     }
 
     private void drawCanvasDebug(UiContext context) {
@@ -360,12 +424,28 @@ public final class UiPlaygroundScreen extends UiScreen {
             pressedPreviewComponent = null;
             return true;
         }
+        if (button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && inCanvas(mouseX, mouseY)) {
+            panningPreview = true;
+            lastPanX = (int) mouseX;
+            lastPanY = (int) mouseY;
+            pressedPreviewComponent = null;
+            return true;
+        }
         if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT && !previewMode && inPalette(mouseX, mouseY)) {
             setFocused(null);
             setDragging(false);
             int paletteIndex = paletteScrollOffset + (int) ((mouseY - canvasY - 22) / 20);
-            if (paletteIndex >= 0 && paletteIndex < PALETTE_TYPES.length) {
-                paletteDragType = PALETTE_TYPES[paletteIndex];
+            List<PaletteEntry> entries = paletteEntries();
+            if (paletteIndex >= 0 && paletteIndex < entries.size()) {
+                PaletteEntry entry = entries.get(paletteIndex);
+                if (entry.type == null) {
+                    if (!collapsedPaletteCategories.add(entry.category)) {
+                        collapsedPaletteCategories.remove(entry.category);
+                    }
+                    paletteScrollOffset = Math.min(paletteScrollOffset, maxPaletteScrollOffset());
+                    return true;
+                }
+                paletteDragType = entry.type;
                 lastMouseX = (int) mouseX;
                 lastMouseY = (int) mouseY;
                 return true;
@@ -420,6 +500,14 @@ public final class UiPlaygroundScreen extends UiScreen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (modal() != null) return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        if (panningPreview && button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            int currentX = (int) mouseX;
+            int currentY = (int) mouseY;
+            applyPreviewPan(currentX - lastPanX, currentY - lastPanY);
+            lastPanX = currentX;
+            lastPanY = currentY;
+            return true;
+        }
         if (previewMode && pressedPreviewComponent != null
                 && pressedPreviewComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         if (paletteDragType != null || draggingNode != null) {
@@ -435,8 +523,12 @@ public final class UiPlaygroundScreen extends UiScreen {
                             Math.min(8192, selected.height + deltaHeight));
                 } else if (selected.parent != null && selected.parent.isAbsolute()) {
                     Bounds parentBounds = componentMap.get(selected.parent).bounds();
-                    selected.x = clamp((int) mouseX - parentBounds.x() - dragOffsetX, -100_000, 100_000);
-                    selected.y = clamp((int) mouseY - parentBounds.y() - dragOffsetY, -100_000, 100_000);
+                    int parentPanX = selected.parent == document.root ? previewPanX : 0;
+                    int parentPanY = selected.parent == document.root ? previewPanY : 0;
+                    selected.x = clamp((int) mouseX - parentBounds.x() - parentPanX - dragOffsetX,
+                            -100_000, 100_000);
+                    selected.y = clamp((int) mouseY - parentBounds.y() - parentPanY - dragOffsetY,
+                            -100_000, 100_000);
                 }
                 rebuildCanvas();
             }
@@ -450,6 +542,10 @@ public final class UiPlaygroundScreen extends UiScreen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (modal() != null) return super.mouseReleased(mouseX, mouseY, button);
+        if (panningPreview && button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            panningPreview = false;
+            return true;
+        }
         if (paletteDragType != null) {
             if (inCanvas(mouseX, mouseY)) {
                 addNode(paletteDragType, (int) mouseX, (int) mouseY);
@@ -542,8 +638,11 @@ public final class UiPlaygroundScreen extends UiScreen {
         PlaygroundNode parent = dropContainerAt(mouseX, mouseY, null);
         if (parent == null) parent = document.root;
         Bounds parentBounds = componentMap.get(parent).bounds();
+        int parentPanX = parent == document.root ? previewPanX : 0;
+        int parentPanY = parent == document.root ? previewPanY : 0;
         PlaygroundNode node = PlaygroundNode.create(type,
-                mouseX - parentBounds.x() - 24, mouseY - parentBounds.y() - 12);
+                mouseX - parentBounds.x() - parentPanX - 24,
+                mouseY - parentBounds.y() - parentPanY - 12);
         if (!parent.isAbsolute()) {
             node.x = 0;
             node.y = 0;
@@ -562,8 +661,10 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (oldParent == null || !oldParent.removeChild(node)) return;
         if (newParent.isAbsolute()) {
             Bounds targetBounds = componentMap.get(newParent).bounds();
-            node.x = mouseX - targetBounds.x() - componentMap.get(node).bounds().width() / 2;
-            node.y = mouseY - targetBounds.y() - componentMap.get(node).bounds().height() / 2;
+            int parentPanX = newParent == document.root ? previewPanX : 0;
+            int parentPanY = newParent == document.root ? previewPanY : 0;
+            node.x = mouseX - targetBounds.x() - parentPanX - componentMap.get(node).bounds().width() / 2;
+            node.y = mouseY - targetBounds.y() - parentPanY - componentMap.get(node).bounds().height() / 2;
         } else {
             node.x = 0;
             node.y = 0;
@@ -601,13 +702,32 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     private boolean inPalette(double mouseX, double mouseY) {
         return mouseX >= 8 && mouseX < sidebarWidth && mouseY >= canvasY + 22
-                && mouseY < canvasY + canvasHeight;
+                && mouseY < canvasY + canvasHeight - PALETTE_BOTTOM_PADDING;
+    }
+
+    private int visiblePaletteSlots() {
+        int viewportHeight = canvasHeight - 22 - PALETTE_BOTTOM_PADDING;
+        return Math.max(1, (viewportHeight - 17) / 20 + 1);
     }
 
     private int maxPaletteScrollOffset() {
-        int visibleSlots = Math.max(1, (canvasHeight - 22 + 19) / 20);
-        return Math.max(0, PALETTE_TYPES.length - visibleSlots);
+        return Math.max(0, paletteEntries().size() - visiblePaletteSlots());
     }
+
+    private List<PaletteEntry> paletteEntries() {
+        List<PaletteEntry> entries = new ArrayList<>();
+        for (PaletteCategory category : PALETTE_CATEGORIES) {
+            entries.add(new PaletteEntry(category.name, null));
+            if (!collapsedPaletteCategories.contains(category.name)) {
+                for (String type : category.types) entries.add(new PaletteEntry(category.name, type));
+            }
+        }
+        return entries;
+    }
+
+    private record PaletteCategory(String name, List<String> types) { }
+
+    private record PaletteEntry(String category, String type) { }
 
     private void rebuildCanvas() {
         document.normalize();
@@ -648,10 +768,28 @@ public final class UiPlaygroundScreen extends UiScreen {
         for (UiComponent child : newChildren) newPlacements.put(child, rebuiltRoot.placementOf(child));
         for (UiComponent child : new ArrayList<>(canvas.children())) canvas.remove(child);
         for (UiComponent child : newChildren) {
-            canvas.addAt(child, newPlacements.get(child));
+            Bounds placement = newPlacements.get(child);
+            canvas.addAt(child, new Bounds(placement.x() + previewPanX, placement.y() + previewPanY,
+                    placement.width(), placement.height()));
         }
         rebuiltMap.put(document.root, canvas);
         return rebuiltMap;
+    }
+
+    private void applyPreviewPan(int deltaX, int deltaY) {
+        if (deltaX == 0 && deltaY == 0) return;
+        int nextPanX = clamp(previewPanX + deltaX, -100_000, 100_000);
+        int nextPanY = clamp(previewPanY + deltaY, -100_000, 100_000);
+        int appliedX = nextPanX - previewPanX;
+        int appliedY = nextPanY - previewPanY;
+        previewPanX = nextPanX;
+        previewPanY = nextPanY;
+        for (UiComponent child : canvas.children()) {
+            Bounds placement = canvas.placementOf(child);
+            canvas.setPlacement(child, new Bounds(placement.x() + appliedX, placement.y() + appliedY,
+                    placement.width(), placement.height()));
+        }
+        canvas.layout(font, THEME, new Bounds(canvasX, canvasY, canvasWidth, canvasHeight));
     }
 
     private void newDocument() {
@@ -798,11 +936,15 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     private void toggleMode() {
         previewMode = !previewMode;
+        panningPreview = false;
+        progressPreviewTicks = 0;
         setFocused(null);
         clearPreviewFocus();
         pressedPreviewComponent = null;
         paletteDragType = null;
         updateCanvasLayout(width, height);
+        rebuildCanvas();
+        if (previewMode) updatePreviewProgressBars(0);
         refreshInspector();
         modeButtonUpdate();
         for (var renderable : renderables) {
@@ -811,7 +953,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 if (label.equals("Apply") || label.equals("Remove")) button.active = !previewMode;
             }
         }
-        status = previewMode ? "Preview: componentes recebem mouse e teclado." : "Edição: arraste e ajuste os componentes.";
+        status = previewMode ? "Preview: interaja; botão do meio arrasta o canvas."
+                : "Edição: arraste componentes; botão do meio arrasta o canvas.";
     }
 
     private void modeButtonUpdate() {
@@ -865,19 +1008,30 @@ public final class UiPlaygroundScreen extends UiScreen {
                 || selected.type.equals("progressbar")
                 || selected.usesItemStack() || selected.supportsColumns());
         rangeField.setEditable(rangeEditable);
-        textField.setEditable(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
+        boolean textEditable = hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("iconbutton") || selected.type.equals("panel")
                 || selected.type.equals("card") || selected.type.equals("divider")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
                 || selected.usesItemStack() || selected.type.equals("table")
-                || selected.type.equals("radial")));
-        colorField.setEditable(hasSelection && (selected.type.equals("label") || selected.usesItemStack()));
-        gapField.setEditable(hasSelection && selected.isContainer() && !selected.isAbsolute());
-        xField.setEditable(hasSelection && selected.parent != null && selected.parent.isAbsolute());
-        yField.setEditable(hasSelection && selected.parent != null && selected.parent.isAbsolute());
+                || selected.type.equals("radial"));
+        textField.setEditable(textEditable);
+        textField.visible = textEditable && !previewMode;
+        boolean colorEditable = hasSelection && (selected.type.equals("label") || selected.usesItemStack());
+        colorField.setEditable(colorEditable);
+        colorField.visible = colorEditable && !previewMode;
+        boolean gapEditable = hasSelection && selected.isContainer() && !selected.isAbsolute();
+        gapField.setEditable(gapEditable);
+        gapField.visible = gapEditable && !previewMode;
+        boolean positionEditable = hasSelection && selected.parent != null && selected.parent.isAbsolute();
+        xField.setEditable(positionEditable);
+        yField.setEditable(positionEditable);
+        xField.visible = positionEditable && !previewMode;
+        yField.visible = positionEditable && !previewMode;
         widthField.setEditable(hasSelection);
         heightField.setEditable(hasSelection);
+        widthField.visible = hasSelection && !previewMode;
+        heightField.visible = hasSelection && !previewMode;
         if (horizontalAlignmentButton != null) {
             Alignment horizontal = hasSelection ? selected.horizontalAlignment : Alignment.START;
             Alignment vertical = hasSelection ? selected.verticalAlignment : Alignment.STRETCH;
@@ -885,7 +1039,9 @@ public final class UiPlaygroundScreen extends UiScreen {
             verticalAlignmentButton.setMessage(Component.literal(alignmentLabel("V", vertical)));
             boolean selectable = hasSelection && (selected.type.equals("toggle")
                     || selected.type.equals("chip") || selected.type.equals("card"));
-            enabledButton.setMessage(Component.literal(selected != null && selected.type.equals("spacer")
+            enabledButton.setMessage(Component.literal(selected != null && selected.type.equals("progressbar")
+                    ? "Format: " + (selected.percentage ? "Percent" : "Value")
+                    : selected != null && selected.type.equals("spacer")
                     ? "Flex: " + (selected.flexible ? "Yes" : "No")
                     : selectable ? "Selected: " + (selected.selected ? "Yes" : "No")
                     : "Enabled: " + (hasSelection && selected.enabled ? "Yes" : "No")));
@@ -899,7 +1055,8 @@ public final class UiPlaygroundScreen extends UiScreen {
             rangeField.visible = rangeEditable && !previewMode;
             enabledButton.visible = hasSelection && (selected.type.equals("button")
                     || selected.type.equals("iconbutton")
-                    || selected.type.equals("slider") || selected.usesItemStack()
+                    || selected.type.equals("slider") || selected.type.equals("progressbar")
+                    || selected.usesItemStack()
                     || selected.type.equals("spacer") || selectable) && !previewMode;
             enabledButton.active = enabledButton.visible && !previewMode;
         }
@@ -921,7 +1078,64 @@ public final class UiPlaygroundScreen extends UiScreen {
         for (var renderable : renderables) {
             if (renderable instanceof net.minecraft.client.gui.components.Button button) {
                 String label = button.getMessage().getString();
-                if (label.equals("Apply") || label.equals("Remove")) button.active = !previewMode;
+                if (label.equals("Apply") || label.equals("Remove")) {
+                    button.visible = !previewMode && hasSelection;
+                    button.active = !previewMode && hasSelection;
+                }
+            }
+        }
+        layoutInspectorFields();
+    }
+
+    private void layoutInspectorFields() {
+        int cursorY = canvasY + 36;
+        int fieldY;
+        if (textField.visible) {
+            fieldY = cursorY + 11;
+            textField.setY(fieldY);
+            cursorY += 32;
+        }
+        if (colorField.visible) {
+            fieldY = cursorY + 11;
+            colorField.setY(fieldY);
+            cursorY += 32;
+        }
+        if (xField.visible || yField.visible) {
+            fieldY = cursorY + 11;
+            xField.setY(fieldY);
+            yField.setY(fieldY);
+            cursorY += 32;
+        }
+        if (widthField.visible || heightField.visible) {
+            fieldY = cursorY + 11;
+            widthField.setY(fieldY);
+            heightField.setY(fieldY);
+            cursorY += 32;
+        }
+        if (gapField.visible) {
+            gapField.setY(cursorY + 11);
+            cursorY += 32;
+        }
+        if (rangeField.visible) {
+            rangeField.setY(cursorY + 11);
+            cursorY += 32;
+        }
+        int controlY = cursorY + 2;
+        if (horizontalAlignmentButton.visible) {
+            horizontalAlignmentButton.setY(controlY);
+            verticalAlignmentButton.setY(controlY);
+            controlY += 22;
+        }
+        if (enabledButton.visible) {
+            enabledButton.setY(controlY);
+            controlY += 22;
+        }
+        int actionY = height - 38;
+        for (var renderable : renderables) {
+            if (renderable instanceof net.minecraft.client.gui.components.Button button) {
+                String label = button.getMessage().getString();
+                if (label.equals("Apply")) button.setY(actionY);
+                else if (label.equals("Remove")) button.setY(actionY);
             }
         }
     }
@@ -1065,7 +1279,9 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     private void toggleEnabled() {
         if (selected == null) return;
-        if (selected.type.equals("spacer")) {
+        if (selected.type.equals("progressbar")) {
+            selected.percentage = !selected.percentage;
+        } else if (selected.type.equals("spacer")) {
             selected.flexible = !selected.flexible;
         } else if (selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("card")) {

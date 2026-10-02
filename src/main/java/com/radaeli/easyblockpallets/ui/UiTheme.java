@@ -11,7 +11,7 @@ public record UiTheme(UiPalette palette, UiTokens tokens) {
                     0xFF303A47, 0xFF3C4B5C, 0xFF26313D, 0xFF252A31,
                     0xFF8BCBFF),
             new UiTokens(Insets.all(8), Insets.all(6), 4, 8, 16,
-                    Insets.symmetric(10, 5), 64, 20));
+                    Insets.symmetric(10, 5), 64, 20, 140));
 
     public UiTheme {
         Objects.requireNonNull(palette, "palette");

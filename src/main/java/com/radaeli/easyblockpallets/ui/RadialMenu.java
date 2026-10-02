@@ -64,19 +64,27 @@ public final class RadialMenu extends UiComponent {
 
     @Override
     public void render(UiContext context) {
-        if (!open || !isEnabled() || segments.isEmpty()) return;
+        if (!isEnabled() || segments.isEmpty()) return;
+        double openProgress = animateFrom(context, "open", open ? 1 : 0, open ? 0 : 1);
+        if (openProgress <= 0) return;
         Bounds bounds = bounds();
         RadialGeometry.Point center = RadialGeometry.center(bounds);
         double outerRadius = RadialGeometry.outerRadius(bounds);
         if (outerRadius < 2) return;
         double innerRadius = RadialGeometry.innerRadius(outerRadius, DEAD_ZONE_FRACTION);
-        rasterizeSegments(context, center, innerRadius, outerRadius);
-        drawCenter(context, center, innerRadius);
-        drawSegmentContents(context, center, innerRadius, outerRadius);
+        double[] hoverProgress = new double[segments.size()];
+        for (int index = 0; index < segments.size(); index++) {
+            hoverProgress[index] = animate(context, "segment-hover-" + index,
+                    index == hoveredSegment ? 1 : 0);
+        }
+        rasterizeSegments(context, center, innerRadius, outerRadius, hoverProgress, openProgress);
+        drawCenter(context, center, innerRadius, openProgress);
+        drawSegmentContents(context, center, innerRadius, outerRadius, openProgress);
     }
 
     private void rasterizeSegments(UiContext context, RadialGeometry.Point center,
-                                   double innerRadius, double outerRadius) {
+                                   double innerRadius, double outerRadius, double[] hoverProgress,
+                                   double openProgress) {
         int top = Math.max(bounds().y(), (int) Math.ceil(center.y() - outerRadius));
         int bottom = Math.min(bounds().bottom() - 1, (int) Math.floor(center.y() + outerRadius));
         int outerSquared = (int) Math.ceil(outerRadius * outerRadius);
@@ -95,27 +103,29 @@ public final class RadialMenu extends UiComponent {
                         : RadialGeometry.segmentAt(x + 0.5, y + 0.5, center,
                                 innerRadius, outerRadius, segments.size());
                 if (segment != runSegment) {
-                    drawRun(context, y, runStart, x, runSegment);
+                    drawRun(context, y, runStart, x, runSegment, hoverProgress, openProgress);
                     runStart = segment < 0 ? -1 : x;
                     runSegment = segment;
                 }
             }
-            drawRun(context, y, runStart, right + 1, runSegment);
+            drawRun(context, y, runStart, right + 1, runSegment, hoverProgress, openProgress);
         }
     }
 
     private void drawRun(UiContext context, int y, int start, int endExclusive,
-                         int segmentIndex) {
+                         int segmentIndex, double[] hoverProgress, double openProgress) {
         if (segmentIndex < 0 || endExclusive <= start) return;
         RadialSegment segment = segments.get(segmentIndex);
         UiPalette palette = context.theme().palette();
+        int baseColor = (segmentIndex & 1) == 0 ? palette.card() : palette.button();
         int color = !segment.enabled() ? palette.disabled()
-                : segmentIndex == hoveredSegment ? palette.accent()
-                : (segmentIndex & 1) == 0 ? palette.card() : palette.button();
-        UiPaint.rect(context, new Bounds(start, y, endExclusive - start, 1), color);
+                : UiPaint.mixColor(baseColor, palette.accent(), hoverProgress[segmentIndex]);
+        UiPaint.rect(context, new Bounds(start, y, endExclusive - start, 1),
+                UiPaint.withAlpha(color, openProgress));
     }
 
-    private void drawCenter(UiContext context, RadialGeometry.Point center, double innerRadius) {
+    private void drawCenter(UiContext context, RadialGeometry.Point center, double innerRadius,
+                            double openProgress) {
         int radius = Math.max(1, (int) Math.floor(innerRadius));
         int top = Math.max(bounds().y(), (int) Math.ceil(center.y() - radius));
         int bottom = Math.min(bounds().bottom() - 1, (int) Math.floor(center.y() + radius));
@@ -123,12 +133,12 @@ public final class RadialMenu extends UiComponent {
             double dy = y + 0.5 - center.y();
             int span = (int) Math.floor(Math.sqrt(Math.max(0, radius * radius - dy * dy)));
             UiPaint.rect(context, new Bounds((int) Math.round(center.x()) - span, y,
-                    span * 2 + 1, 1), context.theme().palette().panel());
+                    span * 2 + 1, 1), UiPaint.withAlpha(context.theme().palette().panel(), openProgress));
         }
     }
 
     private void drawSegmentContents(UiContext context, RadialGeometry.Point center,
-                                     double innerRadius, double outerRadius) {
+                                     double innerRadius, double outerRadius, double openProgress) {
         double contentRadius = (innerRadius + outerRadius) * 0.55;
         for (int index = 0; index < segments.size(); index++) {
             RadialSegment segment = segments.get(index);
@@ -136,12 +146,19 @@ public final class RadialMenu extends UiComponent {
             int contentX = (int) Math.round(center.x() + Math.cos(angle) * contentRadius);
             int contentY = (int) Math.round(center.y() + Math.sin(angle) * contentRadius);
             UiPalette palette = context.theme().palette();
-            int color = segment.enabled() ? palette.text() : palette.mutedText();
+            int color = UiPaint.withAlpha(segment.enabled() ? palette.text() : palette.mutedText(),
+                    openProgress * context.opacity());
             ItemStack icon = segment.icon();
             int labelY = contentY - context.font().lineHeight / 2;
             if (!icon.isEmpty()) {
                 int iconY = contentY - 10;
+                context.graphics().pose().pushPose();
+                float iconScale = (float) (0.82 + 0.18 * openProgress);
+                context.graphics().pose().translate(contentX, iconY + 8, 0);
+                context.graphics().pose().scale(iconScale, iconScale, 1);
+                context.graphics().pose().translate(-contentX, -iconY - 8, 0);
                 context.graphics().renderItem(icon, contentX - 8, iconY);
+                context.graphics().pose().popPose();
                 labelY = contentY + 10;
             }
             String label = segment.label().getString();

@@ -19,6 +19,7 @@ public final class Table<T> extends UiComponent {
     private BiConsumer<Integer, T> onRowClicked = (index, row) -> {};
     private int selectedIndex = -1;
     private int scrollOffset;
+    private double visualScrollOffset;
     private int rowHeight = MIN_ROW_HEIGHT;
     private int headerHeight = MIN_ROW_HEIGHT;
     private int contentHeight;
@@ -109,20 +110,22 @@ public final class Table<T> extends UiComponent {
         int viewportY = headerBottom;
         int viewportHeight = Math.max(0, tableBounds.bottom() - viewportY);
         if (viewportHeight == 0) return;
+        visualScrollOffset = animate(context, "scroll-offset", scrollOffset);
         context.graphics().enableScissor(tableBounds.x(), viewportY, tableBounds.right(), tableBounds.bottom());
         try {
-            for (int index = firstVisibleRow(); index < rows.size(); index++) {
-                int y = viewportY + index * rowHeight - scrollOffset;
+            for (int index = firstVisibleRow(visualScrollOffset); index < rows.size(); index++) {
+                int y = (int) Math.round(viewportY + index * rowHeight - visualScrollOffset);
                 if (y >= tableBounds.bottom()) break;
                 Bounds rowBounds = new Bounds(tableBounds.x(), y, tableBounds.width(), rowHeight);
                 boolean hovered = rowBounds.contains(context.mouseX(), context.mouseY());
-                if (index == selectedIndex) {
-                    UiPaint.rect(context, rowBounds, context.theme().palette().accent());
-                } else if (hovered) {
-                    UiPaint.rect(context, rowBounds, context.theme().palette().buttonHover());
-                } else if ((index & 1) == 1) {
-                    UiPaint.rect(context, rowBounds, context.theme().palette().panel());
-                }
+                UiPalette palette = context.theme().palette();
+                double hoverProgress = animate(context, "row-hover-" + index, hovered ? 1 : 0);
+                double selectedProgress = animate(context, "row-selected-" + index,
+                        index == selectedIndex ? 1 : 0);
+                int base = (index & 1) == 1 ? palette.card() : palette.panel();
+                int fill = UiPaint.mixColor(UiPaint.mixColor(base, palette.buttonHover(), hoverProgress),
+                        palette.accent(), selectedProgress);
+                UiPaint.rect(context, rowBounds, fill);
                 drawCells(context, index, y, context.theme().palette().text());
                 UiPaint.divider(context, new Bounds(tableBounds.x(), y + rowHeight - 1,
                         tableBounds.width(), 1));
@@ -136,7 +139,7 @@ public final class Table<T> extends UiComponent {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isEnabled() || button != 0 || !bounds().contains(mouseX, mouseY)
                 || mouseY < bounds().y() + headerHeight || columns.isEmpty()) return false;
-        int index = (int) ((mouseY - bounds().y() - headerHeight + scrollOffset) / rowHeight);
+        int index = (int) ((mouseY - bounds().y() - headerHeight + visualScrollOffset) / rowHeight);
         if (index < 0 || index >= rows.size()) return true;
         selectedIndex = index;
         onRowClicked.accept(index, rows.get(index));
@@ -206,7 +209,8 @@ public final class Table<T> extends UiComponent {
             int textY = y + Math.max(0, (rowHeight - context.font().lineHeight) / 2);
             context.graphics().enableScissor(x, y, x + cellWidth, y + rowHeight);
             try {
-                context.graphics().drawString(context.font(), value, textX, textY, color, false);
+                context.graphics().drawString(context.font(), value, textX, textY,
+                        UiPaint.withAlpha(color, context.opacity()), false);
             } finally {
                 context.graphics().disableScissor();
             }
@@ -214,8 +218,8 @@ public final class Table<T> extends UiComponent {
         }
     }
 
-    private int firstVisibleRow() {
-        return Math.max(0, scrollOffset / rowHeight);
+    private int firstVisibleRow(double offset) {
+        return Math.max(0, (int) (offset / rowHeight));
     }
 
     private int maxScrollOffset() {

@@ -9,7 +9,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 - A tela só é registrada em execução de desenvolvimento. Ela não fica disponível no mod instalado em produção.
 - **Toast** percorre os quatro níveis de notificação. Avisos no canto superior direito somem após quatro segundos; clique esquerdo sobre um aviso o dispensa.
 - **Table** traz linhas de exemplo, seleção e rolagem vertical. No inspector, edite os cabeçalhos separados por vírgula e o número de colunas.
-- **ProgressBar** mostra progresso determinado. No inspetor, ajuste o range como `mínimo, máximo, valor`; a API permite altura, cores do trilho/preenchimento e formatter opcionais.
+- **ProgressBar** mostra progresso determinado. No inspetor, ajuste o range como `mínimo, máximo, valor` e alterne entre exibir o valor ou a porcentagem normalizada. Os valores são arredondados para inteiros; a porcentagem vai de `0%` a `100%`, independentemente do range. A API permite altura, cores do trilho/preenchimento, formatter e modo de porcentagem. No Preview, o exemplo percorre continuamente do mínimo ao máximo e de volta; ao retornar à edição, o valor configurado é restaurado.
 - **RadialMenu** começa com quatro segmentos. No inspetor, edite os rótulos separados por vírgulas; no Preview, pressione, arraste até um setor e solte para disparar a ação de demonstração. A área central cancela a seleção.
 - **Dialog** abre um `Modal` de demonstração. Ele centraliza sobre a tela, prende foco e input, fecha por Escape ou pelo botão interno e também aceita clique externo quando habilitado.
 
@@ -24,11 +24,11 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 
 ## Testar e salvar
 
-- Alterne entre **Preview** e **Edit** na barra superior. No Preview, a paleta e o inspetor desaparecem e o canvas ocupa a largura disponível; a barra superior continua acessível para voltar à edição ou fechar. Botões, toggles e chips respondem ao mouse, Tab/Shift+Tab, Enter e Espaço. `Tabs` troca de página por clique e pelas setas esquerda/direita quando focado. As interações atualizam o status/contador visível.
+- Alterne entre **Preview** e **Edit** na barra superior. No Preview, a paleta e o inspetor desaparecem e o canvas ocupa a largura disponível; a barra superior continua acessível para voltar à edição ou fechar. Arraste com o botão do meio nos modos **Edit** e **Preview** para mover o canvas; isso não altera as posições persistidas e a navegação é mantida ao alternar de modo. Botões, toggles e chips respondem ao mouse, Tab/Shift+Tab, Enter e Espaço. `Tabs` troca de página por clique e pelas setas esquerda/direita quando focado. As interações atualizam o status/contador visível.
 - Solte filhos dentro de `Tabs` para criar páginas; o texto do primeiro filho funciona como título da aba. Adicione duas ou mais páginas para navegar entre elas.
 - Campos de texto aceitam edição no Preview; `TextField` e `SearchField` mantêm o valor salvo no layout. O campo de busca exibe uma lupa, e ambos centralizam o texto verticalmente com pelo menos 8 px de padding à esquerda. `ScrollView` empilha os filhos verticalmente, rola pela roda do mouse e permite arrastar a scrollbar. `ClipStack` sobrepõe os filhos e recorta qualquer desenho fora do contêiner.
 - `Slider` pode ser ajustado por arraste ou teclado. No inspetor, edite a faixa como `mínimo, máximo, passo`; use passo `0` para valores contínuos.
-- `ProgressBar` é somente visual e mostra o valor atual formatado; seus valores podem ser editados como `mínimo, máximo, valor`.
+- `ProgressBar` é somente visual e mostra o valor atual arredondado sem casas decimais; seus valores podem ser editados como `mínimo, máximo, valor`. Use o botão `Format` no inspetor para mostrar a porcentagem normalizada de `0%` a `100%`. No Preview, o valor demonstra o ciclo contínuo de progresso.
 - Digite um nome na caixa superior e use **Save** para gravar em `config/easy_block_pallets/ui-playground/` dentro da pasta de jogo. **Load** abre uma lista dos layouts salvos; selecione um item e confirme.
 - Ao abrir o playground, o último layout salvo é carregado automaticamente. Se layouts antigos não tiverem registro de último salvamento, o arquivo JSON modificado mais recentemente é usado.
 - **New** cria um documento vazio. Os callbacks de demonstração são recriados localmente e nunca são gravados no JSON.

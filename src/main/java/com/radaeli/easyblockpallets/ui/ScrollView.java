@@ -6,6 +6,7 @@ import net.minecraft.client.gui.Font;
 public final class ScrollView extends UiContainer {
     private final int gap;
     private int scrollOffset;
+    private double visualScrollOffset;
     private int contentHeight;
     private Font lastFont;
     private UiTheme lastTheme;
@@ -59,7 +60,7 @@ public final class ScrollView extends UiContainer {
         if (sizes.length > 1) contentHeight += gap * (sizes.length - 1);
         scrollOffset = Math.min(scrollOffset, maxScrollOffset());
 
-        int y = bounds().y() - scrollOffset;
+        int y = (int) Math.round(bounds().y() - visualScrollOffset);
         for (int i = 0; i < children().size(); i++) {
             UiComponent child = children().get(i);
             UiSize size = sizes[i];
@@ -85,6 +86,10 @@ public final class ScrollView extends UiContainer {
 
     @Override
     public void render(UiContext context) {
+        double previousOffset = visualScrollOffset;
+        visualScrollOffset = animate(context, "scroll-offset", scrollOffset);
+        if (Math.abs(previousOffset - visualScrollOffset) >= 0.01
+                && lastFont != null && lastTheme != null) layoutChildren(lastFont, lastTheme);
         UiPaint.panel(context, bounds());
         context.graphics().enableScissor(bounds().x(), bounds().y(), bounds().right(), bounds().bottom());
         try {
@@ -99,9 +104,13 @@ public final class ScrollView extends UiContainer {
             int thumbHeight = scrollbarThumbHeight();
             int travel = bounds().height() - thumbHeight;
             int thumbY = bounds().y() + (travel == 0 ? 0
-                    : (int) ((long) travel * scrollOffset / maxScrollOffset()));
+                    : (int) Math.round(travel * visualScrollOffset / maxScrollOffset()));
+            boolean pointerOnScrollbar = bounds().contains(context.mouseX(), context.mouseY())
+                    && context.mouseX() >= bounds().right() - 8;
+            double shown = animate(context, "scrollbar-visible", pointerOnScrollbar || draggingScrollbar ? 1 : 0);
+            int thumbColor = UiPaint.withAlpha(context.theme().palette().accent(), 0.35 + shown * 0.65);
             UiPaint.rect(context, new Bounds(trackX - 1, thumbY, 4, thumbHeight),
-                    context.theme().palette().accent());
+                    thumbColor);
         }
     }
 

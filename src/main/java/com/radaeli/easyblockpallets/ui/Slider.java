@@ -98,7 +98,7 @@ public final class Slider extends UiComponent {
         UiPaint.rect(context, new Bounds(trackStartX, trackY - 2,
                 Math.max(0, knobX - trackStartX), 4), isEnabled() ? palette.accent() : palette.disabled());
         int knobColor = !isEnabled() ? palette.mutedText()
-                : dragging || hovered ? palette.buttonHover() : palette.text();
+                : UiPaint.mixColor(palette.text(), palette.buttonHover(), hovered || dragging ? 1 : 0);
         UiPaint.rect(context, new Bounds(knobX - 3, trackY - 6, 7, 12), knobColor);
         UiPaint.outline(context, new Bounds(knobX - 3, trackY - 6, 7, 12),
                 isFocused() ? palette.focus() : palette.border());

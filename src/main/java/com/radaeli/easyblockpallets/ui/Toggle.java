@@ -45,7 +45,9 @@ public final class Toggle extends UiComponent {
     public void render(UiContext context) {
         boolean hovered = isEnabled() && bounds().contains(context.mouseX(), context.mouseY());
         UiPalette palette = context.theme().palette();
-        UiPaint.toggle(context, bounds(), selected, hovered, isEnabled(), isFocused());
+        UiPaint.toggle(context, bounds(), animate(context, "selected", selected ? 1 : 0),
+                animate(context, "hover", hovered ? 1 : 0), isEnabled(),
+                animate(context, "focus", isFocused() ? 1 : 0));
         int labelX = bounds().x() + context.theme().tokens().buttonPadding().left() + 24
                 + context.theme().tokens().smallGap();
         int textY = bounds().centerY() - context.font().lineHeight / 2;

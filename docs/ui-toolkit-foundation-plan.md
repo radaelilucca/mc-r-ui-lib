@@ -207,6 +207,9 @@ do playground.
   intervalo e faixas inválidas/invertidas renderizam vazias.
 - Altura da barra e cores do trilho/preenchimento são configuráveis; formatter
   opcional recebe o valor atual e fornece um `Component` centralizado.
+- `setPercentage(true)` exibe o progresso normalizado como porcentagem inteira
+  de `0%` a `100%`; no playground, o modo padrão exibe o valor inteiro
+  arredondado, e o inspetor alterna entre os dois formatos.
 - Não captura mouse nem teclado e não usa timer ou animação própria.
 - No playground, o inspetor aceita `mínimo, máximo, valor` e o preview mostra
   o valor atual formatado.
