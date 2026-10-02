@@ -1,6 +1,7 @@
 package com.radaeli.easyblockpallets.ui;
 
 import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
 
 /** Base node for measurement, layout, rendering and input in a toolkit tree. */
 public abstract class UiComponent {
@@ -9,6 +10,7 @@ public abstract class UiComponent {
     private boolean enabled = true;
     private Integer preferredWidth;
     private Integer preferredHeight;
+    private Tooltip tooltip;
 
     public final UiSize measure(Font font, UiTheme theme, int maxWidth, int maxHeight) {
         UiSize intrinsic = measureIntrinsic(font, theme, maxWidth, maxHeight);
@@ -111,5 +113,20 @@ public abstract class UiComponent {
 
     public Bounds bounds() {
         return bounds;
+    }
+
+    /** Attaches vanilla-rendered tooltip content to this component. */
+    public UiComponent tooltip(Component... lines) {
+        this.tooltip = Tooltip.of(lines);
+        return this;
+    }
+
+    public UiComponent tooltip(Tooltip tooltip) {
+        this.tooltip = java.util.Objects.requireNonNull(tooltip, "tooltip");
+        return this;
+    }
+
+    public Tooltip tooltip() {
+        return tooltip;
     }
 }

@@ -2,7 +2,7 @@
 
 **Projeto hospedeiro:** Easy Block Pallets  
 **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
-**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar` e `RadialMenu` implementados; os componentes visuais estão disponíveis no playground; validação manual in-game pendente
+**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar`, `RadialMenu`, `Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` implementados; componentes visuais demonstráveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 

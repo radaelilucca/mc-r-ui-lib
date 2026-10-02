@@ -1995,9 +1995,15 @@ Implementados na API: `Label` (texto), `Button`, `Toggle`, `Tabs`, `Chip`,
 `Column`, `Stack`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`,
 `Toast`, `ToastHost` e `Table`.
 
-Ainda sem componente público próprio: `Panel`, `Card`, `IconButton`, `Divider`,
-`Tooltip` e `Modal`; helpers de pintura existentes não equivalem às APIs de
-composição.
+`Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` agora têm APIs
+públicas. Panel/Card compõem conteúdo com padding e frames temáticos; o consumidor
+escolhe o layout interno com Row/Column/Grid. Tooltip usa o renderer vanilla e
+Modal oferece overlay central, backdrop, foco contido, Escape e fechamento
+opcional por clique externo.
+
+No playground, Panel, Card, Divider e IconButton são nós persistíveis; o botão
+Dialog abre um Modal temporário para testar overlay e foco sem salvar callbacks
+ou estado de diálogo no JSON.
 
 O playground disponibiliza `Grid`, `Spacer`, `ItemCard` e `ItemGrid` pela
 paleta. `ItemCard` guarda o ID e a quantidade do item no documento, e pode ser
@@ -2087,16 +2093,16 @@ está implementado, e a próxima etapa é Dropdown / Select.
   fora ou após executar ação. Permitir setas/Enter e focar primeira ação válida.
 - Adiar submenus, atalhos globais e callbacks carregados de JSON.
 
-## 63.4. Componentes de apresentação e navegação ainda ausentes
+## 63.4. Componentes de apresentação e navegação
 
 | Componente | Plano técnico mínimo |
 |---|---|
-| `Panel` | `UiContainer` com fundo/borda temáticos, padding e filhos; usar estratégia explícita de layout, sem duplicar `UiPaint.panel`. |
-| `Card` | Compor título opcional e conteúdo, com hover/selecionado opcionais; estado de domínio fica com o consumidor. |
-| `IconButton` | Reusar ativação/foco de `Button`, desenhar ícone vanilla/sprite e exigir tooltip ou nome narrável. |
-| `Divider` | Componente sem input com orientação, espessura e cor temática; medir só a espessura. |
-| `Tooltip` | Wrapper fino das APIs vanilla ligado ao componente e com conteúdo `Component`; sem atraso/animação própria no primeiro corte. |
-| `Modal` | Overlay no host, backdrop, painel central, foco contido, Escape e opção de fechar por clique fora; não criar uma `Screen` por diálogo. |
+| `Panel` | **Implementado.** Frame temático com padding configurável; conteúdo interno recebe bounds e é composto por um layout explícito como Row/Column/Grid. |
+| `Card` | **Implementado.** Frame com título opcional e estados hover/selecionado; estado selecionado pertence ao consumidor. |
+| `IconButton` | **Implementado.** Ativação por mouse/teclado, foco e nome acessível/tooltip; ícone fornecido como `Component` vanilla. |
+| `Divider` | **Implementado.** Horizontal por padrão, orientação, espessura e cor configuráveis; sem input. |
+| `Tooltip` | **Implementado.** `UiComponent.tooltip(Component...)` renderiza pelo pipeline vanilla, sem atraso ou animação próprios. |
+| `Modal` | **Implementado.** Overlay central via `UiScreen.showModal`, backdrop, foco contido, Escape e fechamento externo opcional; não cria outra Screen. |
 | `TreeView` | IDs estáveis, hierarquia, expand/collapse, seleção e navegação por setas; desenhar apenas nós visíveis. |
 | `SplitPane` | Dois filhos, divisor arrastável, proporção e limites mínimos; atualizar bounds em resize e permitir ajuste por teclado. |
 | `ResizablePanel` | Handles nas bordas/cantos, captura de drag e clamp por dimensões mínima/máxima; persistência fica com consumidor. |
@@ -2134,8 +2140,7 @@ está implementado, e a próxima etapa é Dropdown / Select.
 
 ## 63.7. Sequência inicial depois dos seis primeiros
 
-Implementar como lotes revisáveis: `Panel`/`Card`/`Divider`/`IconButton`/
-`Tooltip`/`Modal`; `NotificationCenter` e `TreeView`; virtualização; `SplitPane`
+Implementar como lotes revisáveis: `NotificationCenter` e `TreeView`; virtualização; `SplitPane`
 e `ResizablePanel`; adaptadores de configuração; `ColorPicker`/`KeybindInput`;
 texto rico/Markdown; drag-and-drop/Graph; builders/binding/responsividade;
 animação; acessibilidade/narration; `UiContainerScreen` e debug tooling.

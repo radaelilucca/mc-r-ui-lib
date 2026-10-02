@@ -4,14 +4,18 @@ import com.radaeli.easyblockpallets.ui.AbsoluteLayout;
 import com.radaeli.easyblockpallets.ui.Alignment;
 import com.radaeli.easyblockpallets.ui.Bounds;
 import com.radaeli.easyblockpallets.ui.Button;
+import com.radaeli.easyblockpallets.ui.Card;
 import com.radaeli.easyblockpallets.ui.Chip;
 import com.radaeli.easyblockpallets.ui.ClipStack;
 import com.radaeli.easyblockpallets.ui.Column;
+import com.radaeli.easyblockpallets.ui.Divider;
+import com.radaeli.easyblockpallets.ui.IconButton;
 import com.radaeli.easyblockpallets.ui.Label;
 import com.radaeli.easyblockpallets.ui.Grid;
 import com.radaeli.easyblockpallets.ui.ItemCard;
 import com.radaeli.easyblockpallets.ui.ItemGrid;
 import com.radaeli.easyblockpallets.ui.ProgressBar;
+import com.radaeli.easyblockpallets.ui.Panel;
 import com.radaeli.easyblockpallets.ui.RadialMenu;
 import com.radaeli.easyblockpallets.ui.RadialSegment;
 import com.radaeli.easyblockpallets.ui.Row;
@@ -50,6 +54,12 @@ final class PlaygroundComponentFactory {
         UiComponent component = switch (node.type) {
             case "label" -> new Label(Component.literal(node.text), node.color);
             case "button" -> new Button(Component.literal(node.text), () -> onButtonClick.accept(node));
+            case "iconbutton" -> new IconButton(Component.literal(node.text),
+                    Component.literal(node.text.isBlank() ? "?" : node.text.substring(0, 1)),
+                    () -> onButtonClick.accept(node));
+            case "divider" -> new Divider(Divider.Orientation.HORIZONTAL, Math.max(1, node.height), null);
+            case "panel" -> new Panel(new Column(node.gap));
+            case "card" -> new Card(Component.literal(node.text), new Column(node.gap)).setSelected(node.selected);
             case "toggle" -> new Toggle(Component.literal(node.text), node.selected,
                     selected -> onSelectionChange.accept(node, selected));
             case "chip" -> new Chip(Component.literal(node.text), node.selected,
@@ -88,7 +98,23 @@ final class PlaygroundComponentFactory {
         }
         components.put(node, component);
 
-        if (component instanceof UiContainer container) {
+        if (component instanceof Panel panel) {
+            addChildren(node, components, onButtonClick, onSelectionChange, (UiContainer) panel.contentComponent());
+        } else if (component instanceof Card card) {
+            addChildren(node, components, onButtonClick, onSelectionChange, (UiContainer) card.contentComponent());
+        } else if (component instanceof UiContainer container) {
+            addChildren(node, components, onButtonClick, onSelectionChange, container);
+        }
+        if (!node.text.isBlank() && !node.type.equals("iconbutton") && !node.usesItemStack()) {
+            component.tooltip(Component.literal(node.text));
+        }
+        return component;
+    }
+
+    private static void addChildren(PlaygroundNode node, Map<PlaygroundNode, UiComponent> components,
+                                    Consumer<PlaygroundNode> onButtonClick,
+                                    BiConsumer<PlaygroundNode, Boolean> onSelectionChange,
+                                    UiContainer container) {
             for (PlaygroundNode childNode : node.children) {
                 UiComponent child = build(childNode, components, onButtonClick, onSelectionChange);
                 if (container instanceof AbsoluteLayout absolute) {
@@ -105,8 +131,6 @@ final class PlaygroundComponentFactory {
                 tabs.select(selectedTab);
                 tabs.setOnSelectionChanged(index -> node.selectedTab = index);
             }
-        }
-        return component;
     }
 
     static Map<PlaygroundNode, UiComponent> newComponentMap() {

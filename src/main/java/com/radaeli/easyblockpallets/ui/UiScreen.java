@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Thin bridge from a component tree to Minecraft's client Screen lifecycle. */
 public class UiScreen extends Screen {
@@ -16,6 +17,7 @@ public class UiScreen extends Screen {
     private final ToastHost toastHost = new ToastHost();
     private UiComponent focusedComponent;
     private UiComponent pressedComponent;
+    private Modal modal;
 
     public UiScreen(Component title, UiComponent root) {
         this(title, root, UiTheme.DARK);
@@ -31,6 +33,7 @@ public class UiScreen extends Screen {
     protected void init() {
         toastHost.layout(font, theme, new Bounds(0, 0, width, height));
         root.layout(font, theme, new Bounds(0, 0, width, height));
+        if (modal != null) modal.layoutInScreen(font, theme, width, height);
         clearToolkitFocus();
     }
 
@@ -46,6 +49,11 @@ public class UiScreen extends Screen {
         root.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
         renderToastOverlay(graphics, mouseX, mouseY);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
+        if (modal != null) modal.render(new UiContext(graphics, font, theme, mouseX, mouseY, width, height));
+        UiComponent hovered = activeRoot().hitTest(mouseX, mouseY);
+        if (hovered != null && hovered.tooltip() != null) {
+            graphics.renderTooltip(font, hovered.tooltip().lines(), Optional.empty(), mouseX, mouseY);
+        }
     }
 
     protected void renderToastOverlay(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -61,6 +69,17 @@ public class UiScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (modal != null) {
+            if (modal.shouldCloseFromOutsideClick(mouseX, mouseY)) {
+                closeModal();
+                return true;
+            }
+            UiComponent target = modal.hitTest(mouseX, mouseY);
+            clearToolkitFocus();
+            if (target != null && target != modal && target.isFocusable()) focus(target);
+            pressedComponent = target != null && target.mouseClicked(mouseX, mouseY, button) ? target : null;
+            return true;
+        }
         if (handleToastClick(mouseX, mouseY, button)) return true;
         UiComponent target = root.hitTest(mouseX, mouseY);
         clearToolkitFocus();
@@ -92,12 +111,20 @@ public class UiScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (modal != null) {
+            modal.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            return true;
+        }
         return root.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
                 || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (modal != null && keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            closeModal();
+            return true;
+        }
         if (focusedComponent != null && !focusedComponent.isEnabled()) {
             clearToolkitFocus();
         }
@@ -108,6 +135,7 @@ public class UiScreen extends Screen {
         if (focusedComponent != null && focusedComponent.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
+        if (modal != null) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -119,7 +147,7 @@ public class UiScreen extends Screen {
 
     private void moveFocus(boolean backwards) {
         List<UiComponent> focusable = new ArrayList<>();
-        root.visitFocusable(focusable::add);
+        activeRoot().visitFocusable(focusable::add);
         if (focusable.isEmpty()) {
             clearToolkitFocus();
             return;
@@ -144,6 +172,35 @@ public class UiScreen extends Screen {
             focusedComponent.setFocused(false);
             focusedComponent = null;
         }
+    }
+
+    private UiComponent activeRoot() {
+        return modal == null ? root : modal;
+    }
+
+    public void showModal(Modal modal) {
+        Objects.requireNonNull(modal, "modal");
+        closeModal();
+        this.modal = modal;
+        modal.layoutInScreen(font, theme, width, height);
+        pressedComponent = null;
+        clearToolkitFocus();
+        List<UiComponent> focusable = new ArrayList<>();
+        modal.visitFocusable(focusable::add);
+        if (!focusable.isEmpty()) focus(focusable.get(0));
+    }
+
+    public void closeModal() {
+        Modal closing = modal;
+        if (closing == null) return;
+        modal = null;
+        pressedComponent = null;
+        clearToolkitFocus();
+        closing.closed();
+    }
+
+    public Modal modal() {
+        return modal;
     }
 
     public UiComponent root() {

@@ -29,6 +29,14 @@ public final class UiPaint {
         outline(context, bounds, context.theme().palette().border());
     }
 
+    public static void card(UiContext context, Bounds bounds, boolean hovered,
+                            boolean selected, boolean focused) {
+        UiPalette palette = context.theme().palette();
+        int fill = selected ? palette.buttonPressed() : hovered ? palette.panel() : palette.card();
+        rect(context, bounds, fill);
+        outline(context, bounds, focused ? palette.focus() : selected ? palette.accent() : palette.border());
+    }
+
     public static void divider(UiContext context, Bounds bounds) {
         rect(context, bounds, context.theme().palette().divider());
     }

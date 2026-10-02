@@ -49,6 +49,21 @@ final class PlaygroundNode {
                 node.width = 100;
                 node.height = 22;
             }
+            case "iconbutton" -> {
+                node.text = "Settings";
+                node.width = 24;
+                node.height = 22;
+            }
+            case "divider" -> {
+                node.text = "Horizontal";
+                node.width = 120;
+                node.height = 1;
+            }
+            case "panel", "card" -> {
+                node.text = type.equals("card") ? "Card" : "Panel";
+                node.width = 160;
+                node.height = 90;
+            }
             case "toggle" -> {
                 node.text = "Toggle";
                 node.width = 112;
@@ -129,7 +144,8 @@ final class PlaygroundNode {
     }
 
     boolean isContainer() {
-        return type.equals("row") || type.equals("column")
+        return type.equals("panel") || type.equals("card")
+                || type.equals("row") || type.equals("column")
                 || type.equals("stack") || type.equals("absolute") || type.equals("tabs")
                 || type.equals("scroll") || type.equals("clip") || type.equals("grid")
                 || type.equals("itemgrid");

@@ -36,6 +36,7 @@ final class PlaygroundDocument {
         if (++count[0] > 512) throw new IllegalArgumentException("Layout has more than 512 components");
         if (node.children == null) node.children = new java.util.ArrayList<>();
         if (!(node.type.equals("label") || node.type.equals("button")
+                || node.type.equals("iconbutton") || node.type.equals("divider")
                 || node.type.equals("toggle") || node.type.equals("chip")
                 || node.type.equals("textfield") || node.type.equals("searchfield")
                 || node.type.equals("slider") || node.type.equals("progressbar")

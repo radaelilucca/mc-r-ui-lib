@@ -7,6 +7,10 @@ import com.radaeli.easyblockpallets.ui.AbsoluteLayout;
 import com.radaeli.easyblockpallets.ui.Alignment;
 import com.radaeli.easyblockpallets.ui.Bounds;
 import com.radaeli.easyblockpallets.ui.Button;
+import com.radaeli.easyblockpallets.ui.Column;
+import com.radaeli.easyblockpallets.ui.Label;
+import com.radaeli.easyblockpallets.ui.Modal;
+import com.radaeli.easyblockpallets.ui.Row;
 import com.radaeli.easyblockpallets.ui.UiComponent;
 import com.radaeli.easyblockpallets.ui.UiContext;
 import com.radaeli.easyblockpallets.ui.UiPaint;
@@ -41,7 +45,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     private static final int INSPECTOR_WIDTH = 168;
     private static final int TOOLBAR_HEIGHT = 28;
     private static final String[] PALETTE_TYPES = {
-            "label", "button", "toggle", "chip", "textfield", "searchfield",
+            "label", "button", "iconbutton", "panel", "card", "divider", "toggle", "chip", "textfield", "searchfield",
             "slider", "progressbar", "radial", "itemcard", "tabs", "scroll", "clip", "row", "column",
             "stack", "grid", "itemgrid", "table", "spacer", "absolute"
     };
@@ -114,7 +118,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         nameField.setMaxLength(40);
         nameField.setValue(document.name);
         cursorX += nameWidth + 3;
-        int topButtonWidth = Math.max(20, (width - cursorX - 21) / 6);
+        int topButtonWidth = Math.max(20, (width - cursorX - 24) / 7);
         String newLabel = compactToolbar ? "N" : "New";
         String saveLabel = compactToolbar ? "S" : "Save";
         String loadLabel = compactToolbar ? "L" : "Load";
@@ -126,6 +130,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         cursorX = addTopButton(cursorX, modeLabel, topButtonWidth, this::toggleMode);
         String toastLabel = compactToolbar ? "T" : "Toast";
         cursorX = addTopButton(cursorX, toastLabel, topButtonWidth, this::showToastDemo);
+        String modalLabel = compactToolbar ? "D" : "Dialog";
+        cursorX = addTopButton(cursorX, modalLabel, topButtonWidth, this::showModalDemo);
         addTopButton(cursorX, closeLabel, topButtonWidth, this::onClose);
 
         inspectorWidgets.clear();
@@ -170,6 +176,18 @@ public final class UiPlaygroundScreen extends UiScreen {
             case 2 -> toastHost().show(Toast.warning(Component.literal("Warning toast preview")));
             default -> toastHost().show(Toast.error(Component.literal("Error toast preview")));
         }
+    }
+
+    private void showModalDemo() {
+        clearPreviewFocus();
+        pressedPreviewComponent = null;
+        Column content = new Column(10);
+        content.add(new Label(Component.literal("Modal overlay with contained focus.")));
+        Row actions = new Row(6);
+        actions.add(new Button(Component.literal("Close"), this::closeModal));
+        content.add(actions);
+        showModal(new Modal(Component.literal("Presentation layer"), content, 240, 112)
+                .setCloseOnOutsideClick(true));
     }
 
     private void createInspectorWidgets(int screenWidth) {
@@ -238,6 +256,11 @@ public final class UiPlaygroundScreen extends UiScreen {
         renderToastOverlay(graphics, mouseX, mouseY);
         graphics.drawString(font, status, 8, height - 12, 0xFFD3DCE8, false);
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
+        if (modal() != null) modal().render(context);
+        UiComponent hovered = (modal() == null ? root() : modal()).hitTest(mouseX, mouseY);
+        if (hovered != null && hovered.tooltip() != null) {
+            graphics.renderTooltip(font, hovered.tooltip().lines(), java.util.Optional.empty(), mouseX, mouseY);
+        }
     }
 
     private void drawCanvasGrid(GuiGraphics graphics) {
@@ -331,6 +354,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (modal() != null) return super.mouseClicked(mouseX, mouseY, button);
         if (handleToastClick(mouseX, mouseY, button)) {
             clearPreviewFocus();
             pressedPreviewComponent = null;
@@ -395,6 +419,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (modal() != null) return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         if (previewMode && pressedPreviewComponent != null
                 && pressedPreviewComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         if (paletteDragType != null || draggingNode != null) {
@@ -406,7 +431,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                     int deltaWidth = (int) mouseX - lastMouseX;
                     int deltaHeight = (int) mouseY - lastMouseY;
                     selected.width = Math.max(12, Math.min(8192, selected.width + deltaWidth));
-                    selected.height = Math.max(12, Math.min(8192, selected.height + deltaHeight));
+                    selected.height = Math.max(selected.type.equals("divider") ? 1 : 12,
+                            Math.min(8192, selected.height + deltaHeight));
                 } else if (selected.parent != null && selected.parent.isAbsolute()) {
                     Bounds parentBounds = componentMap.get(selected.parent).bounds();
                     selected.x = clamp((int) mouseX - parentBounds.x() - dragOffsetX, -100_000, 100_000);
@@ -423,6 +449,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (modal() != null) return super.mouseReleased(mouseX, mouseY, button);
         if (paletteDragType != null) {
             if (inCanvas(mouseX, mouseY)) {
                 addNode(paletteDragType, (int) mouseX, (int) mouseY);
@@ -455,6 +482,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (modal() != null) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         if (!previewMode && inPalette(mouseX, mouseY) && scrollY != 0) {
             paletteScrollOffset = clamp(paletteScrollOffset - (int) Math.signum(scrollY),
                     0, maxPaletteScrollOffset());
@@ -465,6 +493,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (modal() != null) return super.keyPressed(keyCode, scanCode, modifiers);
         if (previewMode) {
             if (keyCode == GLFW.GLFW_KEY_TAB) {
                 movePreviewFocus((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
@@ -483,6 +512,7 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (modal() != null) return super.charTyped(codePoint, modifiers);
         if (previewMode && focusedPreviewComponent != null
                 && focusedPreviewComponent.charTyped(codePoint, modifiers)) return true;
         return super.charTyped(codePoint, modifiers);
@@ -808,6 +838,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         boolean hasSelection = selected != null;
         nameField.setEditable(!previewMode);
         textField.setValue(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
+                || selected.type.equals("iconbutton") || selected.type.equals("panel")
+                || selected.type.equals("card") || selected.type.equals("divider")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
                 || selected.usesItemStack() || selected.type.equals("table")
@@ -834,6 +866,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 || selected.usesItemStack() || selected.supportsColumns());
         rangeField.setEditable(rangeEditable);
         textField.setEditable(hasSelection && (selected.type.equals("label") || selected.type.equals("button")
+                || selected.type.equals("iconbutton") || selected.type.equals("panel")
+                || selected.type.equals("card") || selected.type.equals("divider")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
                 || selected.usesItemStack() || selected.type.equals("table")
@@ -849,7 +883,8 @@ public final class UiPlaygroundScreen extends UiScreen {
             Alignment vertical = hasSelection ? selected.verticalAlignment : Alignment.STRETCH;
             horizontalAlignmentButton.setMessage(Component.literal(alignmentLabel("H", horizontal)));
             verticalAlignmentButton.setMessage(Component.literal(alignmentLabel("V", vertical)));
-            boolean selectable = hasSelection && (selected.type.equals("toggle") || selected.type.equals("chip"));
+            boolean selectable = hasSelection && (selected.type.equals("toggle")
+                    || selected.type.equals("chip") || selected.type.equals("card"));
             enabledButton.setMessage(Component.literal(selected != null && selected.type.equals("spacer")
                     ? "Flex: " + (selected.flexible ? "Yes" : "No")
                     : selectable ? "Selected: " + (selected.selected ? "Yes" : "No")
@@ -863,6 +898,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             gapField.visible = gapContainer && !previewMode;
             rangeField.visible = rangeEditable && !previewMode;
             enabledButton.visible = hasSelection && (selected.type.equals("button")
+                    || selected.type.equals("iconbutton")
                     || selected.type.equals("slider") || selected.usesItemStack()
                     || selected.type.equals("spacer") || selectable) && !previewMode;
             enabledButton.active = enabledButton.visible && !previewMode;
@@ -918,7 +954,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 nextY = parseBoundedInt(yField.getValue(), -100_000, 100_000);
             }
             int nextWidth = parseBoundedInt(widthField.getValue(), 12, 8192);
-            int nextHeight = parseBoundedInt(heightField.getValue(), 12, 8192);
+            int nextHeight = parseBoundedInt(heightField.getValue(),
+                    selected.type.equals("divider") ? 1 : 12, 8192);
             int nextGap = selected.gap;
             int nextColumns = selected.columns;
             int nextItemCount = selected.itemCount;
@@ -949,6 +986,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 nextItemCount = parseBoundedInt(rangeField.getValue(), 1, 64);
             }
             if (selected.type.equals("label") || selected.type.equals("button")
+                    || selected.type.equals("iconbutton") || selected.type.equals("panel")
+                    || selected.type.equals("card") || selected.type.equals("divider")
                     || selected.type.equals("toggle") || selected.type.equals("chip")
                     || selected.type.equals("textfield") || selected.type.equals("searchfield")
                     || selected.usesItemStack() || selected.type.equals("table")
@@ -1028,7 +1067,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (selected == null) return;
         if (selected.type.equals("spacer")) {
             selected.flexible = !selected.flexible;
-        } else if (selected.type.equals("toggle") || selected.type.equals("chip")) {
+        } else if (selected.type.equals("toggle") || selected.type.equals("chip")
+                || selected.type.equals("card")) {
             selected.selected = !selected.selected;
         } else {
             selected.enabled = !selected.enabled;
