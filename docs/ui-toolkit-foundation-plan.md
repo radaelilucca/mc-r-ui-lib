@@ -1,20 +1,20 @@
-# Plano de ação — fundação do UI Toolkit
+# Plano de ação — fundação da R-Ui Lib
 
-**Projeto hospedeiro:** Easy Block Pallets  
-**Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21  
-**Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar`, `RadialMenu`, `Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` implementados; componentes visuais demonstráveis no playground; validação manual in-game pendente
+- **Projeto:** R-Ui Lib
+- **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21
+- **Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar`, `RadialMenu`, `Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` implementados; componentes visuais demonstráveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 
-O pedido do usuário é criar neste projeto uma biblioteca de UI, usar Logistics Network como inspiração, guardar seu JAR em `references/` e transformar o PRD anexado em um plano para a fundação e os primeiros primitives.
+O toolkit começou como código isolado neste projeto e agora é distribuído como a biblioteca R-Ui Lib. Logistics Network serviu como referência de comportamento e organização visual; seu JAR local permanece em `references/` apenas para consulta.
 
 O arquivo `minecraft-ui-toolkit-prd.md` é tratado como documento de requisitos em rascunho. Ele define a direção client-side, a camada pequena sobre as APIs do Minecraft, composição, temas e a lista ampla de componentes futuros. As fases e prioridades abaixo são uma proposta de execução para começar com uma base verificável; não são requisitos adicionais atribuídos ao PRD.
 
 ## Decisões recomendadas para o primeiro corte
 
 1. **Manter NeoForge e Minecraft 1.21.1**, alinhados ao build existente.
-2. **Manter a biblioteca dentro do projeto hospedeiro por enquanto**, em um pacote isolado `com.radaeli.easyblockpallets.ui`, com separação clara entre API pública e internals. Não abrir agora um segundo módulo Gradle; reavaliar a extração após uma tela real comprovar a API.
-3. **Impor dependência em uma direção:** código da UI não importa pacotes de domínio, blocos, rede ou regras do Easy Block Pallets. O mod pode consumir a UI; a UI não conhece o mod.
+2. **Distribuir a biblioteca como mod independente**, no pacote público `com.radaeli.ruilib.ui`, com separação clara entre API e detalhes internos.
+3. **Manter o toolkit independente do domínio:** a API não contém regras de negócio, networking ou lógica de outro mod consumidor.
 4. **Tratar toda integração com `Screen`, `GuiGraphics`, entrada e widgets como client-side.** O construtor comum do mod e a inicialização do servidor não devem carregar classes exclusivas do cliente.
 5. **Usar as APIs vanilla onde já resolvem o comportamento** — fonte, `ItemStack`, renderer de itens, tooltips e edição de texto — e controlar a aparência própria dos painéis e controles.
 6. **Não assumir que o JAR de Logistics Network fornece código reutilizável.** Ele é uma referência local de comportamento e organização visual; a página do projeto indica “All Rights Reserved”. Não copiar código, recursos ou identidade visual para o mod.
@@ -27,11 +27,11 @@ O arquivo `minecraft-ui-toolkit-prd.md` é tratado como documento de requisitos 
 - Fazer um spike curto nas APIs da versão configurada para confirmar lifecycle de `Screen`, render com `GuiGraphics`, coordenadas de GUI e clipping antes de abstrair essas áreas.
 - Manter o escopo sem dependências externas e sem suporte a outros loaders.
 
-**Saída:** uma decisão de integração que compile dentro do mod hospedeiro sem introduzir inicialização de UI no servidor.
+**Saída:** uma biblioteca instalável e consumível por outros mods, sem inicialização de UI no servidor dedicado.
 
 ### Etapa 1 — Geometria, tema e pintura
 
-**Estado:** implementada no pacote `com.radaeli.easyblockpallets.ui`.
+**Estado:** implementada no pacote `com.radaeli.ruilib.ui`.
 
 `Bounds` usa retângulos em coordenadas escaladas de GUI; tema e tokens são
 imutáveis; `UiContext`, `UiPaint` e `UiText` usam `GuiGraphics` e `Font` vanilla.
@@ -84,7 +84,7 @@ UiScreen screen = new UiScreen(Component.literal("Exemplo"), content);
 ```
 
 Toda classe que integra `Screen`, `Font` ou `GuiGraphics` fica no pacote client-side
-da biblioteca. A classe comum `EasyBlockPallets` não importa esse pacote. Layouts
+da biblioteca. A classe comum `RUiLib` não importa esse pacote. Layouts
 usam tamanhos intrínsecos medidos e alinhamentos fixos; não há flex-grow ou
 rolagem neste corte.
 
@@ -218,7 +218,7 @@ do playground.
 
 **Estado:** implementada como playground editável, acessível por F7 no ambiente
 de desenvolvimento. Layouts podem ser salvos como JSON em
-`config/easy_block_pallets/ui-playground/`; os detalhes de uso estão em
+`config/r_ui_lib/ui-playground/`; os detalhes de uso estão em
 [Playground do UI Toolkit](ui-toolkit-playground.md). A validação visual em
 execução do cliente e do servidor dedicado continua pendente.
 
@@ -248,13 +248,13 @@ houver consumidor concreto.
 - integração completa com `AbstractContainerScreen`;
 - Fabric, Forge 1.20.1 ou abstração cross-loader;
 - dependência runtime de framework de UI de terceiros;
-- decisão de publicação/distribuição da biblioteca independente.
+- publicação em uma plataforma de mods ou em um repositório Maven remoto específico; o projeto deixa os artefatos de release prontos e aceita um destino Maven configurado por ambiente.
 
 ## Riscos e decisões a revisitar
 
 - **Ciclo de input e foco:** conciliar a árvore própria com o ciclo de `Screen` sem duplicar eventos nem perder compatibilidade com widgets vanilla.
 - **Escala e clipping:** validar a convenção de coordenadas antes de implementar clipping aninhado ou scrollbar.
 - **Limite da API pública:** manter pequeno o conjunto exportado e mover renderers/helpers internos para `internal`.
-- **Extração futura:** considerar um subprojeto/artifact próprio quando um segundo mod for consumidor e a API estiver provada; até lá, manter isolamento por pacote e ausência de referências ao domínio.
-- **Nome e namespace de publicação:** permanecem abertos; este plano não fixa coordenadas Maven nem nome público definitivo.
+- **Consumo em produção:** mods que usam a API declaram R-Ui Lib como dependência client-side e distribuem sua instalação separadamente.
+- **Publicação remota:** a coordenada Maven está definida como `com.radaeli.ruilib:r-ui-lib-neoforge`; o endpoint de publicação é configurado pelo consumidor do repositório.
 

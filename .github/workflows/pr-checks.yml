@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build NeoForge mod
+    name: Build NeoForge library
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,4 +1,4 @@
-name: Build release tag
+name: Build R-Ui Lib release
 
 on:
   push:
@@ -44,19 +44,23 @@ jobs:
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           chmod +x ./gradlew
           ./gradlew -Pmod_version="${RELEASE_TAG#v}" build --no-daemon --no-parallel --console=plain
-      - name: Collect release JAR
+      - name: Collect library and source JARs
         shell: bash
         run: |
           set -euo pipefail
           version="${RELEASE_TAG#v}"
           mod_id="$(sed -nE 's/^mod_id=([^[:space:]]+)$/\1/p' gradle.properties)"
+          minecraft_version="$(sed -nE 's/^minecraft_version=([^[:space:]]+)$/\1/p' gradle.properties)"
           mkdir -p release-artifacts
           mapfile -t jars < <(find build/libs -maxdepth 1 -type f -name "*-${version}.jar" ! -name '*-sources.jar' -print)
+          mapfile -t sources < <(find build/libs -maxdepth 1 -type f -name "*-${version}-sources.jar" -print)
           test "${#jars[@]}" -eq 1
-          cp "${jars[0]}" "release-artifacts/${mod_id}-${version}-neoforge.jar"
+          test "${#sources[@]}" -eq 1
+          cp "${jars[0]}" "release-artifacts/${mod_id}-${minecraft_version}-neoforge-${version}.jar"
+          cp "${sources[0]}" "release-artifacts/${mod_id}-${minecraft_version}-neoforge-${version}-sources.jar"
       - uses: actions/upload-artifact@v4
         with:
-          name: neoforge-mod-${{ env.RELEASE_TAG }}
+          name: r-ui-lib-${{ env.RELEASE_TAG }}
           path: release-artifacts/
           if-no-files-found: error
       - name: Create or update the GitHub release
@@ -65,5 +69,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "NeoForge Mod $RELEASE_TAG"
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "R-Ui Lib $RELEASE_TAG"
           gh release upload "$RELEASE_TAG" release-artifacts/*.jar --clobber

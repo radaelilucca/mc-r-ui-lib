@@ -5,7 +5,9 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 ## Abrir
 
 - Inicie o cliente pelo `runClient` e pressione **F7**.
-- A tecla pode ser alterada em **Opções → Controles → Easy Block Pallets**.
+- Use **Theme** na barra superior para escolher **Dark** ou **Light**; a escolha altera o tema global enquanto o playground está aberto.
+- A tecla pode ser alterada em **Opções → Controles → R-Ui Lib**.
+- Em execução de desenvolvimento, **F6** exibe a sequência de toasts de teste sobre o jogo. Essa tecla também pode ser alterada nos controles.
 - A tela só é registrada em execução de desenvolvimento. Ela não fica disponível no mod instalado em produção.
 - **Toast** percorre os quatro níveis de notificação. Avisos no canto superior direito somem após quatro segundos; clique esquerdo sobre um aviso o dispensa.
 - **Table** traz linhas de exemplo, seleção e rolagem vertical. No inspector, edite os cabeçalhos separados por vírgula e o número de colunas.
@@ -16,7 +18,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 ## Montar um layout
 
 - Arraste um tipo da paleta à esquerda para o canvas. Ela contém `Label`, `Button`, `IconButton`, `Panel`, `Card`, `Divider`, `Toggle`, `Chip`, `TextField`, `SearchField`, `Slider`, `ProgressBar`, `RadialMenu`, `ItemCard`, `Tabs`, `ScrollView`, `ClipStack`, `Row`, `Column`, `Stack`, `Grid`, `ItemGrid`, `Table`, `Spacer` e `AbsoluteLayout`. A lista rola com a roda do mouse em janelas baixas. `ItemRenderer` é um helper exercitado por `ItemCard`, não um nó separado.
-- `Panel` e `Card` aceitam filhos; aninhe um `Row`, `Column` ou `Grid` para definir o layout interno. `Card` também oferece estado selecionado no inspetor. `IconButton` usa o primeiro caractere do nome como ícone e mostra o nome como tooltip. Tooltips usam o conteúdo textual do nó e o renderer vanilla. `Divider` é horizontal no playground.
+- `Panel` e `Card` aceitam filhos; aninhe um `Row`, `Column` ou `Grid` para definir o layout interno. `Card` também oferece estado selecionado no inspetor. `IconButton` usa o primeiro caractere do nome como ícone e mostra o nome em um tooltip tematizado. Tooltips de itens continuam usando o renderer vanilla. `Divider` é horizontal no playground.
 - Selecione um nó para editar seu texto, cor, posição, dimensões, espaçamento e alinhamento no inspetor; pressione **Apply** para aplicar os campos. Arraste o canto inferior direito para redimensionar; **Delete** ou **Remove** exclui o nó.
 - Solte um componente sobre `Row`, `Column` ou `Stack` para aninhá-lo. O contêiner passa a definir a posição dos filhos; X/Y ficam inativos e largura/altura continuam ajustáveis.
 - Solte `ItemCard` sobre `Grid` ou `ItemGrid` para compor uma grade. O inspetor edita as colunas e o espaçamento da grade, e o ID namespaced e a quantidade do item no cartão. `Spacer` pode ser fixo (ajuste Width/Height) ou flexível (botão Flex no inspetor), preenchendo o espaço livre em `Row`/`Column`.
@@ -29,7 +31,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 - Campos de texto aceitam edição no Preview; `TextField` e `SearchField` mantêm o valor salvo no layout. O campo de busca exibe uma lupa, e ambos centralizam o texto verticalmente com pelo menos 8 px de padding à esquerda. `ScrollView` empilha os filhos verticalmente, rola pela roda do mouse e permite arrastar a scrollbar. `ClipStack` sobrepõe os filhos e recorta qualquer desenho fora do contêiner.
 - `Slider` pode ser ajustado por arraste ou teclado. No inspetor, edite a faixa como `mínimo, máximo, passo`; use passo `0` para valores contínuos.
 - `ProgressBar` é somente visual e mostra o valor atual arredondado sem casas decimais; seus valores podem ser editados como `mínimo, máximo, valor`. Use o botão `Format` no inspetor para mostrar a porcentagem normalizada de `0%` a `100%`. No Preview, o valor demonstra o ciclo contínuo de progresso.
-- Digite um nome na caixa superior e use **Save** para gravar em `config/easy_block_pallets/ui-playground/` dentro da pasta de jogo. **Load** abre uma lista dos layouts salvos; selecione um item e confirme.
+- Digite um nome na caixa superior e use **Save** para gravar em `config/r_ui_lib/ui-playground/` dentro da pasta de jogo. **Load** abre uma lista dos layouts salvos; selecione um item e confirme.
 - Ao abrir o playground, o último layout salvo é carregado automaticamente. Se layouts antigos não tiverem registro de último salvamento, o arquivo JSON modificado mais recentemente é usado.
 - **New** cria um documento vazio. Os callbacks de demonstração são recriados localmente e nunca são gravados no JSON.
 - Erros de arquivo ou de formato aparecem na barra inferior da tela.

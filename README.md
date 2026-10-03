@@ -1,20 +1,25 @@
-# Easy Block Pallets
+# R-Ui Lib
 
-Minimal NeoForge foundation for Minecraft 1.21.1 and NeoForge 21.1.236.
+R-Ui Lib is a reusable UI library for Minecraft mods, with a compositional set
+of client-side components.
+
+| Minecraft | Loader | Java |
+| --- | --- | --- |
+| 1.21.1 | NeoForge 21.1.236+ | 21 |
+
+Install the library JAR in the client `mods` folder alongside mods that use it.
+Releases include a source JAR for developers. See the [consumer guide](docs/using-r-ui-lib.md)
+for adding the library to another mod project.
 
 ## Development
 
 - Build: `gradlew.bat build`
 - Run the client: `gradlew.bat runClient`
-- VS Code: use `Easy Block Pallets: Build` or `Easy Block Pallets: Run NeoForge Client`.
-
-The metadata in `src/main/resources/META-INF/neoforge.mods.toml` and
-`src/main/resources/pack.mcmeta` is expanded from `gradle.properties` during
-the build. GitHub Actions run PR builds, create semantic version tags from
-Conventional Commits merged to `main`, and publish a release for each tag.
+- Publish to the local Maven repository: `gradlew.bat publishToMavenLocal`
 
 ## Documentation
 
 - [Documentation index](docs/README.md)
-- [UI Toolkit foundation action plan](docs/ui-toolkit-foundation-plan.md)
-- [Local reference JAR notes](references/README.md)
+- [Using R-Ui Lib in another mod](docs/using-r-ui-lib.md)
+- [Toolkit foundation and API plan](docs/ui-toolkit-foundation-plan.md)
+- [Playground guide](docs/ui-toolkit-playground.md)

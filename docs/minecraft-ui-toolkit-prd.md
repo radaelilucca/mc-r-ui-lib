@@ -1,10 +1,10 @@
 # PRD — Minecraft UI Toolkit
 ## Biblioteca client-side de UI para mods Minecraft
 
-**Status:** Draft  
-**Target inicial:** Minecraft 1.21.1 + NeoForge  
-**Distribuição inicial:** módulo interno de um mod hospedeiro  
-**Objetivo futuro:** extração para projeto/biblioteca independente  
+- **Status:** Em evolução
+- **Target inicial:** Minecraft 1.21.1 + NeoForge
+- **Distribuição inicial:** mod de biblioteca independente R-Ui Lib
+- **Próximo objetivo:** consolidar a API e disponibilizar os artefatos de runtime e fontes para projetos consumidores
 **Referência arquitetural:** abordagem utilizada pelo Logistics Network — primitives e design system próprios construídos sobre as APIs vanilla de `Screen`, `GuiGraphics` e widgets do Minecraft.
 
 ---

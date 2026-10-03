@@ -2,7 +2,7 @@
 
 ## Base global
 
-As animações usam `UiTokens.transitionDurationMillis`, com padrão de **140 ms**. Um tema pode substituir esse valor ao construir `UiTokens`; o construtor anterior, sem duração, continua usando o padrão. As transições usam easing suave e o relógio monotônico compartilhado pelo `UiContext` de cada frame.
+As animações usam `UiTokens.motion`, com duração padrão de **140 ms** e easing `EASE_IN_OUT`. Um tema pode configurar a duração e escolher `LINEAR`, `EASE_IN_OUT` ou `EASE_OUT`; duração zero desativa as transições. O acessor `UiTokens.transitionDurationMillis()` permanece disponível por compatibilidade. As transições usam o relógio monotônico compartilhado pelo `UiContext` de cada frame.
 
 Estados de interação começam no valor inicial do componente. Desabilitar um controle mantém resposta imediata; hover, foco e mudanças de seleção usam a duração do tema.
 

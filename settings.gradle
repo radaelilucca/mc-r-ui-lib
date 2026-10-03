@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'easy-block-pallets'
+rootProject.name = 'r-ui-lib'

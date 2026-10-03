@@ -1,0 +1,5 @@
+{
+  "key.categories.r_ui_lib": "R-Ui Lib",
+  "key.r_ui_lib.open_ui_playground": "Abrir playground do UI Toolkit",
+  "key.r_ui_lib.dispatch_test_toast": "Exibir toast de teste do UI Toolkit"
+}

@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Easy Block Pallets: Build",
+      "label": "R-Ui Lib: Build",
       "type": "process",
       "command": "${workspaceFolder}\\gradlew.bat",
       "args": [
@@ -14,7 +14,7 @@
       "options": {
         "cwd": "${workspaceFolder}",
         "env": {
-          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-easyblockpallets"
+          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-r-ui-lib"
         }
       },
       "group": "build",
@@ -26,7 +26,7 @@
       }
     },
     {
-      "label": "Easy Block Pallets: Run NeoForge Client",
+      "label": "R-Ui Lib: Run NeoForge Client",
       "type": "process",
       "command": "${workspaceFolder}\\gradlew.bat",
       "args": [
@@ -38,7 +38,7 @@
       "options": {
         "cwd": "${workspaceFolder}",
         "env": {
-          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-easyblockpallets"
+          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-r-ui-lib"
         }
       },
       "group": "test",

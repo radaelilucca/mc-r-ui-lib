@@ -1,12 +1,13 @@
 plugins {
     id 'net.neoforged.moddev' version '2.0.144'
+    id 'maven-publish'
 }
 
 group = mod_group_id
 version = mod_version
 
 base {
-    archivesName = "${mod_id}-neoforge"
+    archivesName = 'r-ui-lib-neoforge'
 }
 
 java {
@@ -62,4 +63,59 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = java_version as int
+}
+
+publishing {
+    publications {
+        rUiLib(MavenPublication) {
+            from components.java
+            groupId = mod_group_id
+            artifactId = 'r-ui-lib-neoforge'
+            pom {
+                name = mod_name
+                description = mod_description
+                licenses {
+                    license {
+                        name = mod_license
+                        url = 'https://opensource.org/license/mit'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'radaeli'
+                        name = mod_authors
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        mavenLocal()
+
+        def releaseUrl = providers.gradleProperty('maven_release_url')
+                .orElse(providers.environmentVariable('MAVEN_RELEASE_URL'))
+                .getOrNull()
+        if (releaseUrl) {
+            maven {
+                name = 'release'
+                url = uri(releaseUrl)
+
+                def releaseUsername = providers.gradleProperty('maven_username')
+                        .orElse(providers.environmentVariable('MAVEN_USERNAME'))
+                        .getOrNull()
+                def releasePassword = providers.gradleProperty('maven_password')
+                        .orElse(providers.environmentVariable('MAVEN_PASSWORD'))
+                        .getOrNull()
+                if (releaseUsername || releasePassword) {
+                    credentials {
+                        username = releaseUsername
+                        password = releasePassword
+                    }
+                }
+            }
+        }
+    }
+
 }
