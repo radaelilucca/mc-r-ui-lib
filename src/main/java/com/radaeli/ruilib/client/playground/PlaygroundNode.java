@@ -19,6 +19,7 @@ final class PlaygroundNode {
     int columns = 3;
     int itemCount = 1;
     String itemId = "minecraft:diamond";
+    String itemSlotBackground = "theme";
     double minimum;
     double maximum = 100;
     double value = 50;

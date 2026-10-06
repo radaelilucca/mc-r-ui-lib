@@ -2,7 +2,7 @@
 
 - **Projeto:** R-Ui Lib
 - **Base confirmada:** Minecraft 1.21.1, NeoForge 21.1.236, Java 21
-- **Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar`, `RadialMenu`, `Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` implementados; componentes visuais demonstráveis no playground; validação manual in-game pendente
+- **Status:** etapas 1, 2 e 3, playground visual da etapa 4 e primitives `Toggle`, `Tabs`, `Chip`, `ClipStack`, `ScrollView`, `TextField`, `SearchField`, `Slider`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`, `InventoryGrid`, `Toast`, `ToastHost`, `Table`, `ProgressBar`, `RadialMenu`, `Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` implementados; componentes visuais demonstráveis no playground; validação manual in-game pendente
 
 ## Origem e limites
 
@@ -174,6 +174,13 @@ items.addItem(new ItemStack(Items.HOPPER), Component.literal("Entrada"));
 
 O toolkit continua sem importar classes do domínio do mod. A API recebe stacks
 já construídos pelo consumidor e mantém callbacks Java somente em memória.
+
+`InventoryGrid` também integra containers vanilla. A conveniência para o jogador
+mostra os 27 espaços principais e a hotbar separada por um destaque leve; grids
+de `Container` genérico permanecem row-major. `PICKER` copia stacks para o cursor
+visual da `UiScreen` e permite soltá-los em `ItemSlot` sem alterar a origem.
+`CUSTOM` emite snapshots de interação, deixando mutação e sincronização a cargo
+do mod consumidor.
 
 ### Toast notifications
 

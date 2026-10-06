@@ -77,6 +77,46 @@ O callback recebe uma cópia defensiva com quantidade normalizada para um item;
 referência com `setItemStack(stack)` e `clear()`. O usuário pode limpar o slot
 com clique direito, Delete ou Backspace quando ele está focado.
 
+O fundo segue o tema por padrão, mas pode receber uma cor local nomeada ou
+qualquer valor ARGB. `UiColor.named(...)` reconhece nomes básicos como `white`,
+`black`, `red`, `green`, `blue`, `yellow`, `cyan`, `magenta`, `orange`, `purple`,
+`pink`, `brown` e `gray`; `UiColor.hex(...)` aceita `#RRGGBB` e `#AARRGGBB`.
+
+```java
+itemSlot.setBackgroundColor(UiColor.named("black"));
+itemSlot.setBackgroundColor(UiColor.hex("#804080FF"));
+itemSlot.setBackgroundColor(0xFF204060); // ARGB arbitrário
+itemSlot.clearBackgroundColor(); // volta ao tema ativo
+```
+
+## Grade de inventário
+
+`InventoryGrid.playerInventory()` exibe o inventário principal e a hotbar do
+jogador local. A hotbar tem uma separação visual sutil. Para exibir outro
+`Container`, use `new InventoryGrid(container)`; por padrão, containers genéricos
+são apresentados em linhas, sem presumir onde começa uma hotbar.
+
+```java
+InventoryGrid inventory = InventoryGrid.playerInventory()
+        .setColumns(9)
+        .setSlotSize(18)
+        .setGap(2)
+        .setOnItemPicked(stack -> selectedFilter.set(stack));
+content.add(inventory);
+content.add(new ItemSlot().setOnItemChanged(selectedFilter::set));
+```
+
+No modo `PICKER` (padrão), clique esquerdo carrega uma cópia da pilha e clique
+direito uma unidade. Clique novamente no slot de origem para cancelar, ou solte
+o item em um `ItemSlot` da mesma `UiScreen`. A grade não remove nem altera itens;
+`ItemSlot` guarda uma referência com contagem normalizada para um.
+
+Use `setInteractionMode(InventoryGrid.InteractionMode.CUSTOM)` para receber
+eventos de pressionar, arrastar e soltar por `setOnInteraction(...)`. Cada evento
+inclui ação, índice, botão e uma cópia defensiva do stack; o consumidor decide
+como alterar o container e sincronizar essas operações com o servidor. A grade
+não escreve diretamente em containers no modo customizado.
+
 ## Maven local ou repositório Maven
 
 Para consumir pelo Maven local nesta máquina, publique o projeto com:

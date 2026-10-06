@@ -3,9 +3,11 @@ package com.radaeli.ruilib.client.compat.jei;
 import com.radaeli.ruilib.ui.ItemSlot;
 import com.radaeli.ruilib.ui.UiComponent;
 import com.radaeli.ruilib.ui.UiScreen;
+import com.radaeli.ruilib.client.example.ItemSlotExampleScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
+import mezz.jei.api.gui.handlers.IGuiProperties;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import net.minecraft.client.renderer.Rect2i;
@@ -28,6 +30,45 @@ public final class RUiLibJeiPlugin implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGuiScreenHandler(ItemSlotExampleScreen.class, screen -> {
+            var bounds = screen.jeiGuiBounds();
+            return new IGuiProperties() {
+                @Override
+                public Class<? extends net.minecraft.client.gui.screens.Screen> screenClass() {
+                    return ItemSlotExampleScreen.class;
+                }
+
+                @Override
+                public int guiLeft() {
+                    return bounds.x();
+                }
+
+                @Override
+                public int guiTop() {
+                    return bounds.y();
+                }
+
+                @Override
+                public int guiXSize() {
+                    return bounds.width();
+                }
+
+                @Override
+                public int guiYSize() {
+                    return bounds.height();
+                }
+
+                @Override
+                public int screenWidth() {
+                    return screen.width;
+                }
+
+                @Override
+                public int screenHeight() {
+                    return screen.height;
+                }
+            };
+        });
         registration.addGhostIngredientHandler(UiScreen.class, new IGhostIngredientHandler<>() {
             @Override
             public <I> List<Target<I>> getTargetsTyped(UiScreen screen,

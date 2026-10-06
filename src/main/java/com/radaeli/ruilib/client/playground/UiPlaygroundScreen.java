@@ -101,6 +101,7 @@ public final class UiPlaygroundScreen extends UiScreen {
     private EditBox heightField;
     private EditBox gapField;
     private EditBox rangeField;
+    private EditBox itemSlotBackgroundField;
     private final List<AbstractWidget> inspectorWidgets = new ArrayList<>();
     private net.minecraft.client.gui.components.Button horizontalAlignmentButton;
     private net.minecraft.client.gui.components.Button verticalAlignmentButton;
@@ -260,6 +261,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         int fieldWidth = Math.max(34, editorInspectorWidth - 11);
         textField = createField(panelX, 58, fieldWidth, "Component text");
         colorField = createField(panelX, 78, fieldWidth, "ARGB color");
+        itemSlotBackgroundField = createField(panelX, 98, fieldWidth, "theme, color name or #HEX");
         int halfWidth = Math.max(32, (fieldWidth - 5) / 2);
         xField = createField(panelX, 98, halfWidth, "X");
         yField = createField(panelX + halfWidth + 5, 98, halfWidth, "Y");
@@ -390,6 +392,8 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (textField.visible) UiPaint.text(context, textLabel(), x, textField.getY() - 10, labelColor, UiTextStyle.SMALL);
         if (colorField.visible) UiPaint.text(context, selected != null && selected.usesItemStack()
                 ? "Item ID" : "Color ARGB", x, colorField.getY() - 10, labelColor, UiTextStyle.SMALL);
+        if (itemSlotBackgroundField.visible) UiPaint.text(context, "Background color",
+                x, itemSlotBackgroundField.getY() - 10, labelColor, UiTextStyle.SMALL);
         if (xField.visible || yField.visible) {
             int pairX = x + Math.max(36, (inspectorWidth - 16) / 2) + 5;
             UiPaint.text(context, "X", x, xField.getY() - 10, labelColor, UiTextStyle.SMALL);
@@ -1033,6 +1037,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 ? selected.text : "");
         colorField.setValue(!hasSelection ? "FFFFFFFF"
                 : selected.usesItemStack() ? selected.itemId : String.format("%08X", selected.color));
+        itemSlotBackgroundField.setValue(hasSelection && selected.type.equals("itemslot")
+                && selected.itemSlotBackground != null ? selected.itemSlotBackground : "theme");
         xField.setValue(hasSelection ? Integer.toString(selected.x) : "0");
         yField.setValue(hasSelection ? Integer.toString(selected.y) : "0");
         widthField.setValue(hasSelection ? Integer.toString(selected.width) : "0");
@@ -1063,6 +1069,9 @@ public final class UiPlaygroundScreen extends UiScreen {
         boolean colorEditable = hasSelection && (selected.type.equals("label") || selected.usesItemStack());
         colorField.setEditable(colorEditable);
         colorField.visible = colorEditable && !previewMode;
+        boolean itemSlotBackgroundEditable = hasSelection && selected.type.equals("itemslot");
+        itemSlotBackgroundField.setEditable(itemSlotBackgroundEditable);
+        itemSlotBackgroundField.visible = itemSlotBackgroundEditable && !previewMode;
         boolean gapEditable = hasSelection && selected.isContainer() && !selected.isAbsolute();
         gapField.setEditable(gapEditable);
         gapField.visible = gapEditable && !previewMode;
@@ -1107,6 +1116,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             nameField.setEditable(false);
             textField.setEditable(false);
             colorField.setEditable(false);
+            itemSlotBackgroundField.setEditable(false);
             xField.setEditable(false);
             yField.setEditable(false);
             widthField.setEditable(false);
@@ -1141,6 +1151,10 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (colorField.visible) {
             fieldY = cursorY + 11;
             colorField.setY(fieldY);
+            cursorY += 32;
+        }
+        if (itemSlotBackgroundField.visible) {
+            itemSlotBackgroundField.setY(cursorY + 11);
             cursorY += 32;
         }
         if (xField.visible || yField.visible) {
@@ -1194,6 +1208,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             String nextText = textField.getValue();
             int nextColor = selected.color;
             String nextItemId = selected.itemId;
+            String nextItemSlotBackground = selected.itemSlotBackground;
             if (selected.usesItemStack()) {
                 nextItemId = colorField.getValue().trim();
                 if (selected.type.equals("itemcard") && !PlaygroundComponentFactory.itemExists(nextItemId)) {
@@ -1207,6 +1222,11 @@ public final class UiPlaygroundScreen extends UiScreen {
                 String color = colorField.getValue().replace("#", "");
                 if (color.length() > 8) throw new IllegalArgumentException("Use até oito dígitos ARGB");
                 nextColor = (int) Long.parseLong(color, 16);
+            }
+            if (selected.type.equals("itemslot")) {
+                nextItemSlotBackground = itemSlotBackgroundField.getValue().trim();
+                PlaygroundComponentFactory.parseItemSlotBackground(nextItemSlotBackground);
+                if (nextItemSlotBackground.isBlank()) nextItemSlotBackground = "theme";
             }
             int nextX = selected.x;
             int nextY = selected.y;
@@ -1256,6 +1276,7 @@ public final class UiPlaygroundScreen extends UiScreen {
                 selected.text = nextText;
             }
             selected.itemId = nextItemId;
+            selected.itemSlotBackground = nextItemSlotBackground;
             selected.itemCount = nextItemCount;
             selected.columns = nextColumns;
             selected.color = nextColor;

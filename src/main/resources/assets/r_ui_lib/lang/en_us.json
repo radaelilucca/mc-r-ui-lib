@@ -1,5 +1,12 @@
 {
   "key.categories.r_ui_lib": "R-Ui Lib",
   "key.r_ui_lib.open_ui_playground": "Open UI Toolkit Playground",
-  "key.r_ui_lib.dispatch_test_toast": "Show UI Toolkit Test Toast"
+  "key.r_ui_lib.dispatch_test_toast": "Show UI Toolkit Test Toast",
+  "key.r_ui_lib.open_item_slot_example": "Open Item Slot Example",
+  "screen.r_ui_lib.item_slot_example": "R-Ui Lib Item Slot Example",
+  "screen.r_ui_lib.item_slot_example.title": "Item slot test bench",
+  "screen.r_ui_lib.item_slot_example.instructions": "Click an inventory item to pick it up, then click a slot or release over it. JEI drag-and-drop also works.",
+  "screen.r_ui_lib.item_slot_example.filter_a": "Filter A",
+  "screen.r_ui_lib.item_slot_example.filter_b": "Filter B",
+  "screen.r_ui_lib.item_slot_example.inventory": "Player inventory"
 }

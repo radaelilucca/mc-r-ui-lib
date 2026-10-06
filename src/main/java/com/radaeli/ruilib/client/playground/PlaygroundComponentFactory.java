@@ -32,6 +32,7 @@ import com.radaeli.ruilib.ui.Toggle;
 import com.radaeli.ruilib.ui.Spacer;
 import com.radaeli.ruilib.ui.UiComponent;
 import com.radaeli.ruilib.ui.UiContainer;
+import com.radaeli.ruilib.ui.UiColor;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -161,10 +162,25 @@ final class PlaygroundComponentFactory {
         ItemStack stack = node.itemId == null || node.itemId.isBlank() ? ItemStack.EMPTY
                 : new ItemStack(resolveItem(node.itemId)
                         .orElseThrow(() -> new IllegalArgumentException("Unknown item: " + node.itemId)));
-        return new ItemSlot(stack).setOnItemChanged(next -> {
+        ItemSlot itemSlot = new ItemSlot(stack);
+        UiColor background = parseItemSlotBackground(node.itemSlotBackground);
+        if (background != null) itemSlot.setBackgroundColor(background);
+        return itemSlot.setOnItemChanged(next -> {
             node.itemId = next.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(next.getItem()).toString();
             onChanged.accept(node);
         });
+    }
+
+    static UiColor parseItemSlotBackground(String value) {
+        if (value == null) return null;
+        String color = value.trim();
+        if (color.isBlank() || color.equalsIgnoreCase("theme") || color.equalsIgnoreCase("default")) {
+            return null;
+        }
+        if (color.startsWith("#") || color.matches("(?i)[0-9a-f]{6}([0-9a-f]{2})?")) {
+            return UiColor.hex(color);
+        }
+        return UiColor.named(color);
     }
 
     private static Table<String[]> createTable(PlaygroundNode node, Consumer<PlaygroundNode> onClick) {

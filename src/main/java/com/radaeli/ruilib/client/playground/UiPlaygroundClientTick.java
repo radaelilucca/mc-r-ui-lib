@@ -1,6 +1,7 @@
 package com.radaeli.ruilib.client.playground;
 
 import com.radaeli.ruilib.neoforge.RUiLib;
+import com.radaeli.ruilib.client.example.ItemSlotExampleScreen;
 import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -25,6 +26,10 @@ public final class UiPlaygroundClientTick {
         if (UiPlaygroundKeyRegistration.OPEN_PLAYGROUND.consumeClick()
                 && !(minecraft.screen instanceof UiPlaygroundScreen)) {
             minecraft.setScreen(new UiPlaygroundScreen());
+        }
+        if (UiPlaygroundKeyRegistration.OPEN_ITEM_SLOT_EXAMPLE.consumeClick()
+                && !(minecraft.screen instanceof ItemSlotExampleScreen)) {
+            minecraft.setScreen(new ItemSlotExampleScreen());
         }
     }
 }

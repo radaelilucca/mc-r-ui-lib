@@ -5,6 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -15,6 +16,7 @@ public final class ItemSlot extends UiComponent {
     private static final int ICON_SIZE = 16;
 
     private ItemStack itemStack = ItemStack.EMPTY;
+    private UiColor backgroundColor;
     private Consumer<ItemStack> onItemChanged = ignored -> { };
     private boolean pressed;
     private boolean dropTargetActive;
@@ -65,6 +67,27 @@ public final class ItemSlot extends UiComponent {
         return this;
     }
 
+    /** Overrides the theme background color; an empty value keeps the active theme default. */
+    public Optional<UiColor> backgroundColor() {
+        return Optional.ofNullable(backgroundColor);
+    }
+
+    public ItemSlot setBackgroundColor(UiColor backgroundColor) {
+        this.backgroundColor = Objects.requireNonNull(backgroundColor, "backgroundColor");
+        return this;
+    }
+
+    /** Sets a custom ARGB background color. */
+    public ItemSlot setBackgroundColor(int argb) {
+        return setBackgroundColor(new UiColor(argb));
+    }
+
+    /** Removes the local override and returns to the active theme's input background. */
+    public ItemSlot clearBackgroundColor() {
+        backgroundColor = null;
+        return this;
+    }
+
     /** Allows a custom drag integration to show that this slot can accept the dragged item. */
     public ItemSlot setDropTargetActive(boolean active) {
         dropTargetActive = active;
@@ -86,7 +109,8 @@ public final class ItemSlot extends UiComponent {
         double hover = animate(context, "hover", hovered ? 1 : 0);
         double focused = animate(context, "focus", isFocused() ? 1 : 0);
         double pressedAmount = animate(context, "press", pressed ? 1 : 0);
-        UiPaint.input(context, bounds(), hover, isEnabled(), focused);
+        UiPaint.input(context, bounds(), hover, isEnabled(), focused,
+                backgroundColor == null ? null : backgroundColor.argb());
         if (dropTargetActive) {
             UiPaint.roundedOutline(context, bounds(), context.theme().palette().accent(),
                     context.theme().tokens().radii().medium());

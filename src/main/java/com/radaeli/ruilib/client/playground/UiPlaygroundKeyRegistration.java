@@ -27,6 +27,13 @@ public final class UiPlaygroundKeyRegistration {
             GLFW.GLFW_KEY_F6,
             "key.categories.r_ui_lib"
     );
+    static final KeyMapping OPEN_ITEM_SLOT_EXAMPLE = new KeyMapping(
+            "key.r_ui_lib.open_item_slot_example",
+            KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
+            "key.categories.r_ui_lib"
+    );
 
     private UiPlaygroundKeyRegistration() {
     }
@@ -36,6 +43,7 @@ public final class UiPlaygroundKeyRegistration {
         if (!FMLEnvironment.production) {
             event.register(OPEN_PLAYGROUND);
             event.register(DISPATCH_TEST_TOAST);
+            event.register(OPEN_ITEM_SLOT_EXAMPLE);
         }
     }
 }

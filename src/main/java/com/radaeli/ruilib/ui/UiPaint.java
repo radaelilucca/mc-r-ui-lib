@@ -187,10 +187,19 @@ public final class UiPaint {
 
     public static void input(UiContext context, Bounds bounds, double hovered,
                              boolean enabled, double focused) {
+        input(context, bounds, hovered, enabled, focused, null);
+    }
+
+    public static void input(UiContext context, Bounds bounds, double hovered,
+                             boolean enabled, double focused, Integer backgroundOverride) {
         UiPalette palette = context.theme().palette();
         int radius = context.theme().tokens().radii().small();
+        int background = backgroundOverride == null ? palette.card()
+                : withAlpha(backgroundOverride, context.opacity());
+        int hoveredBackground = backgroundOverride == null ? palette.panel()
+                : withAlpha(palette.panel(), context.opacity());
         roundedRect(context, bounds, !enabled ? palette.disabled()
-                : mixColor(palette.card(), palette.panel(), hovered), radius);
+                : mixColor(background, hoveredBackground, hovered), radius);
         roundedOutline(context, bounds, mixColor(palette.border(), palette.focus(), focused), radius);
     }
 

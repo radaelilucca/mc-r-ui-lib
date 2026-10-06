@@ -5,6 +5,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 ## Abrir
 
 - Inicie o cliente pelo `runClient` e pressione **F7**.
+- Pressione **F8** para abrir a tela de exemplo do `ItemSlot`, com `InventoryGrid` e integração de arraste do JEI. O atalho é configurável em Controles.
 - Use **Theme** na barra superior para escolher **Dark** ou **Light**; a escolha altera o tema global enquanto o playground está aberto.
 - A tecla pode ser alterada em **Opções → Controles → R-Ui Lib**.
 - Em execução de desenvolvimento, **F6** exibe a sequência de toasts de teste sobre o jogo. Essa tecla também pode ser alterada nos controles.
@@ -22,7 +23,7 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 - Selecione um nó para editar seu texto, cor, posição, dimensões, espaçamento e alinhamento no inspetor; pressione **Apply** para aplicar os campos. Arraste o canto inferior direito para redimensionar; **Delete** ou **Remove** exclui o nó.
 - Solte um componente sobre `Row`, `Column` ou `Stack` para aninhá-lo. O contêiner passa a definir a posição dos filhos; X/Y ficam inativos e largura/altura continuam ajustáveis.
 - Solte `ItemCard` sobre `Grid` ou `ItemGrid` para compor uma grade. O inspetor edita as colunas e o espaçamento da grade, e o ID namespaced e a quantidade do item no cartão. `Spacer` pode ser fixo (ajuste Width/Height) ou flexível (botão Flex no inspetor), preenchendo o espaço livre em `Row`/`Column`.
-- `ItemSlot` aceita itens arrastados do JEI quando JEI está instalado. O item selecionado é uma referência de filtro e não entra em inventário; botão direito, Delete ou Backspace limpa o slot.
+- `ItemSlot` aceita itens arrastados do JEI quando JEI está instalado. O item selecionado é uma referência de filtro e não entra em inventário; botão direito, Delete ou Backspace limpa o slot. Na tela de exemplo do F8, a grade do jogador permite clicar ou arrastar itens para os slots sem removê-los do inventário.
 - Arraste um filho para uma área vazia do canvas para colocá-lo de volta no `AbsoluteLayout`.
 
 ## Testar e salvar

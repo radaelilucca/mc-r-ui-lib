@@ -3,6 +3,7 @@ package com.radaeli.ruilib.ui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Objects;
 
 /** Thin bridge from a component tree to Minecraft's client Screen lifecycle. */
 public class UiScreen extends Screen {
+    private static final float CARRIED_ITEM_Z_INDEX = 450.0F;
     private final UiComponent root;
     private final UiTheme themeOverride;
     private UiTheme layoutTheme;
@@ -19,6 +21,11 @@ public class UiScreen extends Screen {
     private UiComponent pressedComponent;
     private Modal modal;
     private Modal closingModal;
+    private ItemStack carriedItem = ItemStack.EMPTY;
+    private InventoryGrid carriedFromGrid;
+    private int carriedFromSlot = -1;
+    private int carriedMouseButton = -1;
+    private boolean draggingInventoryItem;
 
     public UiScreen(Component title, UiComponent root) {
         this(title, root, null);
@@ -62,6 +69,7 @@ public class UiScreen extends Screen {
         if (hovered != null && hovered.tooltip() != null) {
             UiPaint.tooltip(context, hovered.tooltip(), mouseX, mouseY);
         }
+        renderCarriedItem(graphics, mouseX, mouseY);
     }
 
     protected void renderToastOverlay(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -97,6 +105,7 @@ public class UiScreen extends Screen {
                 return true;
             }
             UiComponent target = modal.hitTest(mouseX, mouseY);
+            if (handleInventoryPickerClick(target, mouseX, mouseY, button)) return true;
             clearToolkitFocus();
             if (target != null && target != modal && target.isFocusable()) focus(target);
             pressedComponent = target != null && target.mouseClicked(mouseX, mouseY, button) ? target : null;
@@ -105,6 +114,7 @@ public class UiScreen extends Screen {
         if (closingModal != null) return true;
         if (handleToastClick(mouseX, mouseY, button)) return true;
         UiComponent target = root.hitTest(mouseX, mouseY);
+        if (handleInventoryPickerClick(target, mouseX, mouseY, button)) return true;
         clearToolkitFocus();
         if (target == null) {
             pressedComponent = null;
@@ -120,6 +130,16 @@ public class UiScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (closingModal != null) return true;
+        if (draggingInventoryItem && button == carriedMouseButton) {
+            UiComponent target = activeRoot().hitTest(mouseX, mouseY);
+            if (target instanceof ItemSlot slot && slot.isEnabled() && !carriedItem.isEmpty()) {
+                slot.setItemStack(carriedItem);
+                clearCarriedItem();
+            }
+            draggingInventoryItem = false;
+            pressedComponent = null;
+            return true;
+        }
         UiComponent target = pressedComponent;
         pressedComponent = null;
         return target != null && target.mouseReleased(mouseX, mouseY, button)
@@ -129,6 +149,7 @@ public class UiScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (closingModal != null) return true;
+        if (draggingInventoryItem && button == carriedMouseButton) return true;
         return pressedComponent != null
                 && pressedComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY)
                 || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -232,6 +253,69 @@ public class UiScreen extends Screen {
         pressedComponent = null;
         focusedComponent = null;
         closing.closed();
+    }
+
+    @Override
+    public void removed() {
+        clearCarriedItem();
+        super.removed();
+    }
+
+    private boolean handleInventoryPickerClick(UiComponent target, double mouseX, double mouseY, int button) {
+        if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT && button != GLFW.GLFW_MOUSE_BUTTON_RIGHT) return false;
+
+        if (target instanceof ItemSlot itemSlot && itemSlot.isEnabled() && !carriedItem.isEmpty()) {
+            clearToolkitFocus();
+            focus(itemSlot);
+            itemSlot.setItemStack(carriedItem);
+            clearCarriedItem();
+            pressedComponent = null;
+            return true;
+        }
+
+        if (!(target instanceof InventoryGrid grid)
+                || grid.interactionMode() != InventoryGrid.InteractionMode.PICKER) return false;
+        int slotIndex = grid.slotIndexAt(mouseX, mouseY);
+        if (slotIndex < 0) return false;
+
+        ItemStack selected = grid.itemAt(slotIndex);
+        if (selected.isEmpty()) return false;
+        if (grid == carriedFromGrid && slotIndex == carriedFromSlot && !carriedItem.isEmpty()) {
+            clearCarriedItem();
+            return true;
+        }
+
+        clearToolkitFocus();
+        if (carriedFromGrid != null) carriedFromGrid.setCarriedSlotIndex(-1);
+        carriedItem = selected.copy();
+        if (button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) carriedItem.setCount(1);
+        carriedFromGrid = grid;
+        carriedFromSlot = slotIndex;
+        carriedMouseButton = button;
+        draggingInventoryItem = true;
+        grid.setCarriedSlotIndex(slotIndex);
+        grid.notifyPicked(carriedItem);
+        pressedComponent = null;
+        return true;
+    }
+
+    private void clearCarriedItem() {
+        if (carriedFromGrid != null) carriedFromGrid.setCarriedSlotIndex(-1);
+        carriedItem = ItemStack.EMPTY;
+        carriedFromGrid = null;
+        carriedFromSlot = -1;
+        carriedMouseButton = -1;
+        draggingInventoryItem = false;
+    }
+
+    /** Renders the current picker stack above components and tooltips. */
+    protected final void renderCarriedItem(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (carriedItem.isEmpty()) return;
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, CARRIED_ITEM_Z_INDEX);
+        graphics.renderItem(carriedItem, mouseX - 8, mouseY - 8);
+        graphics.renderItemDecorations(font, carriedItem, mouseX - 8, mouseY - 8);
+        graphics.pose().popPose();
     }
 
     public Modal modal() {

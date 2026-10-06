@@ -1,5 +1,12 @@
 {
   "key.categories.r_ui_lib": "R-Ui Lib",
   "key.r_ui_lib.open_ui_playground": "Abrir playground do UI Toolkit",
-  "key.r_ui_lib.dispatch_test_toast": "Exibir toast de teste do UI Toolkit"
+  "key.r_ui_lib.dispatch_test_toast": "Exibir toast de teste do UI Toolkit",
+  "key.r_ui_lib.open_item_slot_example": "Abrir exemplo de slots de item",
+  "screen.r_ui_lib.item_slot_example": "Exemplo de slots de item da R-Ui Lib",
+  "screen.r_ui_lib.item_slot_example.title": "Bancada de teste de slots",
+  "screen.r_ui_lib.item_slot_example.instructions": "Clique em um item do inventário para pegá-lo e clique ou solte sobre um slot. O arraste do JEI também funciona.",
+  "screen.r_ui_lib.item_slot_example.filter_a": "Filtro A",
+  "screen.r_ui_lib.item_slot_example.filter_b": "Filtro B",
+  "screen.r_ui_lib.item_slot_example.inventory": "Inventário do jogador"
 }
