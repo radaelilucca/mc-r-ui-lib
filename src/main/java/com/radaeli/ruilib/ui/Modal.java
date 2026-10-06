@@ -42,6 +42,12 @@ public final class Modal extends UiComponent {
     public UiComponent content() { return content; }
     public boolean closeOnOutsideClick() { return closeOnOutsideClick; }
     public void closed() { onClose.run(); }
+
+    @Override
+    public void visitComponents(Consumer<UiComponent> visitor) {
+        visitor.accept(this);
+        content.visitComponents(visitor);
+    }
     void beginOpen() {
         closing = false;
         transitionOpacity = 0;

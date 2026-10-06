@@ -106,6 +106,13 @@ final class PlaygroundNode {
                 node.width = 116;
                 node.height = 32;
             }
+            case "itemslot" -> {
+                node.text = "";
+                node.itemId = "";
+                node.itemCount = 1;
+                node.width = 24;
+                node.height = 24;
+            }
             case "itemgrid", "grid" -> {
                 node.text = type.equals("grid") ? "Grid" : "ItemGrid";
                 node.width = 180;
@@ -153,6 +160,10 @@ final class PlaygroundNode {
     }
 
     boolean usesItemStack() {
+        return type.equals("itemcard") || type.equals("itemslot");
+    }
+
+    boolean supportsItemCount() {
         return type.equals("itemcard");
     }
 

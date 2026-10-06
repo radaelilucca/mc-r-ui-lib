@@ -5,6 +5,8 @@ import net.minecraft.network.chat.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /** Base node for measurement, layout, rendering and input in a toolkit tree. */
 public abstract class UiComponent {
@@ -147,6 +149,11 @@ public abstract class UiComponent {
         if (isFocusable() && enabled) {
             visitor.accept(this);
         }
+    }
+
+    /** Visits this component and any components it contains, in render order. */
+    public void visitComponents(Consumer<UiComponent> visitor) {
+        Objects.requireNonNull(visitor, "visitor").accept(this);
     }
 
     public boolean isFocusable() {

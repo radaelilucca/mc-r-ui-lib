@@ -20,6 +20,12 @@ abstract class UiFrame extends UiComponent {
         return content;
     }
 
+    @Override
+    public void visitComponents(Consumer<UiComponent> visitor) {
+        visitor.accept(this);
+        content.visitComponents(visitor);
+    }
+
     protected Insets padding(UiTheme theme) {
         return paddingOverride == null ? defaultPadding(theme) : paddingOverride;
     }

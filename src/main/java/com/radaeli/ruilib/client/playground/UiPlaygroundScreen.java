@@ -54,7 +54,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             new PaletteCategory("Input", List.of("textfield", "searchfield", "slider")),
             new PaletteCategory("Layout", List.of("panel", "card", "divider", "row", "column", "stack",
                     "absolute", "grid", "spacer")),
-            new PaletteCategory("Data", List.of("itemcard", "itemgrid", "table", "tabs")),
+            new PaletteCategory("Data", List.of("itemcard", "itemslot", "itemgrid", "table", "tabs")),
             new PaletteCategory("Status", List.of("progressbar", "radial")),
             new PaletteCategory("Scroll", List.of("scroll", "clip")));
 
@@ -416,7 +416,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (selected == null) return "Value";
         return selected.type.equals("slider") ? "Min, max, step"
                 : selected.type.equals("progressbar") ? "Min, max, value"
-                : selected.usesItemStack() ? "Stack count"
+                : selected.supportsItemCount() ? "Stack count"
                 : selected.type.equals("table") ? "Table columns"
                 : selected.supportsColumns() ? "Grid columns" : "Value";
     }
@@ -790,6 +790,12 @@ public final class UiPlaygroundScreen extends UiScreen {
                         clearPreviewFocus();
                         rebuildCanvas();
                         refreshInspector();
+                    } else if (node.type.equals("itemslot")) {
+                        clickCount++;
+                        status = node.itemId.isBlank()
+                                ? "Filtro de item limpo."
+                                : "Filtro de item definido: " + node.itemId;
+                        refreshInspector();
                     } else {
                         status = "Ação acionada (" + clickCount + "): " + node.text;
                     }
@@ -1022,7 +1028,7 @@ public final class UiPlaygroundScreen extends UiScreen {
                 || selected.type.equals("card") || selected.type.equals("divider")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack() || selected.type.equals("table")
+                || selected.type.equals("itemcard") || selected.type.equals("table")
                 || selected.type.equals("radial"))
                 ? selected.text : "");
         colorField.setValue(!hasSelection ? "FFFFFFFF"
@@ -1039,18 +1045,18 @@ public final class UiPlaygroundScreen extends UiScreen {
                     : selected.type.equals("progressbar")
                     ? formatNumber(selected.minimum) + ", " + formatNumber(selected.maximum) + ", "
                         + formatNumber(selected.value)
-                    : selected.usesItemStack() ? Integer.toString(selected.itemCount)
+                    : selected.supportsItemCount() ? Integer.toString(selected.itemCount)
                     : selected.supportsColumns() ? Integer.toString(selected.columns) : "0, 100, 1");
         boolean rangeEditable = hasSelection && (selected.type.equals("slider")
                 || selected.type.equals("progressbar")
-                || selected.usesItemStack() || selected.supportsColumns());
+                || selected.supportsItemCount() || selected.supportsColumns());
         rangeField.setEditable(rangeEditable);
         boolean textEditable = hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("iconbutton") || selected.type.equals("panel")
                 || selected.type.equals("card") || selected.type.equals("divider")
                 || selected.type.equals("toggle") || selected.type.equals("chip")
                 || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                || selected.usesItemStack() || selected.type.equals("table")
+                || selected.type.equals("itemcard") || selected.type.equals("table")
                 || selected.type.equals("radial"));
         textField.setEditable(textEditable);
         textField.visible = textEditable && !previewMode;
@@ -1190,7 +1196,11 @@ public final class UiPlaygroundScreen extends UiScreen {
             String nextItemId = selected.itemId;
             if (selected.usesItemStack()) {
                 nextItemId = colorField.getValue().trim();
-                if (!PlaygroundComponentFactory.itemExists(nextItemId)) {
+                if (selected.type.equals("itemcard") && !PlaygroundComponentFactory.itemExists(nextItemId)) {
+                    throw new IllegalArgumentException("Unknown item ID: " + nextItemId);
+                }
+                if (selected.type.equals("itemslot") && !nextItemId.isEmpty()
+                        && !PlaygroundComponentFactory.itemExists(nextItemId)) {
                     throw new IllegalArgumentException("Unknown item ID: " + nextItemId);
                 }
             } else if (selected.type.equals("label") && !colorField.getValue().isBlank()) {
@@ -1233,7 +1243,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             if (selected.supportsColumns()) {
                 nextColumns = parseBoundedInt(rangeField.getValue(), 1, 64);
             }
-            if (selected.usesItemStack()) {
+            if (selected.supportsItemCount()) {
                 nextItemCount = parseBoundedInt(rangeField.getValue(), 1, 64);
             }
             if (selected.type.equals("label") || selected.type.equals("button")
@@ -1241,7 +1251,7 @@ public final class UiPlaygroundScreen extends UiScreen {
                     || selected.type.equals("card") || selected.type.equals("divider")
                     || selected.type.equals("toggle") || selected.type.equals("chip")
                     || selected.type.equals("textfield") || selected.type.equals("searchfield")
-                    || selected.usesItemStack() || selected.type.equals("table")
+                    || selected.type.equals("itemcard") || selected.type.equals("table")
                     || selected.type.equals("radial")) {
                 selected.text = nextText;
             }

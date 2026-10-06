@@ -17,11 +17,12 @@ O playground é uma ferramenta de desenvolvimento para experimentar os component
 
 ## Montar um layout
 
-- Arraste um tipo da paleta à esquerda para o canvas. Ela contém `Label`, `Button`, `IconButton`, `Panel`, `Card`, `Divider`, `Toggle`, `Chip`, `TextField`, `SearchField`, `Slider`, `ProgressBar`, `RadialMenu`, `ItemCard`, `Tabs`, `ScrollView`, `ClipStack`, `Row`, `Column`, `Stack`, `Grid`, `ItemGrid`, `Table`, `Spacer` e `AbsoluteLayout`. A lista rola com a roda do mouse em janelas baixas. `ItemRenderer` é um helper exercitado por `ItemCard`, não um nó separado.
+- Arraste um tipo da paleta à esquerda para o canvas. Ela contém `Label`, `Button`, `IconButton`, `Panel`, `Card`, `Divider`, `Toggle`, `Chip`, `TextField`, `SearchField`, `Slider`, `ProgressBar`, `RadialMenu`, `ItemCard`, `ItemSlot`, `Tabs`, `ScrollView`, `ClipStack`, `Row`, `Column`, `Stack`, `Grid`, `ItemGrid`, `Table`, `Spacer` e `AbsoluteLayout`. A lista rola com a roda do mouse em janelas baixas. `ItemRenderer` é um helper exercitado por `ItemCard` e `ItemSlot`, não um nó separado.
 - `Panel` e `Card` aceitam filhos; aninhe um `Row`, `Column` ou `Grid` para definir o layout interno. `Card` também oferece estado selecionado no inspetor. `IconButton` usa o primeiro caractere do nome como ícone e mostra o nome em um tooltip tematizado. Tooltips de itens continuam usando o renderer vanilla. `Divider` é horizontal no playground.
 - Selecione um nó para editar seu texto, cor, posição, dimensões, espaçamento e alinhamento no inspetor; pressione **Apply** para aplicar os campos. Arraste o canto inferior direito para redimensionar; **Delete** ou **Remove** exclui o nó.
 - Solte um componente sobre `Row`, `Column` ou `Stack` para aninhá-lo. O contêiner passa a definir a posição dos filhos; X/Y ficam inativos e largura/altura continuam ajustáveis.
 - Solte `ItemCard` sobre `Grid` ou `ItemGrid` para compor uma grade. O inspetor edita as colunas e o espaçamento da grade, e o ID namespaced e a quantidade do item no cartão. `Spacer` pode ser fixo (ajuste Width/Height) ou flexível (botão Flex no inspetor), preenchendo o espaço livre em `Row`/`Column`.
+- `ItemSlot` aceita itens arrastados do JEI quando JEI está instalado. O item selecionado é uma referência de filtro e não entra em inventário; botão direito, Delete ou Backspace limpa o slot.
 - Arraste um filho para uma área vazia do canvas para colocá-lo de volta no `AbsoluteLayout`.
 
 ## Testar e salvar

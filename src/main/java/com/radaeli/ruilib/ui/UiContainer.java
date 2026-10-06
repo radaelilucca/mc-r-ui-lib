@@ -47,6 +47,12 @@ public abstract class UiContainer extends UiComponent {
     }
 
     @Override
+    public void visitComponents(Consumer<UiComponent> visitor) {
+        visitor.accept(this);
+        for (UiComponent child : children) child.visitComponents(visitor);
+    }
+
+    @Override
     public void render(UiContext context) {
         for (UiComponent child : children) {
             child.render(context);

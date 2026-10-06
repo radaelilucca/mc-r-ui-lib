@@ -55,6 +55,28 @@ UiThemes.setGlobalTheme(UiTheme.DARK); // ou UiTheme.LIGHT
 Veja [Temas e tokens visuais](ui-theming.md) para a API de paletas e tokens,
 além dos overrides de tela e componente.
 
+## Slot fantasma de item
+
+`ItemSlot` renderiza uma referência de `ItemStack` para filtros e usos similares;
+ele não coloca itens em inventário. Com JEI instalado, os `ItemSlot`s dentro de
+uma tela `UiScreen` são automaticamente alvos de arraste. A integração de JEI é
+opcional e o restante da biblioteca continua funcionando sem JEI.
+
+```java
+ItemSlot itemSlot = new ItemSlot().setOnItemChanged(stack -> {
+    if (stack.isEmpty()) {
+        filter.clear();
+    } else {
+        filter.set(stack);
+    }
+});
+```
+
+O callback recebe uma cópia defensiva com quantidade normalizada para um item;
+`ItemStack.EMPTY` representa slot vazio. Também é possível atribuir ou limpar a
+referência com `setItemStack(stack)` e `clear()`. O usuário pode limpar o slot
+com clique direito, Delete ou Backspace quando ele está focado.
+
 ## Maven local ou repositório Maven
 
 Para consumir pelo Maven local nesta máquina, publique o projeto com:

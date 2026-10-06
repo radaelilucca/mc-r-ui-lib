@@ -14,6 +14,7 @@ import com.radaeli.ruilib.ui.Label;
 import com.radaeli.ruilib.ui.Grid;
 import com.radaeli.ruilib.ui.ItemCard;
 import com.radaeli.ruilib.ui.ItemGrid;
+import com.radaeli.ruilib.ui.ItemSlot;
 import com.radaeli.ruilib.ui.ProgressBar;
 import com.radaeli.ruilib.ui.Panel;
 import com.radaeli.ruilib.ui.RadialMenu;
@@ -75,6 +76,7 @@ final class PlaygroundComponentFactory {
                                     .setScale(0, java.math.RoundingMode.HALF_UP).toPlainString()));
             case "radial" -> createRadialMenu(node, onButtonClick);
             case "itemcard" -> createItemCard(node, onButtonClick);
+            case "itemslot" -> createItemSlot(node, onButtonClick);
             case "spacer" -> node.flexible ? Spacer.flex() : Spacer.fixed(node.width, node.height);
             case "row" -> new Row(node.gap, safeAlignment(node.horizontalAlignment),
                     safeAlignment(node.verticalAlignment));
@@ -153,6 +155,16 @@ final class PlaygroundComponentFactory {
         Component label = Component.literal(node.text == null || node.text.isBlank()
                 ? stack.getHoverName().getString() : node.text);
         return new ItemCard(stack, label, node.selected, () -> onClick.accept(node));
+    }
+
+    private static ItemSlot createItemSlot(PlaygroundNode node, Consumer<PlaygroundNode> onChanged) {
+        ItemStack stack = node.itemId == null || node.itemId.isBlank() ? ItemStack.EMPTY
+                : new ItemStack(resolveItem(node.itemId)
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown item: " + node.itemId)));
+        return new ItemSlot(stack).setOnItemChanged(next -> {
+            node.itemId = next.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(next.getItem()).toString();
+            onChanged.accept(node);
+        });
     }
 
     private static Table<String[]> createTable(PlaygroundNode node, Consumer<PlaygroundNode> onClick) {

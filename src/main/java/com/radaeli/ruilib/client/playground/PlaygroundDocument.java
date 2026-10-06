@@ -40,7 +40,7 @@ final class PlaygroundDocument {
                 || node.type.equals("toggle") || node.type.equals("chip")
                 || node.type.equals("textfield") || node.type.equals("searchfield")
                 || node.type.equals("slider") || node.type.equals("progressbar")
-                || node.type.equals("radial") || node.type.equals("itemcard")
+                || node.type.equals("radial") || node.type.equals("itemcard") || node.type.equals("itemslot")
                 || node.type.equals("table")
                 || node.type.equals("spacer") || node.isContainer())) {
             throw new IllegalArgumentException("Unsupported component type: " + node.type);
@@ -61,10 +61,15 @@ final class PlaygroundDocument {
             throw new IllegalArgumentException("Grid columns must be between 1 and 64");
         }
         if (node.usesItemStack()) {
-            if (node.itemId == null || ResourceLocation.tryParse(node.itemId) == null) {
+            if (node.type.equals("itemcard")
+                    && (node.itemId == null || ResourceLocation.tryParse(node.itemId) == null)) {
                 throw new IllegalArgumentException("Item card requires a valid namespaced item ID");
             }
-            node.itemCount = Math.max(1, Math.min(64, node.itemCount));
+            if (node.type.equals("itemslot") && node.itemId != null && !node.itemId.isBlank()
+                    && ResourceLocation.tryParse(node.itemId) == null) {
+                throw new IllegalArgumentException("Item slot item ID must be empty or a valid namespaced ID");
+            }
+            if (node.supportsItemCount()) node.itemCount = Math.max(1, Math.min(64, node.itemCount));
             if (node.text == null || node.text.isBlank()) node.text = node.itemId;
         }
         if (node.type.equals("slider")) {
