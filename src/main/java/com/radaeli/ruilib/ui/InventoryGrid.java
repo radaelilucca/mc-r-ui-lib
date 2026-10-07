@@ -8,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -59,6 +60,7 @@ public final class InventoryGrid extends UiComponent {
     private int customPressedButton = -1;
     private InteractionMode interactionMode = InteractionMode.PICKER;
     private Consumer<ItemStack> onItemPicked = ignored -> { };
+    private BiConsumer<Integer, ItemStack> onItemPickedWithSlot = (slot, stack) -> { };
     private Consumer<InteractionEvent> onInteraction = ignored -> { };
 
     /** Creates a row-major grid backed by a consumer-provided Container. */
@@ -135,6 +137,12 @@ public final class InventoryGrid extends UiComponent {
     /** Called with a defensive copy when Picker mode begins a selection. */
     public InventoryGrid setOnItemPicked(Consumer<ItemStack> onItemPicked) {
         this.onItemPicked = Objects.requireNonNull(onItemPicked, "onItemPicked");
+        return this;
+    }
+
+    /** Receives the displayed inventory slot index together with the temporary picked stack. */
+    public InventoryGrid setOnItemPickedWithSlot(BiConsumer<Integer, ItemStack> onItemPicked) {
+        this.onItemPickedWithSlot = Objects.requireNonNull(onItemPicked, "onItemPicked");
         return this;
     }
 
@@ -263,8 +271,9 @@ public final class InventoryGrid extends UiComponent {
         this.carriedSlotIndex = carriedSlotIndex;
     }
 
-    void notifyPicked(ItemStack stack) {
+    void notifyPicked(int slotIndex, ItemStack stack) {
         onItemPicked.accept(stack.copy());
+        onItemPickedWithSlot.accept(slotIndex, stack.copy());
     }
 
     private int rowCount() {

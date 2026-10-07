@@ -17,6 +17,7 @@ public final class Tabs extends UiContainer {
     private int selectedIndex;
     private int stripHeight;
     private int[] tabWidths = new int[0];
+    private Alignment tabAlignment = Alignment.START;
     private Font lastFont;
     private UiTheme lastTheme;
     private IntConsumer onSelectionChanged = index -> { };
@@ -31,6 +32,12 @@ public final class Tabs extends UiContainer {
 
     public int selectedIndex() {
         return selectedIndex;
+    }
+
+    /** Sets the horizontal alignment of the tab strip without changing the content bounds. */
+    public Tabs setTabAlignment(Alignment alignment) {
+        tabAlignment = Objects.requireNonNull(alignment, "alignment");
+        return this;
     }
 
     public void setOnSelectionChanged(IntConsumer listener) {
@@ -75,7 +82,7 @@ public final class Tabs extends UiContainer {
     @Override
     public void render(UiContext context) {
         if (tabs.isEmpty()) return;
-        int x = bounds().x();
+        int x = bounds().x() + tabStripOffset();
         for (int i = 0; i < tabs.size(); i++) {
             Component title = tabs.get(i).title();
             int width = Math.min(bounds().right() - x, tabWidths[i]);
@@ -107,7 +114,7 @@ public final class Tabs extends UiContainer {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isEnabled() || button != 0 || tabs.isEmpty()
                 || mouseY >= bounds().y() + stripHeight) return false;
-        int x = bounds().x();
+        int x = bounds().x() + tabStripOffset();
         for (int i = 0; i < tabs.size(); i++) {
             int width = tabWidths[i];
             if (mouseX >= x && mouseX < x + width) {
@@ -118,6 +125,13 @@ public final class Tabs extends UiContainer {
             x += width;
         }
         return true;
+    }
+
+    private int tabStripOffset() {
+        if (tabAlignment != Alignment.CENTER) return 0;
+        int stripWidth = 0;
+        for (int width : tabWidths) stripWidth += width;
+        return Math.max(0, (bounds().width() - stripWidth) / 2);
     }
 
     @Override

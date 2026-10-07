@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /** Mouse and keyboard activatable button primitive. */
 public final class Button extends UiComponent {
-    private final Component label;
+    private Component label;
     private final Runnable action;
     private boolean pressed;
 
@@ -72,6 +72,12 @@ public final class Button extends UiComponent {
         if (isEnabled()) {
             action.run();
         }
+    }
+
+    /** Replaces the displayed label while preserving the button's action and interaction state. */
+    public Button setLabel(Component label) {
+        this.label = Objects.requireNonNull(label, "label");
+        return this;
     }
 
     @Override

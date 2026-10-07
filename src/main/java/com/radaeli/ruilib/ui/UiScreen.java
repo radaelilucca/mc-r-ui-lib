@@ -133,7 +133,7 @@ public class UiScreen extends Screen {
         if (draggingInventoryItem && button == carriedMouseButton) {
             UiComponent target = activeRoot().hitTest(mouseX, mouseY);
             if (target instanceof ItemSlot slot && slot.isEnabled() && !carriedItem.isEmpty()) {
-                slot.setItemStack(carriedItem);
+                slot.acceptDrop(carriedItem);
                 clearCarriedItem();
             }
             draggingInventoryItem = false;
@@ -267,7 +267,7 @@ public class UiScreen extends Screen {
         if (target instanceof ItemSlot itemSlot && itemSlot.isEnabled() && !carriedItem.isEmpty()) {
             clearToolkitFocus();
             focus(itemSlot);
-            itemSlot.setItemStack(carriedItem);
+            itemSlot.acceptDrop(carriedItem);
             clearCarriedItem();
             pressedComponent = null;
             return true;
@@ -294,7 +294,7 @@ public class UiScreen extends Screen {
         carriedMouseButton = button;
         draggingInventoryItem = true;
         grid.setCarriedSlotIndex(slotIndex);
-        grid.notifyPicked(carriedItem);
+        grid.notifyPicked(slotIndex, carriedItem);
         pressedComponent = null;
         return true;
     }

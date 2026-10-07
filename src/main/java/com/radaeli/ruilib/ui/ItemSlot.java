@@ -18,6 +18,7 @@ public final class ItemSlot extends UiComponent {
     private ItemStack itemStack = ItemStack.EMPTY;
     private UiColor backgroundColor;
     private Consumer<ItemStack> onItemChanged = ignored -> { };
+    private Consumer<ItemStack> onDrop = ignored -> { };
     private boolean pressed;
     private boolean dropTargetActive;
 
@@ -65,6 +66,17 @@ public final class ItemSlot extends UiComponent {
     public ItemSlot setOnItemChanged(Consumer<ItemStack> onItemChanged) {
         this.onItemChanged = Objects.requireNonNull(onItemChanged, "onItemChanged");
         return this;
+    }
+
+    /** Invoked whenever an inventory picker item is dropped here, even if it matches the current item. */
+    public ItemSlot setOnDrop(Consumer<ItemStack> onDrop) {
+        this.onDrop = Objects.requireNonNull(onDrop, "onDrop");
+        return this;
+    }
+
+    void acceptDrop(ItemStack itemStack) {
+        setItemStack(itemStack);
+        onDrop.accept(itemStack.copy());
     }
 
     /** Overrides the theme background color; an empty value keeps the active theme default. */
