@@ -48,7 +48,7 @@ public final class Row extends UiContainer {
             totalWidth += sizes[i].width();
             if (isFlexibleSpacer(children().get(i))) flexibleCount++;
         }
-        int flexibleSpace = Math.max(0, innerWidth - totalWidth);
+        int flexibleSpace = flexibleCount == 0 ? 0 : Math.max(0, innerWidth - totalWidth);
         int flexibleBase = flexibleCount == 0 ? 0 : flexibleSpace / flexibleCount;
         int flexibleRemainder = flexibleCount == 0 ? 0 : flexibleSpace % flexibleCount;
         int x = Column.alignedStart(bounds().x(), bounds().width(),

@@ -48,10 +48,11 @@ public final class Column extends UiContainer {
             totalHeight += sizes[i].height();
             if (isFlexibleSpacer(children().get(i))) flexibleCount++;
         }
-        int flexibleSpace = Math.max(0, innerHeight - totalHeight);
+        int flexibleSpace = flexibleCount == 0 ? 0 : Math.max(0, innerHeight - totalHeight);
         int flexibleBase = flexibleCount == 0 ? 0 : flexibleSpace / flexibleCount;
         int flexibleRemainder = flexibleCount == 0 ? 0 : flexibleSpace % flexibleCount;
-        int y = alignedStart(bounds().y(), bounds().height(), totalHeight + flexibleSpace, verticalAlignment);
+        int y = alignedStart(bounds().y(), bounds().height(),
+                totalHeight + flexibleSpace + gap * (count - 1), verticalAlignment);
         for (int i = 0; i < count; i++) {
             UiComponent child = children().get(i);
             UiSize size = sizes[i];

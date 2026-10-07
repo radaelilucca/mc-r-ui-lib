@@ -3,7 +3,6 @@ package com.radaeli.ruilib.client.compat.jei;
 import com.radaeli.ruilib.ui.ItemSlot;
 import com.radaeli.ruilib.ui.UiComponent;
 import com.radaeli.ruilib.ui.UiScreen;
-import com.radaeli.ruilib.client.example.ItemSlotExampleScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
@@ -30,12 +29,12 @@ public final class RUiLibJeiPlugin implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
-        registration.addGuiScreenHandler(ItemSlotExampleScreen.class, screen -> {
+        registration.addGuiScreenHandler(UiScreen.class, screen -> {
             var bounds = screen.jeiGuiBounds();
             return new IGuiProperties() {
                 @Override
                 public Class<? extends net.minecraft.client.gui.screens.Screen> screenClass() {
-                    return ItemSlotExampleScreen.class;
+                    return screen.getClass();
                 }
 
                 @Override

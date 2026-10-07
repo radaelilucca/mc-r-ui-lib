@@ -326,6 +326,11 @@ public class UiScreen extends Screen {
         return root;
     }
 
+    /** Panel area reserved by JEI. Override when the root fills the viewport around a panel. */
+    public Bounds jeiGuiBounds() {
+        return root.bounds();
+    }
+
     public UiTheme theme() {
         return themeOverride == null ? UiThemes.globalTheme() : themeOverride;
     }
