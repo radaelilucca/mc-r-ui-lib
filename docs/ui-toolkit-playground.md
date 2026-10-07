@@ -1,41 +1,41 @@
-# Playground do UI Toolkit
+# UI Toolkit playground
 
-O playground é uma ferramenta de desenvolvimento para experimentar os componentes do toolkit dentro do Minecraft.
+The playground is a development tool for experimenting with toolkit components inside Minecraft.
 
-## Abrir
+## Opening the playground
 
-- Inicie o cliente pelo `runClient` e pressione **F7**.
-- Pressione **F8** para abrir a tela de exemplo do `ItemSlot`, com `InventoryGrid` e integração de arraste do JEI. O atalho é configurável em Controles.
-- Use **Theme** na barra superior para escolher **Dark** ou **Light**; a escolha altera o tema global enquanto o playground está aberto.
-- A tecla pode ser alterada em **Opções → Controles → R-Ui Lib**.
-- Em execução de desenvolvimento, **F6** exibe a sequência de toasts de teste sobre o jogo. Essa tecla também pode ser alterada nos controles.
-- A tela só é registrada em execução de desenvolvimento. Ela não fica disponível no mod instalado em produção.
-- **Toast** percorre os quatro níveis de notificação. Avisos no canto superior direito somem após quatro segundos; clique esquerdo sobre um aviso o dispensa.
-- **Table** traz linhas de exemplo, seleção e rolagem vertical. No inspector, edite os cabeçalhos separados por vírgula e o número de colunas.
-- **ProgressBar** mostra progresso determinado. No inspetor, ajuste o range como `mínimo, máximo, valor` e alterne entre exibir o valor ou a porcentagem normalizada. Os valores são arredondados para inteiros; a porcentagem vai de `0%` a `100%`, independentemente do range. A API permite altura, cores do trilho/preenchimento, formatter e modo de porcentagem. No Preview, o exemplo percorre continuamente do mínimo ao máximo e de volta; ao retornar à edição, o valor configurado é restaurado.
-- **RadialMenu** começa com quatro segmentos. No inspetor, edite os rótulos separados por vírgulas; no Preview, pressione, arraste até um setor e solte para disparar a ação de demonstração. A área central cancela a seleção.
-- **Dialog** abre um `Modal` de demonstração. Ele centraliza sobre a tela, prende foco e input, fecha por Escape ou pelo botão interno e também aceita clique externo quando habilitado.
+- Start the client through `runClient` and press **F7**.
+- Press **F8** to open the `ItemSlot` example screen, with `InventoryGrid` and JEI drag integration. The shortcut is configurable in Controls.
+- Use **Theme** in the top toolbar to choose **Dark** or **Light**; this changes the global theme while the playground is open.
+- The key can be changed under **Options → Controls → R-Ui Lib**.
+- In development runs, **F6** displays the test toast sequence over the game. This key can also be changed in Controls.
+- The screen is registered only in development runs. It is not available in production installations of the mod.
+- **Toast** cycles through the four notification levels. Notifications in the upper-right corner disappear after four seconds; left-click a notification to dismiss it.
+- **Table** provides sample rows, selection, and vertical scrolling. In the inspector, edit the comma-separated headers and the number of columns.
+- **ProgressBar** displays determinate progress. In the inspector, configure the range as `minimum, maximum, value` and switch between displaying the value and the normalized percentage. Values are rounded to integers; the percentage ranges from `0%` to `100%`, regardless of the range. The API supports height, track/fill colors, a formatter, and percentage mode. In Preview, the example continuously moves from minimum to maximum and back; returning to Edit restores the configured value.
+- **RadialMenu** starts with four segments. In the inspector, edit the comma-separated labels; in Preview, press, drag to a sector, and release to trigger the demonstration action. The center area cancels the selection.
+- **Dialog** opens a demonstration `Modal`. It is centered over the screen, contains focus and input, closes with Escape or its internal button, and also accepts outside clicks when enabled.
 
-## Montar um layout
+## Building a layout
 
-- Arraste um tipo da paleta à esquerda para o canvas. Ela contém `Label`, `Button`, `IconButton`, `Panel`, `Card`, `Divider`, `Toggle`, `Chip`, `TextField`, `SearchField`, `Slider`, `ProgressBar`, `RadialMenu`, `ItemCard`, `ItemSlot`, `Tabs`, `ScrollView`, `ClipStack`, `Row`, `Column`, `Stack`, `Grid`, `ItemGrid`, `Table`, `Spacer` e `AbsoluteLayout`. A lista rola com a roda do mouse em janelas baixas. `ItemRenderer` é um helper exercitado por `ItemCard` e `ItemSlot`, não um nó separado.
-- `Panel` e `Card` aceitam filhos; aninhe um `Row`, `Column` ou `Grid` para definir o layout interno. `Card` também oferece estado selecionado no inspetor. `IconButton` usa o primeiro caractere do nome como ícone e mostra o nome em um tooltip tematizado. Tooltips de itens continuam usando o renderer vanilla. `Divider` é horizontal no playground.
-- Selecione um nó para editar seu texto, cor, posição, dimensões, espaçamento e alinhamento no inspetor; pressione **Apply** para aplicar os campos. Arraste o canto inferior direito para redimensionar; **Delete** ou **Remove** exclui o nó.
-- Solte um componente sobre `Row`, `Column` ou `Stack` para aninhá-lo. O contêiner passa a definir a posição dos filhos; X/Y ficam inativos e largura/altura continuam ajustáveis.
-- Solte `ItemCard` sobre `Grid` ou `ItemGrid` para compor uma grade. O inspetor edita as colunas e o espaçamento da grade, e o ID namespaced e a quantidade do item no cartão. `Spacer` pode ser fixo (ajuste Width/Height) ou flexível (botão Flex no inspetor), preenchendo o espaço livre em `Row`/`Column`.
-- `ItemSlot` aceita itens arrastados do JEI quando JEI está instalado. O item selecionado é uma referência de filtro e não entra em inventário; botão direito, Delete ou Backspace limpa o slot. Na tela de exemplo do F8, a grade do jogador permite clicar ou arrastar itens para os slots sem removê-los do inventário.
-- Arraste um filho para uma área vazia do canvas para colocá-lo de volta no `AbsoluteLayout`.
+- Drag a type from the palette on the left onto the canvas. It contains `Label`, `Button`, `IconButton`, `Panel`, `Card`, `Divider`, `Toggle`, `Chip`, `TextField`, `SearchField`, `Slider`, `ProgressBar`, `RadialMenu`, `ItemCard`, `ItemSlot`, `Tabs`, `ScrollView`, `ClipStack`, `Row`, `Column`, `Stack`, `Grid`, `ItemGrid`, `Table`, `Spacer`, and `AbsoluteLayout`. The list scrolls with the mouse wheel in short windows. `ItemRenderer` is a helper used by `ItemCard` and `ItemSlot`, not a separate node.
+- `Panel` and `Card` accept children; nest a `Row`, `Column`, or `Grid` to define the inner layout. `Card` also exposes a selected state in the inspector. `IconButton` uses the first character of its name as its icon and shows the name in a themed tooltip. Item tooltips continue to use the vanilla renderer. `Divider` is horizontal in the playground.
+- Select a node to edit its text, color, position, dimensions, spacing, and alignment in the inspector; press **Apply** to apply the fields. Drag the lower-right corner to resize; **Delete** or **Remove** deletes the node.
+- Drop a component onto `Row`, `Column`, or `Stack` to nest it. The container then controls its children's positions; X/Y become inactive, while width and height remain adjustable.
+- Drop `ItemCard` onto `Grid` or `ItemGrid` to build a grid. The inspector edits the grid's columns and spacing, and the card's namespaced item ID and count. `Spacer` can be fixed (adjust Width/Height) or flexible (the Flex button in the inspector), filling the remaining space in `Row`/`Column`.
+- `ItemSlot` accepts items dragged from JEI when JEI is installed. The selected item is a filter reference and does not enter an inventory; right-click, Delete, or Backspace clears the slot. In the F8 example screen, the player grid lets you click or drag items into slots without removing them from the inventory.
+- Drag a child onto an empty area of the canvas to move it back into `AbsoluteLayout`.
 
-## Testar e salvar
+## Testing and saving
 
-- Alterne entre **Preview** e **Edit** na barra superior. No Preview, a paleta e o inspetor desaparecem e o canvas ocupa a largura disponível; a barra superior continua acessível para voltar à edição ou fechar. Arraste com o botão do meio nos modos **Edit** e **Preview** para mover o canvas; isso não altera as posições persistidas e a navegação é mantida ao alternar de modo. Botões, toggles e chips respondem ao mouse, Tab/Shift+Tab, Enter e Espaço. `Tabs` troca de página por clique e pelas setas esquerda/direita quando focado. As interações atualizam o status/contador visível.
-- Solte filhos dentro de `Tabs` para criar páginas; o texto do primeiro filho funciona como título da aba. Adicione duas ou mais páginas para navegar entre elas.
-- Campos de texto aceitam edição no Preview; `TextField` e `SearchField` mantêm o valor salvo no layout. O campo de busca exibe uma lupa, e ambos centralizam o texto verticalmente com pelo menos 8 px de padding à esquerda. `ScrollView` empilha os filhos verticalmente, rola pela roda do mouse e permite arrastar a scrollbar. `ClipStack` sobrepõe os filhos e recorta qualquer desenho fora do contêiner.
-- `Slider` pode ser ajustado por arraste ou teclado. No inspetor, edite a faixa como `mínimo, máximo, passo`; use passo `0` para valores contínuos.
-- `ProgressBar` é somente visual e mostra o valor atual arredondado sem casas decimais; seus valores podem ser editados como `mínimo, máximo, valor`. Use o botão `Format` no inspetor para mostrar a porcentagem normalizada de `0%` a `100%`. No Preview, o valor demonstra o ciclo contínuo de progresso.
-- Digite um nome na caixa superior e use **Save** para gravar em `config/r_ui_lib/ui-playground/` dentro da pasta de jogo. **Load** abre uma lista dos layouts salvos; selecione um item e confirme.
-- Ao abrir o playground, o último layout salvo é carregado automaticamente. Se layouts antigos não tiverem registro de último salvamento, o arquivo JSON modificado mais recentemente é usado.
-- **New** cria um documento vazio. Os callbacks de demonstração são recriados localmente e nunca são gravados no JSON.
-- Erros de arquivo ou de formato aparecem na barra inferior da tela.
+- Switch between **Preview** and **Edit** in the top toolbar. In Preview, the palette and inspector disappear and the canvas fills the available width; the top toolbar remains accessible for returning to Edit or closing. Drag with the middle mouse button in **Edit** and **Preview** to pan the canvas; this does not change saved positions, and the pan is preserved when switching modes. Buttons, toggles, and chips respond to the mouse, Tab/Shift+Tab, Enter, and Space. `Tabs` changes pages by clicking or using the left/right arrows while focused. Interactions update the visible status/counter.
+- Drop children inside `Tabs` to create pages; the first child's text serves as the tab title. Add two or more pages to navigate between them.
+- Text fields support editing in Preview; `TextField` and `SearchField` retain the value saved in the layout. The search field displays a magnifying glass, and both vertically center their text with at least 8 px of left padding. `ScrollView` stacks children vertically, scrolls with the mouse wheel, and supports dragging its scrollbar. `ClipStack` overlays its children and clips any drawing outside the container.
+- `Slider` can be adjusted by dragging, scrolling, or using the keyboard. In the inspector, edit the range as `minimum, maximum, step`; use a step of `0` for continuous values. `Value` sets the initial value; fill in `Upper` to enable the second handle or leave it empty to use a single handle. For example, use the range `0, 1000, 1`, a `Value` of `10`, and an `Upper` of `100`. The second handle always remains above the first. Clicking or scrolling adjusts the handle closest to the mouse; while focused, Space switches handles, and arrows, Home/End, and Page Up/Down adjust the selected handle. Both values are saved in JSON.
+- `ProgressBar` is visual only and displays the current value rounded without decimal places; its values can be edited as `minimum, maximum, value`. Use the `Format` button in the inspector to display the normalized percentage from `0%` to `100%`. In Preview, the value demonstrates the continuous progress cycle.
+- Enter a name in the top text box and use **Save** to write to `config/r_ui_lib/ui-playground/` inside the game directory. **Load** opens a list of saved layouts; select an entry and confirm.
+- When the playground opens, the last saved layout loads automatically. If older layouts have no record of the last save, the most recently modified JSON file is used.
+- **New** creates an empty document. Demonstration callbacks are recreated locally and are never written to JSON.
+- File or format errors appear in the screen's bottom bar.
 
-Os documentos usam `version: 1`; o playground rejeita versões desconhecidas e layouts estruturalmente inválidos sem fechar o jogo.
+Documents use `version: 1`; the playground rejects unknown versions and structurally invalid layouts without closing the game.

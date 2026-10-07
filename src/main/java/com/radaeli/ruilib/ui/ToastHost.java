@@ -20,7 +20,6 @@ public final class ToastHost extends UiComponent {
     private final List<ActiveToast> activeToasts = new ArrayList<>();
     private Font layoutFont;
     private UiTheme layoutTheme;
-    private int transitionDurationMillis = 140;
 
     @Override
     protected UiSize measureIntrinsic(Font font, UiTheme theme, int maxWidth, int maxHeight) {
@@ -31,7 +30,6 @@ public final class ToastHost extends UiComponent {
     protected void layoutChildren(Font font, UiTheme theme) {
         layoutFont = font;
         layoutTheme = theme;
-        transitionDurationMillis = theme.tokens().motion().transitionDurationMillis();
         layoutToasts();
     }
 
@@ -63,20 +61,11 @@ public final class ToastHost extends UiComponent {
     /** Called from the owning screen's tick; inactive screens do not age their toasts. */
     public void tick() {
         if (activeToasts.isEmpty()) return;
-        for (int index = activeToasts.size() - 1; index >= 0; index--) {
-            ActiveToast active = activeToasts.get(index);
+        for (ActiveToast active : activeToasts) {
             if (active.remainingTicks > 0) {
                 active.remainingTicks--;
-                if (active.remainingTicks == 0) active.exitTicks = exitDurationTicks();
-            } else if (active.exitTicks > 0) {
-                active.exitTicks--;
-            }
-            if (active.remainingTicks <= 0 && active.exitTicks <= 0) {
-                activeToasts.remove(index);
-                clearAnimation("toast-opacity-" + active.id);
             }
         }
-        layoutToasts();
     }
 
     public int size() {
@@ -88,29 +77,34 @@ public final class ToastHost extends UiComponent {
         if (layoutFont != context.font() || layoutTheme != context.theme()) {
             layoutFont = context.font();
             layoutTheme = context.theme();
-            transitionDurationMillis = context.theme().tokens().motion().transitionDurationMillis();
             layoutToasts();
         }
-        for (ActiveToast active : activeToasts) {
-            if (active.bounds.width() == 0 || active.lines.isEmpty()) continue;
+        boolean removedToast = false;
+        for (var iterator = activeToasts.iterator(); iterator.hasNext();) {
+            ActiveToast active = iterator.next();
             double opacity = animateFrom(context, "toast-opacity-" + active.id,
                     active.remainingTicks > 0 ? 1 : 0, 0);
-            if (opacity <= 0) continue;
+            if (active.remainingTicks == 0 && opacity <= 0) {
+                iterator.remove();
+                clearAnimation("toast-opacity-" + active.id);
+                removedToast = true;
+                continue;
+            }
+            if (opacity <= 0 || active.bounds.width() == 0 || active.lines.isEmpty()) continue;
             int slide = (int) Math.round((1 - opacity) * 14);
             Bounds visualBounds = new Bounds(active.bounds.x() + slide, active.bounds.y(),
                     active.bounds.width(), active.bounds.height());
-            UiPaint.panel(context, visualBounds, opacity);
-            UiPaint.roundedRect(context, new Bounds(visualBounds.x(), visualBounds.y(), 3, visualBounds.height()),
-                    UiPaint.withAlpha(accentColor(active.toast.level(), context), opacity),
-                    context.theme().tokens().radii().pill());
-            Insets padding = context.theme().tokens().cardPadding();
+            UiContext visualContext = context.withOpacity(opacity);
+            UiPaint.toast(visualContext, visualBounds, accentColor(active.toast.level(), context));
+            Insets padding = contentPadding(context.theme());
             int textY = active.bounds.y() + padding.top();
             for (FormattedCharSequence line : active.lines) {
-                UiPaint.text(context.withOpacity(opacity), line,
+                UiPaint.text(visualContext, line,
                         visualBounds.x() + padding.left(), textY, context.theme().palette().text(), UiTextStyle.SMALL);
                 textY += UiText.height(context.font(), context.theme(), UiTextStyle.SMALL);
             }
         }
+        if (removedToast) layoutToasts();
     }
 
     @Override
@@ -118,10 +112,8 @@ public final class ToastHost extends UiComponent {
         if (button != 0) return false;
         for (int index = 0; index < activeToasts.size(); index++) {
             ActiveToast active = activeToasts.get(index);
-            if (!active.dismissing && active.bounds.contains(mouseX, mouseY)) {
-                active.dismissing = true;
+            if (active.remainingTicks > 0 && active.bounds.contains(mouseX, mouseY)) {
                 active.remainingTicks = 0;
-                active.exitTicks = exitDurationTicks();
                 return true;
             }
         }
@@ -130,7 +122,7 @@ public final class ToastHost extends UiComponent {
 
     private void layoutToasts() {
         if (layoutFont == null || layoutTheme == null) return;
-        Insets padding = layoutTheme.tokens().cardPadding();
+        Insets padding = contentPadding(layoutTheme);
         int edge = layoutTheme.tokens().largeGap();
         int gap = layoutTheme.tokens().smallGap();
         float textScale = layoutTheme.tokens().typography().smallScale();
@@ -161,8 +153,10 @@ public final class ToastHost extends UiComponent {
         }
     }
 
-    private int exitDurationTicks() {
-        return Math.max(1, (transitionDurationMillis + 49) / 50);
+    private static Insets contentPadding(UiTheme theme) {
+        Insets padding = theme.tokens().cardPadding();
+        return new Insets(padding.top(), padding.right(), padding.bottom(),
+                padding.left() + theme.tokens().smallGap());
     }
 
     private static int accentColor(Toast.Level level, UiContext context) {
@@ -178,8 +172,6 @@ public final class ToastHost extends UiComponent {
         private final long id = NEXT_TOAST_ID.incrementAndGet();
         private final Toast toast;
         private int remainingTicks;
-        private int exitTicks;
-        private boolean dismissing;
         private Bounds bounds = Bounds.EMPTY;
         private List<FormattedCharSequence> lines = List.of();
 

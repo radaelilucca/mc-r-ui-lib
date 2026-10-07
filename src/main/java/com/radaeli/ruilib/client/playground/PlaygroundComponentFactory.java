@@ -68,8 +68,7 @@ final class PlaygroundComponentFactory {
                     selected -> onSelectionChange.accept(node, selected));
             case "textfield" -> textField(node, false);
             case "searchfield" -> textField(node, true);
-            case "slider" -> new Slider(node.minimum, node.maximum, node.value, node.step,
-                    value -> node.value = value);
+            case "slider" -> createSlider(node);
             case "progressbar" -> new ProgressBar(node.minimum, node.maximum, node.value)
                     .setPercentage(node.percentage)
                     .setFormatter(node.percentage ? null : value -> Component.literal(
@@ -147,6 +146,15 @@ final class PlaygroundComponentFactory {
         field.setValue(node.text);
         field.setResponder(value -> node.text = value);
         return field;
+    }
+
+    private static Slider createSlider(PlaygroundNode node) {
+        Slider slider = new Slider(node.minimum, node.maximum, node.value, node.step, ignored -> { });
+        if (node.upperValue != null) slider.setValues(node.value, node.upperValue);
+        return slider.setOnRangeChange((lower, upper) -> {
+            node.value = lower;
+            node.upperValue = upper;
+        });
     }
 
     private static ItemCard createItemCard(PlaygroundNode node, Consumer<PlaygroundNode> onClick) {

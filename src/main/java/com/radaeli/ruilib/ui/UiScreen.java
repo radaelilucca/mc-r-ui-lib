@@ -65,11 +65,11 @@ public class UiScreen extends Screen {
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
         renderClosingModal(context);
         if (modal != null) modal.render(context);
+        renderCarriedItem(graphics, mouseX, mouseY);
         UiComponent hovered = closingModal == null ? activeRoot().hitTest(mouseX, mouseY) : null;
         if (hovered != null && hovered.tooltip() != null) {
             UiPaint.tooltip(context, hovered.tooltip(), mouseX, mouseY);
         }
-        renderCarriedItem(graphics, mouseX, mouseY);
     }
 
     protected void renderToastOverlay(GuiGraphics graphics, int mouseX, int mouseY) {

@@ -6,10 +6,11 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /** Small, theme-aware drawing primitives. Components should use these instead of raw shapes. */
 public final class UiPaint {
+    private static final float TOOLTIP_Z_INDEX = 600.0F;
     private UiPaint() {
     }
 
@@ -87,6 +88,26 @@ public final class UiPaint {
         int radius = context.theme().tokens().radii().large();
         roundedRect(context, bounds, withAlpha(context.theme().palette().panel(), opacity), radius);
         roundedOutline(context, bounds, withAlpha(context.theme().palette().border(), opacity), radius);
+    }
+
+    /** Draws a notification with its accent clipped inside the panel's rounded border. */
+    public static void toast(UiContext context, Bounds bounds, int accentColor) {
+        int radius = Math.min(context.theme().tokens().radii().large(),
+                Math.min(bounds.width(), bounds.height()) / 2);
+        roundedRect(context, bounds, context.theme().palette().panel(), radius);
+        Bounds inner = new Bounds(bounds.x() + 1, bounds.y() + 1,
+                Math.max(0, bounds.width() - 2), Math.max(0, bounds.height() - 2));
+        int innerRadius = Math.max(0, radius - 1);
+        int accentRight = Math.min(inner.right(), inner.x() + 3);
+        for (int row = 0; row < inner.height(); row++) {
+            int inset = cornerInset(row, inner.height(), innerRadius);
+            int left = inner.x() + inset;
+            int right = Math.min(accentRight, inner.right() - inset);
+            if (right > left) {
+                rect(context, new Bounds(left, inner.y() + row, right - left, 1), accentColor);
+            }
+        }
+        roundedOutline(context, bounds, context.theme().palette().border(), radius);
     }
 
     public static void card(UiContext context, Bounds bounds) {
@@ -172,10 +193,31 @@ public final class UiPaint {
     }
 
     public static void tab(UiContext context, Bounds bounds, double selected, double focused) {
+        tab(context, bounds, selected, focused, true, true);
+    }
+
+    /** Paints one segment of a tab strip, rounding only the exposed outer corners. */
+    public static void tab(UiContext context, Bounds bounds, double selected, double focused,
+                           boolean roundLeft, boolean roundRight) {
         UiPalette palette = context.theme().palette();
         int radius = context.theme().tokens().radii().small();
-        roundedRect(context, bounds, mixColor(palette.panel(), palette.card(), selected), radius);
-        roundedOutline(context, bounds, mixColor(palette.border(), palette.focus(), focused), radius);
+        int fill = mixColor(palette.panel(), palette.card(), selected);
+        int border = mixColor(palette.border(), palette.focus(), focused);
+        roundedRect(context, bounds, fill, radius);
+        roundedOutline(context, bounds, border, radius);
+        int squareWidth = Math.min(radius, bounds.width());
+        if (!roundLeft && squareWidth > 0) {
+            rect(context, new Bounds(bounds.x(), bounds.y(), squareWidth, bounds.height()), fill);
+            rect(context, new Bounds(bounds.x(), bounds.y(), 1, bounds.height()), border);
+            rect(context, new Bounds(bounds.x(), bounds.y(), squareWidth, 1), border);
+            rect(context, new Bounds(bounds.x(), bounds.bottom() - 1, squareWidth, 1), border);
+        }
+        if (!roundRight && squareWidth > 0) {
+            rect(context, new Bounds(bounds.right() - squareWidth, bounds.y(), squareWidth, bounds.height()), fill);
+            rect(context, new Bounds(bounds.right() - 1, bounds.y(), 1, bounds.height()), border);
+            rect(context, new Bounds(bounds.right() - squareWidth, bounds.y(), squareWidth, 1), border);
+            rect(context, new Bounds(bounds.right() - squareWidth, bounds.bottom() - 1, squareWidth, 1), border);
+        }
         if (selected > 0) rect(context, new Bounds(bounds.x(), bounds.bottom() - 2, bounds.width(), 2),
                 withAlpha(palette.accent(), selected));
     }
@@ -203,43 +245,50 @@ public final class UiPaint {
         roundedOutline(context, bounds, mixColor(palette.border(), palette.focus(), focused), radius);
     }
 
+    /** Paints a tooltip in the screen's top overlay layer. */
     public static void tooltip(UiContext context, Tooltip tooltip, int mouseX, int mouseY) {
-        UiPalette palette = context.theme().palette();
-        UiTokens tokens = context.theme().tokens();
-        Insets padding = tokens.cardPadding();
-        float scale = tokens.typography().smallScale();
-        int maxRenderedWidth = Math.max(1, Math.min(240, context.screenWidth() - 16)
-                - padding.left() - padding.right());
-        int maxFontWidth = Math.max(1, (int) Math.floor(maxRenderedWidth / scale));
-        List<FormattedCharSequence> lines = new ArrayList<>();
-        for (Component component : tooltip.lines()) {
-            List<FormattedCharSequence> wrapped = context.font().split(component, maxFontWidth);
-            lines.addAll(wrapped.isEmpty() ? List.of(FormattedCharSequence.EMPTY) : wrapped);
-        }
-        int textWidth = 0;
-        for (FormattedCharSequence line : lines) {
-            textWidth = Math.max(textWidth, Math.round(context.font().width(line) * scale));
-        }
-        int lineHeight = UiText.height(context.font(), context.theme(), UiTextStyle.SMALL);
-        int gap = tokens.smallGap();
-        int width = Math.min(context.screenWidth(), textWidth + padding.left() + padding.right());
-        int height = lines.size() * lineHeight + Math.max(0, lines.size() - 1) * gap
-                + padding.top() + padding.bottom();
-        int x = mouseX + 10;
-        if (x + width > context.screenWidth() - 4) x = mouseX - width - 10;
-        x = Math.max(4, Math.min(x, context.screenWidth() - width - 4));
-        int y = mouseY + 10;
-        if (y + height > context.screenHeight() - 4) y = mouseY - height - 8;
-        y = Math.max(4, Math.min(y, context.screenHeight() - height - 4));
+        context.graphics().pose().pushPose();
+        context.graphics().pose().translate(0.0F, 0.0F, TOOLTIP_Z_INDEX);
+        try {
+            UiPalette palette = context.theme().palette();
+            UiTokens tokens = context.theme().tokens();
+            Insets padding = tokens.cardPadding();
+            float scale = tokens.typography().smallScale();
+            int maxRenderedWidth = Math.max(1, Math.min(240, context.screenWidth() - 16)
+                    - padding.left() - padding.right());
+            int maxFontWidth = Math.max(1, (int) Math.floor(maxRenderedWidth / scale));
+            List<FormattedCharSequence> lines = new ArrayList<>();
+            for (Component component : tooltip.lines()) {
+                List<FormattedCharSequence> wrapped = context.font().split(component, maxFontWidth);
+                lines.addAll(wrapped.isEmpty() ? List.of(FormattedCharSequence.EMPTY) : wrapped);
+            }
+            int textWidth = 0;
+            for (FormattedCharSequence line : lines) {
+                textWidth = Math.max(textWidth, Math.round(context.font().width(line) * scale));
+            }
+            int lineHeight = UiText.height(context.font(), context.theme(), UiTextStyle.SMALL);
+            int gap = tokens.smallGap();
+            int width = Math.min(context.screenWidth(), textWidth + padding.left() + padding.right());
+            int height = lines.size() * lineHeight + Math.max(0, lines.size() - 1) * gap
+                    + padding.top() + padding.bottom();
+            int x = mouseX + 10;
+            if (x + width > context.screenWidth() - 4) x = mouseX - width - 10;
+            x = Math.max(4, Math.min(x, context.screenWidth() - width - 4));
+            int y = mouseY + 10;
+            if (y + height > context.screenHeight() - 4) y = mouseY - height - 8;
+            y = Math.max(4, Math.min(y, context.screenHeight() - height - 4));
 
-        Bounds bounds = new Bounds(x, y, width, height);
-        int radius = tokens.radii().small();
-        roundedRect(context, bounds, palette.card(), radius);
-        roundedOutline(context, bounds, palette.border(), radius);
-        int textY = y + padding.top();
-        for (FormattedCharSequence line : lines) {
-            text(context, line, x + padding.left(), textY, palette.text(), UiTextStyle.SMALL);
-            textY += lineHeight + gap;
+            Bounds bounds = new Bounds(x, y, width, height);
+            int radius = tokens.radii().small();
+            roundedRect(context, bounds, palette.card(), radius);
+            roundedOutline(context, bounds, palette.border(), radius);
+            int textY = y + padding.top();
+            for (FormattedCharSequence line : lines) {
+                text(context, line, x + padding.left(), textY, palette.text(), UiTextStyle.SMALL);
+                textY += lineHeight + gap;
+            }
+        } finally {
+            context.graphics().pose().popPose();
         }
     }
 
@@ -266,9 +315,9 @@ public final class UiPaint {
     }
 
     public static void text(UiContext context, String value, int x, int y, int color, UiTextStyle style) {
-        withTextScale(context, style, x, y,
-                graphics -> graphics.drawString(context.font(), value, 0, 0,
-                        withAlpha(color, context.opacity()), false));
+        withTextScale(context, style, x, y, color,
+                (graphics, textColor) -> graphics.drawString(context.font(), value, 0, 0,
+                        textColor, false));
     }
 
     public static void textCentered(UiContext context, String value, int centerX, int y, int color) {
@@ -278,9 +327,9 @@ public final class UiPaint {
     public static void textCentered(UiContext context, String value, int centerX, int y, int color,
                                     UiTextStyle style) {
         int xOffset = -context.font().width(value) / 2;
-        withTextScale(context, style, centerX, y,
-                graphics -> graphics.drawString(context.font(), value, xOffset, 0,
-                        withAlpha(color, context.opacity()), false));
+        withTextScale(context, style, centerX, y, color,
+                (graphics, textColor) -> graphics.drawString(context.font(), value, xOffset, 0,
+                        textColor, false));
     }
 
     public static void text(UiContext context, net.minecraft.network.chat.Component value,
@@ -290,9 +339,9 @@ public final class UiPaint {
 
     public static void text(UiContext context, net.minecraft.network.chat.Component value,
                             int x, int y, int color, UiTextStyle style) {
-        withTextScale(context, style, x, y,
-                graphics -> graphics.drawString(context.font(), value, 0, 0,
-                        withAlpha(color, context.opacity()), false));
+        withTextScale(context, style, x, y, color,
+                (graphics, textColor) -> graphics.drawString(context.font(), value, 0, 0,
+                        textColor, false));
     }
 
     public static void textCentered(UiContext context, net.minecraft.network.chat.Component value,
@@ -303,26 +352,30 @@ public final class UiPaint {
     public static void textCentered(UiContext context, net.minecraft.network.chat.Component value,
                                     int centerX, int y, int color, UiTextStyle style) {
         int xOffset = -context.font().width(value) / 2;
-        withTextScale(context, style, centerX, y,
-                graphics -> graphics.drawString(context.font(), value, xOffset, 0,
-                        withAlpha(color, context.opacity()), false));
+        withTextScale(context, style, centerX, y, color,
+                (graphics, textColor) -> graphics.drawString(context.font(), value, xOffset, 0,
+                        textColor, false));
     }
 
     public static void text(UiContext context, FormattedCharSequence value, int x, int y, int color,
                             UiTextStyle style) {
-        withTextScale(context, style, x, y,
-                graphics -> graphics.drawString(context.font(), value, 0, 0,
-                        withAlpha(color, context.opacity()), false));
+        withTextScale(context, style, x, y, color,
+                (graphics, textColor) -> graphics.drawString(context.font(), value, 0, 0,
+                        textColor, false));
     }
 
     private static void withTextScale(UiContext context, UiTextStyle style, int x, int y,
-                                      Consumer<GuiGraphics> drawing) {
+                                      int color, BiConsumer<GuiGraphics, Integer> drawing) {
+        int textColor = withAlpha(color, context.opacity());
+        // Font.adjustColor treats alpha 0..3 as an implicit opaque RGB color.
+        // Skip these effectively invisible glyphs so a fade cannot flash back to full opacity.
+        if ((textColor >>> 24) < 4) return;
         GuiGraphics graphics = context.graphics();
         float scale = context.theme().tokens().typography().scale(style);
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         graphics.pose().scale(scale, scale, 1);
-        drawing.accept(graphics);
+        drawing.accept(graphics, textColor);
         graphics.pose().popPose();
     }
 }

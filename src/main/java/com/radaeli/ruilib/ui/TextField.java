@@ -58,12 +58,17 @@ public class TextField extends UiComponent {
     protected void layoutChildren(Font font, UiTheme theme) {
         textScale = theme.tokens().typography().bodyScale();
         ensureEditBox(font);
-        int inset = editorInsetLeft();
-        int editorHeight = Math.max(8, bounds().height() - 4);
-        editBox.setX(bounds().x() + 4 + inset);
-        editBox.setY(bounds().y() + (bounds().height() - editorHeight) / 2);
-        editBox.setSize(Math.max(1, bounds().width() - 8 - inset), editorHeight);
+        layoutEditor(font);
         syncEditBoxState();
+    }
+
+    private void layoutEditor(Font font) {
+        int inset = editorInsetLeft();
+        int renderedTextHeight = Math.round(font.lineHeight * textScale);
+        int editorY = bounds().y() + Math.max(0, (bounds().height() - renderedTextHeight) / 2);
+        editBox.setX(bounds().x() + 4 + inset);
+        editBox.setY(editorY);
+        editBox.setSize(Math.max(1, bounds().width() - 8 - inset), Math.max(8, font.lineHeight));
     }
 
     protected int editorInsetLeft() {
@@ -72,10 +77,9 @@ public class TextField extends UiComponent {
 
     private void ensureEditBox(Font font) {
         if (editBox != null) return;
-        int editorHeight = Math.max(8, bounds().height() - 4);
         editBox = new EditBox(font, bounds().x() + 4 + editorInsetLeft(),
-                bounds().y() + (bounds().height() - editorHeight) / 2,
-                Math.max(1, bounds().width() - 8 - editorInsetLeft()), editorHeight, hint);
+                bounds().y(), Math.max(1, bounds().width() - 8 - editorInsetLeft()),
+                Math.max(8, font.lineHeight), hint);
         editBox.setBordered(false);
         editBox.setMaxLength(maxLength);
         editBox.setValue(value);
@@ -117,7 +121,13 @@ public class TextField extends UiComponent {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isEnabled() || !bounds().contains(mouseX, mouseY)) return false;
         ensureEditBox(net.minecraft.client.Minecraft.getInstance().font);
-        boolean consumed = editBox.mouseClicked(logicalMouseX(mouseX), logicalMouseY(mouseY), button);
+        Font font = net.minecraft.client.Minecraft.getInstance().font;
+        layoutEditor(font);
+        int editorMouseX = Math.max(editBox.getX(), Math.min(editBox.getX() + editBox.getWidth() - 1,
+                logicalMouseX(mouseX)));
+        int editorMouseY = Math.max(editBox.getY(), Math.min(editBox.getY() + editBox.getHeight() - 1,
+                logicalMouseY(mouseY)));
+        boolean consumed = editBox.mouseClicked(editorMouseX, editorMouseY, button);
         setFocused(consumed);
         return consumed;
     }

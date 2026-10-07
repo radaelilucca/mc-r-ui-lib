@@ -23,6 +23,7 @@ final class PlaygroundNode {
     double minimum;
     double maximum = 100;
     double value = 50;
+    Double upperValue;
     double step = 1;
     int x;
     int y;

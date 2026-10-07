@@ -1,45 +1,45 @@
-# Transições visuais do UI Toolkit
+# UI Toolkit visual transitions
 
-## Base global
+## Global foundation
 
-As animações usam `UiTokens.motion`, com duração padrão de **140 ms** e easing `EASE_IN_OUT`. Um tema pode configurar a duração e escolher `LINEAR`, `EASE_IN_OUT` ou `EASE_OUT`; duração zero desativa as transições. O acessor `UiTokens.transitionDurationMillis()` permanece disponível por compatibilidade. As transições usam o relógio monotônico compartilhado pelo `UiContext` de cada frame.
+Animations use `UiTokens.motion`, with a default duration of **140 ms** and `EASE_IN_OUT` easing. A theme can configure the duration and choose `LINEAR`, `EASE_IN_OUT`, or `EASE_OUT`; a duration of zero disables transitions. The `UiTokens.transitionDurationMillis()` accessor remains available for compatibility. Transitions use the monotonic clock shared through each frame's `UiContext`.
 
-Estados de interação começam no valor inicial do componente. Desabilitar um controle mantém resposta imediata; hover, foco e mudanças de seleção usam a duração do tema.
+Interaction states start at the component's initial value. Disabling a control takes effect immediately; hover, focus, and selection changes use the theme's duration.
 
-## Decisão por componente
+## Per-component decisions
 
-| Componente | Transição |
+| Component | Transition |
 |---|---|
-| `AbsoluteLayout` | Nenhuma: posiciona filhos sem estado visual próprio. |
-| `Button` | Cor entre repouso, hover e pressionado; contorno de foco. |
-| `Card` | Fundo entre repouso, hover e selecionado; contorno de foco. |
-| `Chip` | Fundo de hover e seleção; contorno de foco. |
-| `ClipStack` | Nenhuma: recorta os filhos; cada filho anima seu próprio estado. |
-| `Column` | Nenhuma: layout estático. |
-| `Divider` | Nenhuma: separador estático. |
-| `Grid` | Nenhuma: layout estático. |
-| `IconButton` | Igual ao `Button`, preservando ícone e tooltip nativos. |
-| `ItemCard` | Fundo de hover, pressão e seleção. |
-| `ItemGrid` | Nenhuma própria: os `ItemCard` filhos animam individualmente. |
-| `Label` | Nenhuma: texto informativo estático. |
-| `Modal` | Fundo escurecido, moldura e conteúdo interno entram e saem com a mesma opacidade; foco e input ficam estáveis até o fade de saída terminar. |
-| `Panel` | Nenhuma: superfície estrutural. |
-| `ProgressBar` | Preenchimento interpola até o novo progresso. |
-| `RadialMenu` | Realce do segmento sob o ponteiro e fade ao abrir/fechar. |
-| `Row` | Nenhuma: layout estático. |
-| `ScrollView` | Conteúdo acompanha a rolagem suavemente; indicador fica mais visível ao interagir. |
-| `SearchField` | Herda transições de hover e foco de `TextField`; lupa permanece estável. |
-| `Slider` | Indicador e leitura acompanham mudanças programáticas; arraste segue o ponteiro sem atraso. Hover e foco também transitam. |
-| `Spacer` | Nenhuma: apenas reserva espaço. |
-| `Stack` | Nenhuma: layout estático. |
-| `Table` | Realce de hover/seleção por linha e rolagem suave. |
-| `Tabs` | Fundo, texto, contorno e indicador de seleção transitam; a página ativa troca imediatamente. |
-| `TextField` | Fundo e contorno transitam em hover/foco; cursor, seleção e IME seguem o `EditBox` vanilla. |
-| `Toast` | É apenas o descritor da notificação; a apresentação é animada pelo host. |
-| `ToastHost` | Entrada e saída com fade e pequeno deslocamento lateral. |
-| `Toggle` | A alavanca desliza entre posições; trilha e foco transitam. |
-| `Tooltip` | Mantém o pipeline de tooltip vanilla, sem animação própria nesta etapa. |
+| `AbsoluteLayout` | None: positions children without its own visual state. |
+| `Button` | Color transitions between rest, hover, and pressed states; focus outline. |
+| `Card` | Background transitions between rest, hover, and selected states; focus outline. |
+| `Chip` | Hover and selection backgrounds; focus outline. |
+| `ClipStack` | None: clips children; each child animates its own state. |
+| `Column` | None: static layout. |
+| `Divider` | None: static separator. |
+| `Grid` | None: static layout. |
+| `IconButton` | Same as `Button`, preserving the native icon and tooltip. |
+| `ItemCard` | Hover, pressed, and selection backgrounds. |
+| `ItemGrid` | None of its own: child `ItemCard` components animate individually. |
+| `Label` | None: static informational text. |
+| `Modal` | Dimmed backdrop, frame, and inner content enter and exit with the same opacity; focus and input remain stable until the exit fade ends. |
+| `Panel` | None: structural surface. |
+| `ProgressBar` | Fill interpolates toward the new progress value. |
+| `RadialMenu` | Highlight for the segment under the pointer and a fade when opening or closing. |
+| `Row` | None: static layout. |
+| `ScrollView` | Content scrolls smoothly; the indicator becomes more visible during interaction. |
+| `SearchField` | Inherits hover and focus transitions from `TextField`; the magnifying glass remains steady. |
+| `Slider` | Indicator and readout follow programmatic changes; dragging follows the pointer without delay. Hover and focus also transition. |
+| `Spacer` | None: only reserves space. |
+| `Stack` | None: static layout. |
+| `Table` | Per-row hover and selection highlights, with smooth scrolling. |
+| `Tabs` | Background, text, outline, and selection indicator transition; the active page changes immediately. |
+| `TextField` | Background and outline transition on hover and focus; cursor, selection, and IME use vanilla `EditBox` behavior. |
+| `Toast` | Only the notification descriptor; the host animates its presentation. |
+| `ToastHost` | Entry and exit fades with a slight horizontal slide. |
+| `Toggle` | The thumb slides between positions; track and focus transition. |
+| `Tooltip` | Keeps the vanilla tooltip pipeline, without its own animation at this stage. |
 
-## Infraestrutura
+## Infrastructure
 
-`UiComponent` guarda o progresso dos estados animados por instância. `UiPaint` interpola cores e opacidade sem duplicar lógica de easing nos componentes. Componentes sem estado visual próprio permanecem imediatos; seus filhos interativos continuam usando o mesmo token global.
+`UiComponent` stores animation progress per instance. `UiPaint` interpolates colors and opacity without duplicating easing logic in components. Components without their own visual state remain immediate; their interactive children continue to use the same global token.

@@ -1,23 +1,24 @@
 # PRD — Minecraft UI Toolkit
-## Biblioteca client-side de UI para mods Minecraft
+## Client-side UI library for Minecraft mods
 
-- **Status:** Em evolução
-- **Target inicial:** Minecraft 1.21.1 + NeoForge
-- **Distribuição inicial:** mod de biblioteca independente R-Ui Lib
-- **Próximo objetivo:** consolidar a API e disponibilizar os artefatos de runtime e fontes para projetos consumidores
-**Referência arquitetural:** abordagem utilizada pelo Logistics Network — primitives e design system próprios construídos sobre as APIs vanilla de `Screen`, `GuiGraphics` e widgets do Minecraft.
+- **Status:** Evolving
+- **Initial target:** Minecraft 1.21.1 + NeoForge
+- **Initial distribution:** independent R-Ui Lib library mod
+- **Next objective:** stabilize the API and provide runtime and sources artifacts for consuming projects
+
+**Architectural reference:** the approach used by Logistics Network — custom primitives and a design system built on vanilla Minecraft `Screen`, `GuiGraphics`, and widget APIs.
 
 ---
 
-# 1. Visão
+# 1. Vision
 
-Construir uma biblioteca de UI reutilizável para mods Minecraft que permita criar interfaces visualmente modernas, consistentes e desacopladas do estilo vanilla tradicional de inventário/furnace.
+Build a reusable UI library for Minecraft mods that supports visually modern, consistent interfaces independent of the traditional vanilla inventory/furnace style.
 
-A biblioteca deve abstrair as partes repetitivas e pouco ergonômicas da API de UI do Minecraft sem tentar recriar um framework web completo.
+The library should abstract the repetitive, cumbersome parts of Minecraft's UI API without trying to recreate a complete web framework.
 
-O objetivo não é competir com React, CSS ou frameworks declarativos completos.
+The goal is not to compete with React, CSS, or complete declarative frameworks.
 
-O objetivo é criar uma camada pequena, previsível e idiomática sobre:
+The goal is to create a small, predictable, idiomatic layer over:
 
 ```text
 Minecraft Screen API
@@ -29,7 +30,7 @@ Input events
 Widgets / Item rendering
 ```
 
-fornecendo:
+providing:
 
 ```text
 Design tokens
@@ -42,26 +43,26 @@ Tooltips
 Common rendering helpers
 ```
 
-# 2. Problema
+# 2. Problem
 
-A API vanilla permite construir praticamente qualquer interface, mas exige muito código repetitivo.
+The vanilla API can build almost any interface, but it requires substantial repetitive code.
 
-Problemas comuns:
+Common problems:
 
-- posicionamento manual de elementos;
-- cálculo manual de padding/gap;
-- cores e estilos duplicados;
-- hover/focus implementados várias vezes;
-- scroll implementado manualmente;
-- clipping/scissor pouco ergonômico;
-- necessidade de repetir lógica de cards, panels, buttons e tabs;
-- pouca consistência entre diferentes telas;
-- grande acoplamento entre layout, rendering e input;
-- widgets vanilla possuem estética e comportamento que nem sempre combinam com interfaces customizadas.
+- manual element positioning;
+- manual padding/gap calculations;
+- duplicated colors and styles;
+- repeated hover/focus implementations;
+- manually implemented scrolling;
+- cumbersome clipping/scissoring;
+- repeated card, panel, button, and tab logic;
+- limited consistency across screens;
+- tight coupling between layout, rendering, and input;
+- vanilla widgets have aesthetics and behavior that do not always fit custom interfaces.
 
-Um mod com várias telas tende naturalmente a criar seu próprio mini design system.
+A mod with several screens naturally tends to create its own small design system.
 
-O Logistics Network é um exemplo dessa abordagem, com estruturas equivalentes a:
+Logistics Network is an example of this approach, with structures equivalent to:
 
 ```text
 Theme
@@ -71,13 +72,13 @@ screen abstractions
 reusable paint helpers
 ```
 
-Esta biblioteca formaliza esse approach desde o início.
+This library formalizes that approach from the start.
 
-# 3. Objetivos
+# 3. Goals
 
-## 3.1. Objetivos principais
+## 3.1. Main goals
 
-A biblioteca deve permitir construir UIs como:
+The library should support building UIs such as:
 
 ```text
 dashboard
@@ -94,11 +95,11 @@ tooltips
 radial overlays
 ```
 
-sem depender visualmente do estilo vanilla.
+without visually depending on the vanilla style.
 
-## 3.2. Ergonomia
+## 3.2. Ergonomics
 
-O uso deve se aproximar conceitualmente de:
+Usage should conceptually resemble:
 
 ```java
 Panel panel = ui.panel()
@@ -114,7 +115,7 @@ panel.add(
 );
 ```
 
-em vez de espalhar:
+instead of scattering:
 
 ```java
 graphics.fill(...);
@@ -126,38 +127,38 @@ if (mouseX >= ...) {
 }
 ```
 
-por cada screen.
+throughout every screen.
 
-A biblioteca não precisa ser declarativa no MVP, mas deve permitir composição de componentes.
+The library does not need to be declarative in the MVP, but it should support component composition.
 
-## 3.3. Independência visual
+## 3.3. Visual independence
 
-Nenhum componente deve depender obrigatoriamente de:
+No component should require:
 
-- texturas vanilla de botão;
-- sprites de furnace/chest;
-- slots vanilla;
-- background PNG fixo.
+- vanilla button textures;
+- furnace/chest sprites;
+- vanilla slots;
+- a fixed background PNG.
 
-A aparência deve ser derivada principalmente de:
+Appearance should primarily come from:
 
 - shapes;
-- cores;
+- colors;
 - borders;
 - text;
 - gradients;
-- sprites opcionais;
+- optional sprites;
 - item rendering.
 
-## 3.4. Desacoplamento
+## 3.4. Decoupling
 
-A biblioteca será criada inicialmente dentro de outro projeto, mas deve ser desenvolvida como se já fosse uma dependência externa.
+The library will initially be created inside another project, but it should be developed as if it were already an external dependency.
 
-Regra:
+Rule:
 
-> Nenhuma classe da biblioteca pode importar classes de domínio do mod hospedeiro.
+> No library class may import domain classes from the host mod.
 
-Permitido:
+Allowed:
 
 ```text
 net.minecraft.*
@@ -166,7 +167,7 @@ org.joml.*
 ui toolkit internal packages
 ```
 
-Não permitido:
+Not allowed:
 
 ```text
 com.my_mod.features.*
@@ -175,36 +176,36 @@ com.my_mod.network.*
 com.my_mod.domain.*
 ```
 
-# 4. Não objetivos
+# 4. Non-goals
 
-O MVP não deve tentar implementar:
+The MVP should not attempt to implement:
 
 - HTML/CSS;
-- Flexbox completo;
-- CSS Grid completo;
-- stylesheet parser;
-- XML/JSON layout declarativo;
-- hot reload de UI;
-- WYSIWYG editor;
-- reactive state framework;
-- animations complexas;
-- full accessibility framework;
+- complete Flexbox;
+- complete CSS Grid;
+- a stylesheet parser;
+- declarative XML/JSON layouts;
+- UI hot reload;
+- a WYSIWYG editor;
+- a reactive state framework;
+- complex animations;
+- a full accessibility framework;
 - cross-loader support;
 - Fabric support;
 - Forge 1.20.1;
 - server-side UI abstraction;
 - networking abstraction;
-- inventory menu abstraction completa.
+- a complete inventory menu abstraction.
 
-Esses pontos podem ser avaliados depois.
+These areas can be evaluated later.
 
-# 5. Filosofia
+# 5. Philosophy
 
 ## 5.1. Vanilla first
 
-Sempre que Minecraft já resolve bem alguma coisa, reutilizar.
+Reuse Minecraft behavior whenever it already solves a problem well.
 
-Exemplos:
+Examples:
 
 ```text
 Font
@@ -213,16 +214,16 @@ tooltips
 text input behavior
 Screen lifecycle
 keyboard/mouse events
-narration quando aplicável
+narration where applicable
 ```
 
-Não recriar item rendering.
+Do not recreate item rendering.
 
-Não recriar text layout básico.
+Do not recreate basic text layout.
 
 ## 5.2. Own the visuals
 
-Para aparência customizada:
+For custom appearance:
 
 ```text
 panel
@@ -236,11 +237,11 @@ modal
 scrollbar
 ```
 
-preferir rendering próprio.
+prefer custom rendering.
 
 ## 5.3. Composition over inheritance
 
-Evitar uma árvore profunda de classes como:
+Avoid a deep class hierarchy such as:
 
 ```text
 BaseWidget
@@ -254,7 +255,7 @@ ContainerStyledWidget
 ...
 ```
 
-Preferir:
+Prefer:
 
 ```text
 Component
@@ -263,13 +264,13 @@ Layout
 Renderer
 ```
 
-composição.
+composition.
 
 ## 5.4. Stateful only where necessary
 
-Componentes devem manter apenas o estado necessário.
+Components should keep only the state they need.
 
-Exemplos:
+Examples:
 
 ```text
 hovered
@@ -280,11 +281,11 @@ selected
 expanded
 ```
 
-Estado de domínio pertence ao consumidor.
+Domain state belongs to the consumer.
 
-# 6. Organização do módulo
+# 6. Module organization
 
-Estrutura inicial sugerida:
+Suggested initial structure:
 
 ```text
 src/main/java/.../ui/
@@ -352,13 +353,13 @@ src/main/java/.../ui/
     └── UiDebugOverlay
 ```
 
-A estrutura pode evoluir, mas o módulo deve permanecer autocontido.
+The structure can evolve, but the module should remain self-contained.
 
-# 7. Camada core
+# 7. Core layer
 
 ## 7.1. `UiComponent`
 
-Interface base conceitual:
+Conceptual base interface:
 
 ```java
 interface UiComponent {
@@ -368,12 +369,12 @@ interface UiComponent {
 }
 ```
 
-Responsabilidades:
+Responsibilities:
 
-- receber bounds;
-- renderizar;
-- participar de layout;
-- opcionalmente receber input.
+- receive bounds;
+- render;
+- participate in layout;
+- optionally receive input.
 
 ## 7.2. `Bounds`
 
@@ -401,7 +402,7 @@ bottom()
 
 ## 7.3. `UiContext`
 
-Deve encapsular acesso frequente a:
+Should encapsulate frequently accessed values:
 
 ```text
 GuiGraphics
@@ -414,7 +415,7 @@ theme
 screen size
 ```
 
-Exemplo conceitual:
+Conceptual example:
 
 ```java
 record UiContext(
@@ -429,11 +430,11 @@ record UiContext(
 
 # 8. Theme system
 
-Inspirado diretamente no pattern do Logistics Network.
+Inspired directly by the Logistics Network pattern.
 
 ## 8.1. `UiTokens`
 
-Tokens estruturais:
+Structural tokens:
 
 ```text
 spacingXs
@@ -455,7 +456,7 @@ controlHeightLg
 
 ## 8.2. `UiPalette`
 
-Tokens de cor:
+Color tokens:
 
 ```text
 background
@@ -500,24 +501,24 @@ record UiTheme(
 ) {}
 ```
 
-O toolkit deve permitir múltiplos themes.
+The toolkit should support multiple themes.
 
-Exemplo inicial:
+Initial example:
 
 ```text
 Dark
 Light
 ```
 
-Não priorizar theme editor no MVP.
+Do not prioritize a theme editor in the MVP.
 
 # 9. Paint primitives
 
-`UiPaint` será equivalente ao `ThemePaint` observado no Logistics Network.
+`UiPaint` will be equivalent to the `ThemePaint` observed in Logistics Network.
 
-Deve centralizar rendering repetitivo.
+It should centralize repetitive rendering.
 
-Primeiro set:
+First set:
 
 ```text
 rect
@@ -544,9 +545,9 @@ hoverOverlay
 
 # 10. Layout engine
 
-Não implementar Flexbox completo.
+Do not implement complete Flexbox.
 
-Implementar um subset pequeno que resolva a maioria das screens.
+Implement a small subset that handles most screens.
 
 ## 10.1. Column
 
@@ -558,7 +559,7 @@ Column
 └── component
 ```
 
-Configuração:
+Configuration:
 
 ```text
 gap
@@ -575,7 +576,7 @@ Row
 └── component
 ```
 
-Configuração:
+Configuration:
 
 ```text
 gap
@@ -584,7 +585,7 @@ vertical alignment
 
 ## 10.3. Stack
 
-Elementos sobrepostos:
+Overlapping elements:
 
 ```text
 Stack
@@ -593,7 +594,7 @@ Stack
 └── overlay
 ```
 
-Útil para:
+Useful for:
 
 - badges;
 - hover;
@@ -602,14 +603,14 @@ Stack
 
 ## 10.4. Grid
 
-Necessário desde cedo para mods com:
+Needed early for mods with:
 
 - items;
 - blocks;
 - resource browsers;
 - palettes.
 
-API conceitual:
+Conceptual API:
 
 ```java
 Grid grid = Grid.builder()
@@ -618,14 +619,14 @@ Grid grid = Grid.builder()
     .build();
 ```
 
-Inicialmente:
+Initially:
 
 ```text
 fixed column count
 fixed/known item size
 ```
 
-Depois pode suportar auto-fit.
+Auto-fit can be supported later.
 
 ## 10.5. Spacer
 
@@ -634,7 +635,7 @@ Spacer.fixed(8);
 Spacer.flex();
 ```
 
-`flex()` pode ser adiado se complicar o primeiro layout engine.
+`flex()` can be postponed if it complicates the first layout engine.
 
 # 11. Sizing
 
@@ -646,14 +647,14 @@ CONTENT
 FILL
 ```
 
-Exemplo:
+Example:
 
 ```java
 component.width(FILL);
 component.height(CONTENT);
 ```
 
-Não implementar inicialmente:
+Do not initially implement:
 
 ```text
 min-content
@@ -663,11 +664,11 @@ calc()
 complex constraints
 ```
 
-# 12. Primitives prioritários
+# 12. Priority primitives
 
 ## 12.1. Text
 
-Suportar:
+Support:
 
 ```text
 Component
@@ -680,7 +681,7 @@ max width
 
 ## 12.2. Panel
 
-Container visual neutro.
+Neutral visual container.
 
 Props:
 
@@ -693,21 +694,21 @@ radius
 
 ## 12.3. Card
 
-Panel com semantics visuais de agrupamento.
+Panel with visual grouping semantics.
 
 Props:
 
 ```text
-title opcional
-hover opcional
-selected opcional
+optional title
+optional hover
+optional selected state
 ```
 
 ## 12.4. Button
 
-Button próprio, sem depender visualmente do botão vanilla.
+Custom button without a visual dependency on the vanilla button.
 
-Estados:
+States:
 
 ```text
 default
@@ -719,9 +720,9 @@ disabled
 
 ## 12.5. IconButton
 
-Mesmo comportamento de Button, conteúdo visual compacto.
+Same behavior as Button, with compact visual content.
 
-Útil para:
+Useful for:
 
 ```text
 close
@@ -734,7 +735,7 @@ favorite
 
 ## 12.6. Toggle
 
-Primitivo de boolean.
+Boolean primitive.
 
 ```text
 label
@@ -751,7 +752,7 @@ TabBar
 └── tab
 ```
 
-Estados:
+States:
 
 ```text
 active
@@ -761,7 +762,7 @@ disabled
 
 ## 12.8. Chip / Pill
 
-Útil para:
+Useful for:
 
 ```text
 mod names
@@ -773,17 +774,17 @@ categories
 
 ## 12.9. Divider
 
-Horizontal inicialmente.
+Initially horizontal.
 
 # 13. Inputs
 
-Inputs são uma área onde vale reutilizar comportamento vanilla.
+Inputs are an area where vanilla behavior is worth reusing.
 
 ## 13.1. TextField
 
-Pode encapsular `EditBox`.
+Can wrap `EditBox`.
 
-A biblioteca controla:
+The library controls:
 
 ```text
 layout
@@ -793,19 +794,19 @@ focus chrome
 placeholder
 ```
 
-e deixa o Minecraft controlar:
+and lets Minecraft control:
 
 ```text
 cursor
 selection
 keyboard
 clipboard
-IME behavior quando possível
+IME behavior where possible
 ```
 
 ## 13.2. SearchField
 
-Componente especializado:
+Specialized component:
 
 ```text
 search icon
@@ -816,20 +817,20 @@ onChange
 
 # 14. Scrolling
 
-`ScrollView` é componente obrigatório do MVP.
+`ScrollView` is a required MVP component.
 
-Responsabilidades:
+Responsibilities:
 
 - viewport;
 - clipping;
 - scroll offset;
 - mouse wheel;
-- scrollbar opcional;
-- drag de scrollbar;
-- clamp;
-- conteúdo maior que viewport.
+- optional scrollbar;
+- scrollbar dragging;
+- clamping;
+- content larger than the viewport.
 
-API conceitual:
+Conceptual API:
 
 ```java
 ScrollView view = new ScrollView(content)
@@ -838,9 +839,9 @@ ScrollView view = new ScrollView(content)
 
 # 15. Clipping
 
-Criar `ClipStack`.
+Create `ClipStack`.
 
-Objetivo:
+Goal:
 
 ```text
 push(bounds)
@@ -848,15 +849,15 @@ render children
 pop()
 ```
 
-Internamente utilizar scissor da API gráfica.
+Use the graphics API's scissoring internally.
 
-Isso deve evitar código de clipping espalhado pelas screens.
+This should prevent clipping code from being scattered across screens.
 
 # 16. Item rendering
 
-Muito importante para mods.
+Very important for mods.
 
-Criar helper reutilizável:
+Create a reusable helper:
 
 ```java
 ItemRenderer.render(
@@ -866,25 +867,25 @@ ItemRenderer.render(
 );
 ```
 
-Internamente usar o renderer padrão do Minecraft.
+Use Minecraft's standard renderer internally.
 
-Suportar:
+Support:
 
 ```text
 ItemStack
 tooltip
-count overlay opcional
-durability overlay opcional
+optional count overlay
+optional durability overlay
 scale
 ```
 
-Não implementar renderer 3D próprio.
+Do not implement a custom 3D renderer.
 
 # 17. ItemCard
 
-Componente importante para vários mods futuros.
+An important component for several future mods.
 
-Estrutura:
+Structure:
 
 ```text
 ┌───────────────┐
@@ -908,7 +909,7 @@ onClick
 
 # 18. ItemGrid
 
-Composição de:
+Composition of:
 
 ```text
 Grid
@@ -918,7 +919,7 @@ ItemCard
 ScrollView
 ```
 
-Casos de uso:
+Use cases:
 
 - block palette;
 - resource browser;
@@ -926,11 +927,11 @@ Casos de uso:
 - selection dialog;
 - filters.
 
-Esse componente deve ser importante para validar o toolkit no mod hospedeiro.
+This component should help validate the toolkit in the host mod.
 
 # 19. Tooltip
 
-Criar abstraction fina sobre tooltip vanilla.
+Create a thin abstraction over vanilla tooltips.
 
 API:
 
@@ -938,11 +939,11 @@ API:
 component.tooltip(Component...)
 ```
 
-A library deve continuar utilizando rendering nativo de tooltip sempre que possível.
+The library should continue to use native tooltip rendering whenever possible.
 
 # 20. Modal
 
-MVP deve suportar modal básico.
+The MVP should support a basic modal.
 
 ```text
 Screen
@@ -952,20 +953,20 @@ Overlay
 Centered panel
 ```
 
-Recursos:
+Features:
 
 ```text
 backdrop
 Esc to close
 optional outside click close
-focus containment simples
+simple focus containment
 ```
 
 # 21. Input routing
 
-Criar uma camada clara de input.
+Create a clear input layer.
 
-Eventos:
+Events:
 
 ```text
 mouseMove
@@ -977,13 +978,13 @@ keyUp
 charTyped
 ```
 
-Regra:
+Rule:
 
-> O componente visual deve declarar bounds e comportamento. A Screen não deve precisar repetir hit testing de cada filho.
+> The visual component should declare its bounds and behavior. The Screen should not need to repeat hit testing for each child.
 
 # 22. Event propagation
 
-Modelo simples:
+Simple model:
 
 ```text
 topmost component first
@@ -993,11 +994,11 @@ handled?
  └─ no  → parent / next
 ```
 
-Sem implementar DOM-style capture/bubble completo no MVP.
+Do not implement full DOM-style capture/bubble in the MVP.
 
 # 23. Focus management
 
-`FocusManager` deve gerenciar:
+`FocusManager` should manage:
 
 ```text
 focused component
@@ -1016,13 +1017,13 @@ Shift+Tab
 Esc
 ```
 
-Não tentar resolver acessibilidade completa inicialmente.
+Do not attempt to solve complete accessibility initially.
 
 # 24. Hover
 
-Hover deve ser derivado automaticamente dos bounds.
+Hover should be derived automatically from bounds.
 
-Não exigir:
+Do not require:
 
 ```java
 boolean hovered =
@@ -1030,43 +1031,43 @@ boolean hovered =
     mouseX <= x + width ...
 ```
 
-em cada componente.
+in every component.
 
 # 25. Drag behavior
 
-Criar abstração mínima reutilizável.
+Create a minimal reusable abstraction.
 
-Casos:
+Use cases:
 
 ```text
 scrollbar
-slider futuro
-graph editor futuro
-movable panels futuro
+future slider
+future graph editor
+future movable panels
 ```
 
-Não criar sistema complexo de drag/drop no MVP.
+Do not create a complex drag/drop system in the MVP.
 
 # 26. Screen integration
 
-Criar uma base:
+Create a base class:
 
 ```java
 abstract class UiScreen extends Screen
 ```
 
-Responsável por:
+Responsible for:
 
-- criar root component;
-- recalcular layout em `init`;
-- criar `UiContext`;
-- render;
+- creating the root component;
+- recalculating layout in `init`;
+- creating `UiContext`;
+- rendering;
 - input routing;
 - focus;
-- resize;
+- resizing;
 - lifecycle.
 
-Uso:
+Usage:
 
 ```java
 class PaletteScreen extends UiScreen {
@@ -1082,21 +1083,21 @@ class PaletteScreen extends UiScreen {
 
 # 27. Container screen integration
 
-Inventários precisam de:
+Inventories need:
 
 ```text
 AbstractContainerScreen
 ```
 
-Não construir uma abstração completa no primeiro milestone.
+Do not build a complete abstraction in the first milestone.
 
-Criar depois uma ponte:
+Create a bridge later:
 
 ```java
 UiContainerScreen<T extends AbstractContainerMenu>
 ```
 
-Ela deve permitir combinar:
+It should allow combining:
 
 ```text
 Minecraft slots
@@ -1104,13 +1105,13 @@ Minecraft slots
 custom UI toolkit
 ```
 
-sem reimplementar sincronização de inventory.
+without reimplementing inventory synchronization.
 
-# 28. Estado
+# 28. State
 
-A biblioteca não deve impor state management.
+The library should not impose state management.
 
-Exemplo:
+Example:
 
 ```java
 class PaletteScreen {
@@ -1120,20 +1121,20 @@ class PaletteScreen {
 }
 ```
 
-O toolkit apenas renderiza e dispara callbacks.
+The toolkit only renders and triggers callbacks.
 
-Pode existir no futuro:
+Possible future additions:
 
 ```text
 ObservableValue
 State<T>
 ```
 
-mas não é necessário para o MVP.
+but they are not required for the MVP.
 
-# 29. Rebuild vs mutation
+# 29. Rebuild vs. mutation
 
-MVP pode aceitar abordagem simples:
+The MVP can accept a simple approach:
 
 ```text
 state changes
@@ -1141,15 +1142,15 @@ state changes
 rebuild relevant component tree
 ```
 
-ou mutation direta.
+or direct mutation.
 
-Não otimizar prematuramente.
+Do not optimize prematurely.
 
-Minecraft UIs normalmente possuem poucas centenas de componentes no máximo.
+Minecraft UIs usually have at most a few hundred components.
 
 # 30. Animations
 
-Animations devem ser opcionais e discretas.
+Animations should be optional and subtle.
 
 MVP:
 
@@ -1158,7 +1159,7 @@ Tween
 Easing
 ```
 
-Casos:
+Use cases:
 
 ```text
 hover fade
@@ -1167,27 +1168,27 @@ tab indicator
 panel slide
 ```
 
-Não criar timeline engine complexa.
+Do not create a complex timeline engine.
 
 # 31. Accessibility / narration
 
-Não é prioridade do primeiro spike, mas a arquitetura não deve impedir integração com narration.
+Not a priority for the first spike, but the architecture should not prevent narration integration.
 
-Componentes interativos devem ter:
+Interactive components should have:
 
 ```text
 label
-role conceitual
+conceptual role
 state
 ```
 
-Quando possível, reutilizar mecanismos vanilla.
+Reuse vanilla mechanisms when possible.
 
 # 32. Debug tooling
 
-Criar `UiDebugOverlay`.
+Create `UiDebugOverlay`.
 
-Toggle de desenvolvimento para visualizar:
+Development toggle to visualize:
 
 ```text
 component bounds
@@ -1198,7 +1199,7 @@ layout boxes
 clipping areas
 ```
 
-Exemplo:
+Example:
 
 ```text
 ┌──────────────┐
@@ -1209,34 +1210,35 @@ Exemplo:
 └──────────────┘
 ```
 
-Isso deve acelerar muito o desenvolvimento.
+This should significantly speed up development.
 
-# 33. IDs de componentes
 
-Todo componente pode opcionalmente ter:
+# 33. Component IDs
+
+Every component can optionally have a:
 
 ```text
 debugId
 ```
 
-Exemplo:
+Example:
 
 ```java
 new Card()
     .debugId("palette-reference-card");
 ```
 
-Não usar IDs para styling no MVP.
+Do not use IDs for styling in the MVP.
 
 # 34. Public API boundary
 
-Tudo que consumidores devem usar fica em:
+Everything consumers should use belongs in:
 
 ```text
 ui.api
 ```
 
-ou packages explicitamente documentados como públicos.
+or packages explicitly documented as public.
 
 Internals:
 
@@ -1244,13 +1246,13 @@ Internals:
 ui.internal
 ```
 
-Isso facilitará a futura extração da biblioteca sem quebrar consumidores.
+This will make future library extraction easier without breaking consumers.
 
-# 35. Dependências
+# 35. Dependencies
 
-A biblioteca deve evitar dependências externas inicialmente.
+The library should initially avoid external dependencies.
 
-Permitidas:
+Allowed:
 
 ```text
 Minecraft
@@ -1258,7 +1260,7 @@ NeoForge
 JOML
 ```
 
-Evitar:
+Avoid:
 
 ```text
 YACL
@@ -1267,31 +1269,31 @@ Cloth Config
 third-party UI framework
 ```
 
-Objetivo é controlar a stack e aprender as internals.
+The goal is to control the stack and learn the internals.
 
-# 36. Nenhuma dependência do mod hospedeiro
+# 36. No dependency on the host mod
 
-Regra de build desejada:
+Desired build rule:
 
 ```text
 ui toolkit
    ↓
-não conhece
+does not know about
    ↓
 host mod
 ```
 
-Mas:
+But:
 
 ```text
 host mod
    ↓
-depende de
+depends on
    ↓
 ui toolkit
 ```
 
-Idealmente mesmo dentro do mesmo repository:
+Ideally, even within the same repository:
 
 ```text
 modules/
@@ -1299,33 +1301,33 @@ modules/
 └── mod/
 ```
 
-Se a estrutura Gradle atual não comportar multi-module imediatamente, usar package isolado:
+If the current Gradle structure cannot immediately support multiple modules, use an isolated package:
 
 ```text
 src/main/java/<org>/uitoolkit/
 ```
 
-e proibir imports do host.
+and prohibit imports from the host.
 
 # 37. Resource namespace
 
-Para facilitar migração futura, assets próprios da UI devem utilizar namespace separado quando possível.
+To simplify future migration, custom UI assets should use a separate namespace when possible.
 
-Exemplo:
+Example:
 
 ```text
 assets/minecraft_ui_toolkit/
 ```
 
-ou um namespace neutro planejado.
+or a planned neutral namespace.
 
-Evitar colocar assets fundamentais da library no namespace semântico do mod hospedeiro.
+Avoid putting fundamental library assets in the host mod's semantic namespace.
 
-# 38. Configuração
+# 38. Configuration
 
-A biblioteca não deve possuir screen de configuração global no MVP.
+The library should not have a global configuration screen in the MVP.
 
-Themes e comportamento devem ser configuráveis por código:
+Themes and behavior should be configurable through code:
 
 ```java
 UiToolkit.init(
@@ -1333,18 +1335,18 @@ UiToolkit.init(
 );
 ```
 
-# 39. Primeiro consumidor
+# 39. First consumer
 
-O primeiro consumidor deve ser uma UI real do mod hospedeiro.
+The first consumer should be a real UI in the host mod.
 
-Recomendação:
+Recommendation:
 
 **Dynamic Block Palette UI**
 
-Porque exige:
+Because it requires:
 
 ```text
-screen custom
+custom screen
 cards
 item rendering
 grid
@@ -1355,11 +1357,11 @@ search
 selected state
 ```
 
-Ou seja, testa boa parte dos primitives sem precisar de inventory container.
+This tests many primitives without requiring an inventory container.
 
-# 40. MVP da library
+# 40. Library MVP
 
-Primeira versão precisa conter:
+The first version needs to include:
 
 ## Core
 
@@ -1427,7 +1429,7 @@ Primeira versão precisa conter:
 
 Prefer fluent composition.
 
-Exemplo:
+Example:
 
 ```java
 return Column.create()
@@ -1452,13 +1454,13 @@ return Column.create()
     );
 ```
 
-Isso é apenas direção de ergonomia.
+This is only a direction for API ergonomics.
 
-Não precisa ser API final.
+It does not need to be the final API.
 
 # 42. Rendering lifecycle
 
-Fluxo conceitual:
+Conceptual flow:
 
 ```text
 Screen.init()
@@ -1472,14 +1474,14 @@ layout
 render
 ```
 
-A cada resize:
+On every resize:
 
 ```text
 measure
 layout
 ```
 
-A cada frame:
+On every frame:
 
 ```text
 derive hover
@@ -1500,36 +1502,36 @@ target component
 
 ## Measure
 
-Componente informa tamanho desejado.
+The component reports its desired size.
 
 ## Layout
 
-Parent define bounds finais.
+The parent defines the final bounds.
 
 ## Render
 
-Componente desenha dentro dos bounds.
+The component draws within the bounds.
 
-Essa separação é importante para impedir que cada componente calcule layout durante render.
+This separation prevents each component from calculating layout during rendering.
 
 # 44. Performance
 
-Meta:
+Targets:
 
-- zero allocation excessiva por frame;
-- evitar reconstruir listas grandes durante render;
-- layouts recalculados apenas quando necessário;
-- item rendering reaproveita pipeline vanilla;
-- clipping aninhado controlado;
-- nenhuma reflection no render loop.
+- no excessive per-frame allocations;
+- avoid rebuilding large lists during rendering;
+- recalculate layouts only when necessary;
+- item rendering reuses the vanilla pipeline;
+- controlled nested clipping;
+- no reflection in the render loop.
 
-A library deve funcionar bem em telas com centenas de item cards.
+The library should work well on screens with hundreds of item cards.
 
 # 45. Testing
 
 ## Unit tests
 
-Partes possíveis sem Minecraft runtime:
+Parts that can be tested without the Minecraft runtime:
 
 ```text
 Bounds
@@ -1543,7 +1545,7 @@ focus ordering
 
 ## In-game tests
 
-Necessários para:
+Required for:
 
 ```text
 rendering
@@ -1557,7 +1559,7 @@ fullscreen/window resize
 
 # 46. GUI scale
 
-Testar obrigatoriamente em:
+Testing is required at:
 
 ```text
 GUI Scale 1
@@ -1566,43 +1568,43 @@ GUI Scale 3
 GUI Scale Auto
 ```
 
-Layout nunca deve depender de pixels físicos da tela.
+Layout must never depend on physical screen pixels.
 
 # 47. Resolutions
 
-Validar ao menos:
+Validate at least:
 
 ```text
 1280×720
 1920×1080
 2560×1440
 ultrawide
-window pequeno
+small window
 ```
 
 # 48. Acceptance criteria — MVP
 
-A primeira versão da biblioteca será considerada válida quando for possível implementar uma tela real que:
+The first library version will be considered valid when it can implement a real screen that:
 
-- utiliza `UiScreen`;
-- não realiza positioning manual de cada elemento na screen;
-- utiliza theme central;
-- possui Row/Column/Grid;
-- possui ScrollView;
-- possui SearchField;
-- renderiza ItemStacks;
-- possui cards selecionáveis;
-- possui tooltip;
-- funciona com resize;
-- funciona com GUI scale diferente;
-- suporta mouse e teclado básico;
-- não importa nenhuma classe de domínio do mod hospedeiro.
+- uses `UiScreen`;
+- does not manually position every element in the screen;
+- uses a central theme;
+- has Row/Column/Grid;
+- has ScrollView;
+- has SearchField;
+- renders ItemStacks;
+- has selectable cards;
+- has a tooltip;
+- works after resizing;
+- works with different GUI scales;
+- supports mouse and basic keyboard input;
+- does not import any domain classes from the host mod.
 
 # 49. Milestones
 
 ## Milestone 0 — Rendering primitives
 
-Criar:
+Create:
 
 ```text
 UiTheme
@@ -1612,7 +1614,7 @@ UiContext
 UiPaint
 ```
 
-Provar:
+Demonstrate:
 
 ```text
 panel
@@ -1623,7 +1625,7 @@ button visual
 
 ## Milestone 1 — Component tree
 
-Criar:
+Create:
 
 ```text
 UiComponent
@@ -1631,7 +1633,7 @@ UiContainer
 UiScreen
 ```
 
-Provar:
+Demonstrate:
 
 ```text
 nested components
@@ -1640,7 +1642,7 @@ render traversal
 
 ## Milestone 2 — Layout
 
-Criar:
+Create:
 
 ```text
 Row
@@ -1651,11 +1653,11 @@ Spacer
 Insets
 ```
 
-Provar screen responsiva sem coordenadas hardcoded na aplicação.
+Demonstrate a responsive screen without hardcoded coordinates in the application.
 
 ## Milestone 3 — Input
 
-Criar:
+Create:
 
 ```text
 hover
@@ -1667,7 +1669,7 @@ scroll routing
 
 ## Milestone 4 — Core components
 
-Criar:
+Create:
 
 ```text
 Button
@@ -1680,7 +1682,7 @@ SearchField
 
 ## Milestone 5 — Scroll + clipping
 
-Criar:
+Create:
 
 ```text
 ClipStack
@@ -1690,7 +1692,7 @@ Scrollbar
 
 ## Milestone 6 — Mod-oriented components
 
-Criar:
+Create:
 
 ```text
 ItemRenderer
@@ -1702,37 +1704,37 @@ Modal
 
 ## Milestone 7 — Real consumer
 
-Implementar uma tela real do mod hospedeiro usando somente API pública do toolkit.
+Implement a real screen in the host mod using only the toolkit's public API.
 
-Recomendado:
+Recommended:
 
 ```text
 Dynamic Block Palette
 ```
 
-# 50. Migração futura para projeto próprio
+# 50. Future migration to a standalone project
 
-A extração deve exigir apenas:
+Extraction should require only:
 
 ```text
 move module
 change Maven coordinates
-change package root se desejado
+change package root if desired
 publish artifact
 ```
 
-Não deve exigir:
+It should not require:
 
 ```text
-remover dependências do domínio
-reescrever components
-migrar assets acoplados
-alterar callbacks de negócio
+remove domain dependencies
+rewrite components
+migrate coupled assets
+change business callbacks
 ```
 
-# 51. Estratégia de publicação futura
+# 51. Future publishing strategy
 
-Quando a biblioteca provar valor:
+Once the library proves its value:
 
 ```text
 group:
@@ -1745,33 +1747,33 @@ version:
 semver
 ```
 
-Distribuição possível:
+Possible distribution:
 
 ```text
 Maven
 GitHub Packages
-CurseForge/Modrinth apenas se virar runtime dependency
+CurseForge/Modrinth only if it becomes a runtime dependency
 ```
 
-Preferência inicial:
+Initial preference:
 
-> library dependency embutida/Jar-in-Jar ou compile dependency, dependendo da estratégia de distribuição.
+> embedded/Jar-in-Jar library dependency or compile dependency, depending on the distribution strategy.
 
-Ainda não decidir.
+Do not decide yet.
 
-# 52. Critério para extrair do projeto hospedeiro
+# 52. Criteria for extraction from the host project
 
-Extrair quando:
+Extract when:
 
-- pelo menos dois mods internos usam a library;
-- API pública estiver razoavelmente estável;
-- não houver imports do domínio do primeiro mod;
-- theme/component system estiver provado em produção;
-- migração puder acontecer sem refactor estrutural.
+- at least two internal mods use the library;
+- the public API is reasonably stable;
+- there are no domain imports from the first mod;
+- the theme/component system has been proven in production;
+- migration can happen without structural refactoring.
 
 # 53. Future backlog (status and order updated in section 63)
 
-Após MVP:
+After the MVP:
 
 ```text
 dropdown/select
@@ -1802,11 +1804,11 @@ UiContainerScreen
 
 # 54. Radial menu
 
-Vale prever o radial como extensão futura porque já existe demanda em outros mods planejados.
+Plan radial menus as a future extension because other planned mods already need them.
 
-Não incluir no MVP.
+Do not include them in the MVP.
 
-Arquitetura futura:
+Future architecture:
 
 ```text
 RadialMenu
@@ -1815,7 +1817,7 @@ RadialGeometry
 RadialInput
 ```
 
-Pode reutilizar:
+Can reuse:
 
 ```text
 theme
@@ -1827,11 +1829,11 @@ animation
 
 # 55. Config screens
 
-A própria library deve ser capaz de construir páginas de configuração refinadas sem depender de YACL.
+The library itself should be able to build polished configuration pages without depending on YACL.
 
-Isso não significa recriar YACL imediatamente.
+This does not mean recreating YACL immediately.
 
-Os primitives do MVP já devem tornar possível construir:
+The MVP primitives should already make it possible to build:
 
 ```text
 tabs
@@ -1842,7 +1844,7 @@ cards
 sections
 ```
 
-Config-specific abstractions podem vir depois:
+Config-specific abstractions can come later:
 
 ```text
 ConfigSection
@@ -1851,57 +1853,57 @@ EnumSetting
 NumberSetting
 ```
 
-# 56. Diferença para frameworks existentes
+# 56. Differences from existing frameworks
 
-O toolkit não busca vencer owo-ui/YACL em quantidade de features.
+The toolkit does not aim to beat owo-ui/YACL in feature count.
 
-O diferencial é:
+Its distinguishing features are:
 
-- controle completo da aparência;
-- zero dependência externa;
-- API pequena;
-- otimizada para nossos mods;
-- aprendizado das internals do Minecraft;
-- facilidade de embutir;
-- design system consistente entre projetos.
+- complete control over appearance;
+- no external dependencies;
+- a small API;
+- optimized for our mods;
+- learning Minecraft internals;
+- easy embedding;
+- a consistent design system across projects.
 
 # 57. Naming
 
-Nome provisório interno:
+Temporary internal name:
 
 ```text
 Minecraft UI Toolkit
 ```
 
-ou:
+or:
 
 ```text
 MUI Toolkit
 ```
 
-Evitar nome definitivo antes de decidir se será publicado.
+Avoid a final name before deciding whether it will be published.
 
-O package deve permanecer neutro.
+The package should remain neutral.
 
-# 58. Principal risco técnico
+# 58. Main technical risk
 
-O maior risco não é rendering.
+The biggest risk is not rendering.
 
-Rendering básico é simples.
+Basic rendering is simple.
 
-O risco real é deixar a library crescer até virar um framework de layout/input grande demais.
+The real risk is allowing the library to grow into an overly large layout/input framework.
 
-Regra:
+Rule:
 
-> Implementar apenas abstrações que já possuam pelo menos um consumidor concreto.
+> Implement only abstractions that already have at least one concrete consumer.
 
-Evitar construir primitives especulativos.
+Avoid building speculative primitives.
 
-# 59. Principal risco arquitetural
+# 59. Main architectural risk
 
-Acoplamento acidental ao primeiro mod.
+Accidental coupling to the first mod.
 
-Revisar periodicamente:
+Review periodically:
 
 ```text
 Does this class know what a Block Palette is?
@@ -1910,64 +1912,64 @@ Does this helper assume one screen?
 Does this theme contain product-specific names?
 ```
 
-Se sim, mover a responsabilidade para o consumidor.
+If so, move the responsibility to the consumer.
 
-# 60. Definition of Done para cada component
+# 60. Definition of Done for each component
 
-Todo component novo deve possuir:
+Every new component should have:
 
-- API pública pequena;
+- a small public API;
 - theme support;
-- hover/focus quando aplicável;
-- resize-safe layout;
-- nenhuma referência ao domínio;
-- exemplo de uso;
-- validação em GUI scales diferentes;
-- comportamento previsível com mouse.
+- hover/focus where applicable;
+- layout that remains correct after resizing;
+- no domain references;
+- a usage example;
+- validation at different GUI scales;
+- predictable mouse behavior.
 
-# 61. Resultado esperado
+# 61. Expected result
 
-Ao final do MVP, construir uma tela custom deve parecer:
+At the end of the MVP, building a custom screen should look like:
 
 ```text
-definir state
+define state
    ↓
-compor components
+compose components
    ↓
-definir callbacks
+define callbacks
    ↓
-deixar toolkit cuidar de
+let the toolkit handle
 layout/render/input/theme
 ```
 
-e não:
+rather than:
 
 ```text
-calcular todos os x/y
-desenhar cada shape
-fazer hit test manual
-implementar scroll
-implementar hover
-implementar focus
+calculate every x/y
+draw every shape
+perform manual hit testing
+implement scrolling
+implement hover
+implement focus
 ```
 
-# 62. Norte arquitetural
+# 62. Architectural direction
 
-A biblioteca deve ficar entre dois extremos.
+The library should sit between two extremes.
 
-Não queremos:
+We do not want:
 
 ```text
 raw GuiGraphics everywhere
 ```
 
-nem:
+or:
 
 ```text
 full web framework inside Minecraft
 ```
 
-Queremos:
+We want:
 
 ```text
 Minecraft API
@@ -1979,180 +1981,182 @@ design system primitives
 mod screens
 ```
 
-Essa deve ser a principal restrição de design durante o desenvolvimento.
+This should be the main design constraint during development.
 
-# 63. Estado atual e roadmap técnico priorizado
+# 63. Current status and prioritized technical roadmap
 
-Este inventário foi comparado com `docs/ui-toolkit-foundation-plan.md` e com a
-API atual. Esta seção atualiza a lista histórica da seção 53. Os marcos devem
-ser feitos e revisados um por vez; itens especulativos só avançam quando houver
-consumidor concreto.
+This inventory was compared with `docs/ui-toolkit-foundation-plan.md` and the
+current API. This section updates the historical list in section 53. Milestones
+should be implemented and reviewed one at a time; speculative items only move
+forward when there is a concrete consumer.
 
-## 63.1. Estado da API e do playground
+## 63.1. API and playground status
 
-Implementados na API: `Label` (texto), `Button`, `Toggle`, `Tabs`, `Chip`,
+Implemented in the API: `Label` (text), `Button`, `Toggle`, `Tabs`, `Chip`,
 `TextField`, `SearchField`, `Slider`, `ScrollView`, `ClipStack`, `Row`,
 `Column`, `Stack`, `Grid`, `Spacer`, `ItemRenderer`, `ItemCard`, `ItemGrid`,
-`Toast`, `ToastHost` e `Table`.
+`Toast`, `ToastHost`, and `Table`.
 
-`Panel`, `Card`, `IconButton`, `Divider`, `Tooltip` e `Modal` agora têm APIs
-públicas. Panel/Card compõem conteúdo com padding e frames temáticos; o consumidor
-escolhe o layout interno com Row/Column/Grid. Tooltip usa o renderer vanilla e
-Modal oferece overlay central, backdrop, foco contido, Escape e fechamento
-opcional por clique externo.
+`Panel`, `Card`, `IconButton`, `Divider`, `Tooltip`, and `Modal` now have public
+APIs. Panel/Card compose content with padding and themed frames; the consumer
+chooses the inner layout using Row/Column/Grid. Tooltip uses the vanilla renderer,
+and Modal provides a centered overlay, backdrop, focus containment, Escape,
+and optional closing through an outside click.
 
-No playground, Panel, Card, Divider e IconButton são nós persistíveis; o botão
-Dialog abre um Modal temporário para testar overlay e foco sem salvar callbacks
-ou estado de diálogo no JSON.
+In the playground, Panel, Card, Divider, and IconButton are persistable nodes;
+the Dialog button opens a temporary Modal to test overlays and focus without
+saving callbacks or dialog state in JSON.
 
-O playground disponibiliza `Grid`, `Spacer`, `ItemCard` e `ItemGrid` pela
-paleta. `ItemCard` guarda o ID e a quantidade do item no documento, e pode ser
-aninhado em `Grid`/`ItemGrid`. `Spacer` pode ser fixo ou flexível e a paleta tem
-rolagem para exibir todos os tipos em janelas baixas. `ItemRenderer` é helper,
-não nó de layout; seu caminho é exercitado por `ItemCard`.
+The playground exposes `Grid`, `Spacer`, `ItemCard`, and `ItemGrid` through the
+palette. `ItemCard` stores the item ID and count in the document and can be
+nested in `Grid`/`ItemGrid`. `Spacer` can be fixed or flexible, and the palette
+scrolls to show all types in short windows. `ItemRenderer` is a helper, not a
+layout node; its rendering path is exercised by `ItemCard`.
 
-## 63.2. Ordem dos próximos marcos
+## 63.2. Order of upcoming milestones
 
-| Ordem | Componente | Resultado do primeiro corte |
+| Order | Component | First-iteration result |
 |---:|---|---|
-| 1 | Toast | Implementado; avisos efêmeros em overlay |
-| 2 | Table | Implementado; dados em colunas e linhas, com seleção e rolagem |
-| 3 | ProgressBar | Implementado; progresso determinado, indeterminado opcional |
-| 4 | Radial menu | Implementado; geometria, segmentos, hit test e seleção por gesto |
-| 5 | Dropdown / Select | Seleção única, overlay e navegação por teclado |
-| 6 | Context menu | Ações ancoradas, teclado e fechamento previsível |
-| 7 | Demais itens | Implementar em lotes pequenos conforme seção 63.4–63.6 |
+| 1 | Toast | Implemented; transient overlay notifications |
+| 2 | Table | Implemented; data in columns and rows, with selection and scrolling |
+| 3 | ProgressBar | Implemented; determinate progress, optional indeterminate mode |
+| 4 | Radial menu | Implemented; geometry, segments, hit testing, and gesture selection |
+| 5 | Dropdown / Select | Single selection, overlay, and keyboard navigation |
+| 6 | Context menu | Anchored actions, keyboard support, and predictable closing |
+| 7 | Remaining items | Implement in small batches according to sections 63.4–63.6 |
 
-## 63.3. Plano técnico dos seis primeiros
+## 63.3. Technical plan for the first six
 
-**Estado:** marcos Toast (`Toast`/`ToastHost`), Table e ProgressBar foram
-implementados e estão demonstráveis pela API e no playground; RadialMenu também
-está implementado, e a próxima etapa é Dropdown / Select.
+**Status:** the Toast (`Toast`/`ToastHost`), Table, and ProgressBar milestones
+are implemented and can be demonstrated through the API and playground;
+RadialMenu is also implemented, and Dropdown / Select is the next phase.
 
 ### Toast
 
-- Usar `ToastHost` por tela e publicar por `toastHost.show(Toast)` (com atalhos
-  `info`, `success`, `warning` e `error`); evitar singleton global ou threads
-  próprias.
-- Empilhar quantidade limitada, medir texto vanilla, expirar pelo relógio da UI,
-  pausar quando a tela não estiver ativa e dispensar por clique.
-- Começar com `INFO`, `SUCCESS`, `WARNING` e `ERROR`, sem persistência entre
-  telas nem ações customizadas. Validar que toast não captura clique fora dos
-  próprios bounds e que reposiciona em resize.
+- Use a `ToastHost` per screen and dispatch through `toastHost.show(Toast)`
+  (with `info`, `success`, `warning`, and `error` shortcuts); avoid a global
+  singleton or dedicated threads.
+- Stack a limited number, measure vanilla text, expire using the UI clock,
+  pause when the screen is inactive, and dismiss by clicking.
+- Start with `INFO`, `SUCCESS`, `WARNING`, and `ERROR`, without persistence
+  across screens or custom actions. Validate that toasts do not capture clicks
+  outside their bounds and reposition after resizing.
 
 ### Table
 
-- `Table<T>` aceita colunas com título, largura fixa ou preferida, alinhamento e
-  renderer; cada consumidor fornece suas linhas.
-- Cabeçalho, linhas uniformes, hover, seleção única, callback de clique e
-  rolagem vertical estão implementados. Ordenação, edição, resize de coluna e
-  virtualização continuam fora do primeiro marco.
+- `Table<T>` accepts columns with a title, fixed or preferred width, alignment,
+  and a renderer; each consumer supplies its own rows.
+- Headers, uniform rows, hover, single selection, click callbacks, and vertical
+  scrolling are implemented. Sorting, editing, column resizing, and virtualization
+  remain outside the first milestone.
 
 ### ProgressBar
 
-- **Estado:** implementada como componente determinado, não interativo, com
-  range/value limitados, altura e cores configuráveis e formatter opcional.
-  Range inválido ou invertido é renderizado vazio; o playground expõe
-  `mínimo, máximo, valor` no inspetor.
-- Expor `minimum`, `maximum`, `value`, altura/estilo e formatter opcional; clamp
-  definido também para range inválido.
-- Pintar trilho/preenchimento com `UiPaint`; a variante determinada é obrigatória.
-- Indeterminada e animação são opcionais e usam o tempo do ciclo da UI, sem
-  timer/thread. Não é interativa e não assume intervalo percentual 0–100.
+- **Status:** implemented as a noninteractive determinate component, with
+  clamped range/value, configurable height and colors, and an optional formatter.
+  Invalid or reversed ranges render empty; the playground exposes
+  `minimum, maximum, value` in the inspector.
+- Expose `minimum`, `maximum`, `value`, height/style, and an optional formatter;
+  define clamping behavior for invalid ranges as well.
+- Paint the track/fill with `UiPaint`; the determinate variant is required.
+- Indeterminate mode and animation are optional and use the UI lifecycle's
+  clock, without timers/threads. It is not interactive and does not assume
+  a percentage range of 0–100.
 
 ### Radial menu
 
-- **Estado:** `RadialGeometry`, `RadialSegment` e `RadialMenu` implementados e
-  disponíveis no playground. O primeiro segmento começa ao norte e os demais
-  seguem no sentido horário; mouse down + drag + release escolhe o setor, e a
-  dead zone central ou soltura fora do raio cancela a ação. O consumidor abre e
-  fecha o menu e os callbacks permanecem em memória.
-- `RadialGeometry`: funções puras para centro, raios, ângulos, setores e hit
-  test; cobrir matematicamente fronteiras e wrap do ângulo.
-- `RadialSegment`: label, ícone vanilla opcional, habilitado e callback em
-  memória. `RadialMenu` desenha setor, hover, seleção e vazio/um item.
-- `RadialInput`: captura do mouse, dead zone central, release e cancelamento;
-  primeira versão usa mouse, preservando extensão posterior a teclado/gamepad.
-- Abrir/fechar é controlado pelo consumidor; sem dependência de domínio ou
-  networking. Reutilizar theme, overlay, texto e pintura existentes.
+- **Status:** `RadialGeometry`, `RadialSegment`, and `RadialMenu` are implemented
+  and available in the playground. The first segment starts at north and the
+  rest follow clockwise; mouse down + drag + release chooses a sector, and
+  the central dead zone or releasing outside the radius cancels the action.
+  The consumer opens and closes the menu; callbacks remain in memory.
+- `RadialGeometry`: pure functions for center, radii, angles, sectors, and hit
+  testing; mathematically cover boundaries and angle wrapping.
+- `RadialSegment`: label, optional vanilla icon, enabled state, and in-memory
+  callback. `RadialMenu` draws sectors, hover, selection, and empty/single-item states.
+- `RadialInput`: mouse capture, central dead zone, release, and cancellation;
+  the first version uses the mouse while allowing later keyboard/gamepad extensions.
+- The consumer controls opening/closing; no domain or networking dependencies.
+  Reuse existing themes, overlays, text, and painting.
 
 ### Dropdown / Select
 
-- Opções com identidade estável, label, valor e habilitado; seleção única e
-  callback local. Persistência fica com o consumidor.
-- Abrir lista como overlay do campo, posicionando acima/abaixo para caber na
-  tela e aplicando clipping/scroll se exceder o espaço.
-- Suportar mouse, setas, Enter, Escape, foco e opções desabilitadas. Busca e
-  multi-select não entram no primeiro corte.
+- Options with stable identity, label, value, and enabled state; single selection
+  and a local callback. Persistence belongs to the consumer.
+- Open the list as a field overlay, positioning it above/below to fit on the
+  screen and applying clipping/scrolling if it exceeds the available space.
+- Support mouse, arrows, Enter, Escape, focus, and disabled options. Search and
+  multiple selection are outside the first iteration.
 
 ### Context menu
 
-- Modelar ações, separadores, habilitado e label; abrir por coordenada ou bounds
-  do componente de origem.
-- Ajustar a posição do overlay aos limites da tela; fechar com Escape, clique
-  fora ou após executar ação. Permitir setas/Enter e focar primeira ação válida.
-- Adiar submenus, atalhos globais e callbacks carregados de JSON.
+- Model actions, separators, enabled state, and labels; open at coordinates
+  or at the source component's bounds.
+- Adjust the overlay position to screen limits; close with Escape, an outside
+  click, or after executing an action. Support arrows/Enter and focus the first
+  valid action.
+- Postpone submenus, global shortcuts, and callbacks loaded from JSON.
 
-## 63.4. Componentes de apresentação e navegação
+## 63.4. Presentation and navigation components
 
-| Componente | Plano técnico mínimo |
+| Component | Minimum technical plan |
 |---|---|
-| `Panel` | **Implementado.** Frame temático com padding configurável; conteúdo interno recebe bounds e é composto por um layout explícito como Row/Column/Grid. |
-| `Card` | **Implementado.** Frame com título opcional e estados hover/selecionado; estado selecionado pertence ao consumidor. |
-| `IconButton` | **Implementado.** Ativação por mouse/teclado, foco e nome acessível/tooltip; ícone fornecido como `Component` vanilla. |
-| `Divider` | **Implementado.** Horizontal por padrão, orientação, espessura e cor configuráveis; sem input. |
-| `Tooltip` | **Implementado.** `UiComponent.tooltip(Component...)` renderiza pelo pipeline vanilla, sem atraso ou animação próprios. |
-| `Modal` | **Implementado.** Overlay central via `UiScreen.showModal`, backdrop, foco contido, Escape e fechamento externo opcional; não cria outra Screen. |
-| `TreeView` | IDs estáveis, hierarquia, expand/collapse, seleção e navegação por setas; desenhar apenas nós visíveis. |
-| `SplitPane` | Dois filhos, divisor arrastável, proporção e limites mínimos; atualizar bounds em resize e permitir ajuste por teclado. |
-| `ResizablePanel` | Handles nas bordas/cantos, captura de drag e clamp por dimensões mínima/máxima; persistência fica com consumidor. |
+| `Panel` | **Implemented.** Themed frame with configurable padding; inner content receives bounds and is composed with an explicit layout such as Row/Column/Grid. |
+| `Card` | **Implemented.** Frame with an optional title and hover/selected states; the selected state belongs to the consumer. |
+| `IconButton` | **Implemented.** Mouse/keyboard activation, focus, and accessible name/tooltip; the icon is supplied as a vanilla `Component`. |
+| `Divider` | **Implemented.** Horizontal by default, with configurable orientation, thickness, and color; no input. |
+| `Tooltip` | **Implemented.** `UiComponent.tooltip(Component...)` renders through the vanilla pipeline, without its own delay or animation. |
+| `Modal` | **Implemented.** Centered overlay through `UiScreen.showModal`, backdrop, focus containment, Escape, and optional outside-click closing; does not create another Screen. |
+| `TreeView` | Stable IDs, hierarchy, expand/collapse, selection, and arrow navigation; draw only visible nodes. |
+| `SplitPane` | Two children, a draggable divider, ratio, and minimum limits; update bounds on resize and allow keyboard adjustment. |
+| `ResizablePanel` | Edge/corner handles, drag capture, and clamping to minimum/maximum dimensions; persistence belongs to the consumer. |
 
-## 63.5. Listas, dados e integração com Minecraft
+## 63.5. Lists, data, and Minecraft integration
 
-| Componente | Plano técnico mínimo |
+| Component | Minimum technical plan |
 |---|---|
-| `VirtualizedList` | Fonte de dados e renderer de linha; calcular intervalo visível pelo viewport/offset e criar/reutilizar apenas linhas visíveis, com índices estáveis. |
-| `VirtualizedGrid` | Calcular linhas/colunas visíveis por célula, gap e bounds; construir só células no viewport e preservar identidade em resize/scroll. |
-| `NotificationCenter` | Modelo persistente separado do Toast, com lida/não lida, horário e dismiss; ciclo de vida e armazenamento são do consumidor. |
-| `DragAndDrop` | Payload tipado, origem, target accept/reject, ghost visual e eventos start/move/drop/cancel; sem transferir inventário ou fazer networking. |
-| `Graph/Canvas` | Transform pan/zoom, clipping, coordenadas de mundo e hit testing; iniciar com nós/arestas genéricos, sem solver de domínio. |
-| `UiContainerScreen` | Ponte para `AbstractContainerScreen` que integra componentes e slots preservando ordem de render/input e sincronização vanilla; sem abstrair menu/rede. |
-| `UiDebugOverlay` | Development-only: bounds, debug IDs, hover/foco e regiões de clipping; toggle configurável e custo nulo quando desligado. |
-| `debugId` | Metadado opcional em `UiComponent` para diagnóstico; não afeta layout, estilo, serialização ou lógica de negócio. |
+| `VirtualizedList` | Data source and row renderer; calculate the visible range from the viewport/offset and create/reuse only visible rows, with stable indices. |
+| `VirtualizedGrid` | Calculate visible rows/columns from cell size, gap, and bounds; build only cells in the viewport and preserve identity during resizing/scrolling. |
+| `NotificationCenter` | Persistent model separate from Toast, with read/unread state, timestamp, and dismissal; lifecycle and storage belong to the consumer. |
+| `DragAndDrop` | Typed payload, source, target accept/reject, visual ghost, and start/move/drop/cancel events; no inventory transfer or networking. |
+| `Graph/Canvas` | Pan/zoom transform, clipping, world coordinates, and hit testing; start with generic nodes/edges, without a domain solver. |
+| `UiContainerScreen` | Bridge to `AbstractContainerScreen` that integrates components and slots while preserving render/input order and vanilla synchronization; no menu/network abstraction. |
+| `UiDebugOverlay` | Development only: bounds, debug IDs, hover/focus, and clipping regions; configurable toggle and no cost when disabled. |
+| `debugId` | Optional `UiComponent` metadata for diagnostics; does not affect layout, style, serialization, or business logic. |
 
-## 63.6. Inputs, conteúdo, configuração e extensões
+## 63.6. Inputs, content, configuration, and extensions
 
-| Componente | Plano técnico mínimo |
+| Component | Minimum technical plan |
 |---|---|
-| `ColorPicker` | Value object de cor, hex validado e controles HSV ou paleta; suporta teclado sem impor modelo de cor ao consumidor. |
-| `KeybindInput` | Capturar tecla/modificadores pelos eventos vanilla e exibir aguardando/cancelar/limpar; não registrar `KeyMapping` global por edição. |
-| `RichText` | Renderizar `Component` estilizado e quebrar linha com APIs vanilla; separar medição/layout, sem parser próprio. |
-| `Markdown subset` | Converter títulos, parágrafos, ênfase, listas e links a `Component`; whitelist, sem HTML, execução ou fetch durante render. |
-| `Tween` / `Easing` | Matemática pura com tempo fornecido pelo ciclo UI e cancelamento determinístico; sem timeline engine/thread. Só introduzir com consumidor concreto. |
-| `Responsive breakpoints` | Resolver faixas de largura/altura e escolher variante no init/resize; sem CSS, porcentagens ou recálculo por frame. |
-| `Declarative builders` | Builders Java tipados compilados para a árvore atual, com validação; sem parser JSON/XML ou linguagem de estilo. |
-| `Data binding` | `ObservableValue<T>` opcional com subscription descartável ao fechar tela; não substitui callbacks nem define estado de domínio. |
-| `Accessibility improvements` | Labels, estados, ordem de foco, teclado e narration via APIs vanilla; validar fluxo sem mouse e não criar framework paralelo. |
-| `ConfigSection` | Agrupar título, descrição e settings por composição de `Panel`/`Column`; sem persistência própria. |
-| `BooleanSetting` | Adaptador visual para `Toggle`; valor, persistência e validação pertencem ao sistema de config consumidor. |
-| `EnumSetting` | Adaptar enum conhecida a `Dropdown`/`Select` com labels explícitos; sem descoberta reflexiva automática. |
-| `NumberSetting` | Adaptar limites/step a `Slider` ou campo numérico; formatter, unidade e persistência vêm do consumidor. |
+| `ColorPicker` | Color value object, validated hex input, and HSV controls or a palette; supports keyboard input without imposing a color model on the consumer. |
+| `KeybindInput` | Capture keys/modifiers through vanilla events and display waiting/cancel/clear states; do not register a global `KeyMapping` for each edit. |
+| `RichText` | Render styled `Component` text and wrap lines using vanilla APIs; separate measurement/layout, without a custom parser. |
+| `Markdown subset` | Convert headings, paragraphs, emphasis, lists, and links to `Component`; use an allowlist, without HTML, execution, or fetching during rendering. |
+| `Tween` / `Easing` | Pure math with time supplied by the UI lifecycle and deterministic cancellation; no timeline engine/thread. Introduce only with a concrete consumer. |
+| `Responsive breakpoints` | Resolve width/height ranges and choose a variant on init/resize; no CSS, percentages, or per-frame recalculation. |
+| `Declarative builders` | Typed Java builders compiled into the current tree, with validation; no JSON/XML parser or style language. |
+| `Data binding` | Optional `ObservableValue<T>` with a subscription disposed of when the screen closes; does not replace callbacks or define domain state. |
+| `Accessibility improvements` | Labels, states, focus order, keyboard, and narration through vanilla APIs; validate a flow without the mouse and do not create a parallel framework. |
+| `ConfigSection` | Group a title, description, and settings by composing `Panel`/`Column`; no persistence of its own. |
+| `BooleanSetting` | Visual adapter for `Toggle`; value, persistence, and validation belong to the consuming config system. |
+| `EnumSetting` | Adapt a known enum to `Dropdown`/`Select` with explicit labels; no automatic reflection-based discovery. |
+| `NumberSetting` | Adapt limits/step to a `Slider` or numeric field; formatter, unit, and persistence come from the consumer. |
 
-## 63.7. Sequência inicial depois dos seis primeiros
+## 63.7. Initial sequence after the first six
 
-Implementar como lotes revisáveis: `NotificationCenter` e `TreeView`; virtualização; `SplitPane`
-e `ResizablePanel`; adaptadores de configuração; `ColorPicker`/`KeybindInput`;
-texto rico/Markdown; drag-and-drop/Graph; builders/binding/responsividade;
-animação; acessibilidade/narration; `UiContainerScreen` e debug tooling.
-Reordenar por consumidor real e não iniciar todo o marco 7 de uma vez.
+Implement as reviewable batches: `NotificationCenter` and `TreeView`; virtualization;
+`SplitPane` and `ResizablePanel`; configuration adapters; `ColorPicker`/`KeybindInput`;
+rich text/Markdown; drag-and-drop/Graph; builders/binding/responsiveness;
+animation; accessibility/narration; `UiContainerScreen` and debug tooling.
+Reorder based on real consumers, and do not start all of milestone 7 at once.
 
-## 63.8. Infraestrutura futura
+## 63.8. Future infrastructure
 
-- Extrair `UiInputRouter` somente se overlays e screens concretos repetirem a
-  lógica que hoje pertence a `UiScreen`.
-- `UiThemeRegistry` só quando múltiplos consumidores precisarem resolver themes
-  nomeados; por ora o theme é passado diretamente.
-- Implementar narration junto aos controles interativos em vez de postergar
-  todo o trabalho de acessibilidade.
-- A lista histórica da seção 53 não é a fonte de prioridade; esta seção é a
-  referência atual. `Slider`, já implementado, não faz parte do backlog futuro.
+- Extract `UiInputRouter` only if concrete overlays and screens repeat the logic
+  that currently belongs to `UiScreen`.
+- Add `UiThemeRegistry` only when multiple consumers need to resolve named themes;
+  for now, the theme is passed directly.
+- Implement narration alongside interactive controls instead of postponing all
+  accessibility work.
+- The historical list in section 53 does not determine priority; this section is
+  the current reference. `Slider`, already implemented, is not part of the future backlog.

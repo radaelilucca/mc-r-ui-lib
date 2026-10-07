@@ -1,66 +1,104 @@
-# Usar R-Ui Lib em outro mod
+# Using R-Ui Lib in another mod
 
-R-Ui Lib é uma dependência NeoForge instalada como um mod separado. O mod que
-usa seus componentes compila contra o JAR da biblioteca e declara a dependência
-para que o cliente carregue os dois JARs. O JAR da biblioteca não é embutido no
-JAR do consumidor.
+R-Ui Lib is a NeoForge dependency installed as a separate mod. A mod that uses
+its components compiles against the library JAR and declares the dependency
+so the client loads both JARs. The library JAR is not embedded in the
+consumer's JAR.
 
-## Baixar e instalar
+## Downloading and installing
 
-Cada release fornece dois arquivos:
+Each release provides two files:
 
-- `r_ui_lib-1.21.1-neoforge-<versão>.jar`: biblioteca para instalar no cliente.
-- `r_ui_lib-1.21.1-neoforge-<versão>-sources.jar`: fontes para consulta no IDE.
+- `r_ui_lib-1.21.1-neoforge-<version>.jar`: library to install on the client.
+- `r_ui_lib-1.21.1-neoforge-<version>-sources.jar`: source code for browsing in an IDE.
 
-Instale somente o primeiro arquivo na pasta `mods` da instância Minecraft. O
-JAR de fontes não é carregado pelo jogo.
+Install only the first file in the Minecraft instance's `mods` directory.
+The sources JAR is not loaded by the game.
 
-## Compilar um mod consumidor
+## Building a consuming mod
 
-Copie o JAR de runtime para uma pasta `libs/` no projeto consumidor e adicione-o
-ao classpath do Gradle:
+Copy the runtime JAR into a `libs/` directory in the consuming project and add
+it to the Gradle classpath:
 
 ```groovy
 dependencies {
-    implementation files("libs/r_ui_lib-1.21.1-neoforge-0.1.0.jar")
+    implementation files("libs/r_ui_lib-1.21.1-neoforge-0.3.0.jar")
 }
 ```
 
-O JAR contém `META-INF/neoforge.mods.toml`, então o ModDevGradle também o carrega
-nas execuções de desenvolvimento. O jogador instala R-Ui Lib separadamente do
-mod consumidor.
+The JAR contains `META-INF/neoforge.mods.toml`, so ModDevGradle also loads it
+during development runs. Players install R-Ui Lib separately from the
+consuming mod.
 
-Declare no `META-INF/neoforge.mods.toml` do mod consumidor que a biblioteca é
-necessária no cliente:
+In the consuming mod's `META-INF/neoforge.mods.toml`, declare that the library
+is required on the client:
 
 ```toml
 [[dependencies.${mod_id}]]
 modId="r_ui_lib"
 type="required"
-versionRange="[0.1.0,)"
+versionRange="[0.3.0,)"
 ordering="AFTER"
 side="CLIENT"
 ```
 
-As classes públicas ficam em `com.radaeli.ruilib.ui`. Componentes que criam ou
-usam telas devem ser referenciados apenas pelo código client-side do mod
-consumidor.
+Public classes are in `com.radaeli.ruilib.ui`. Components that create or use
+screens must be referenced only from the consuming mod's client-side code.
 
-Escolha a aparência global uma vez no inicializador client-side do mod:
+Choose the global appearance once in the mod's client-side initializer:
 
 ```java
-UiThemes.setGlobalTheme(UiTheme.DARK); // ou UiTheme.LIGHT
+UiThemes.setGlobalTheme(UiTheme.DARK); // or UiTheme.LIGHT
 ```
 
-Veja [Temas e tokens visuais](ui-theming.md) para a API de paletas e tokens,
-além dos overrides de tela e componente.
+See [Themes and visual tokens](ui-theming.md) for the palette and token API,
+as well as screen and component overrides.
 
-## Slot fantasma de item
+## Slider with an optional range selection
 
-`ItemSlot` renderiza uma referência de `ItemStack` para filtros e usos similares;
-ele não coloca itens em inventário. Com JEI instalado, os `ItemSlot`s dentro de
-uma tela `UiScreen` são automaticamente alvos de arraste. A integração de JEI é
-opcional e o restante da biblioteca continua funcionando sem JEI.
+`Slider` constructors still create a single handle. `setValues(lower, upper)`
+enables selection with two handles; `value()` returns the lower value, and
+`upperValue()` returns the upper value, or `null` in single-handle mode.
+
+```java
+Slider slider = new Slider(0, 1000, 10, 1, lower -> { });
+slider.setValues(10, 100);
+slider.setOnRangeChange((lower, upper) -> {
+    // Called when either endpoint changes; upper is null in single-handle mode.
+    updateSelection(lower, upper);
+});
+slider.setUpperValue(150); // changes the upper value
+slider.setUpperValue(null); // returns to a single handle
+```
+
+Values are clamped to the range and snapped to the step. `setValues` and
+`setUpperValue` reject pairs with `upper <= lower` after snapping. During
+dragging, scrolling, and keyboard input, handles stop before crossing.
+Changing the range or step through the API adjusts both values and preserves
+their order. The constructor callback receives lower-value changes;
+`setOnRangeChange` receives changes to either endpoint.
+
+Clicking or scrolling selects the nearest handle. While focused, Space switches
+the active handle, and arrows, Home/End, and Page Up/Down adjust its value.
+
+## Ghost item slot
+
+`ItemSlot` renders an `ItemStack` reference for filters and similar uses;
+it does not place items in an inventory. With JEI installed, `ItemSlot` components
+inside a `UiScreen` automatically become drag targets. JEI integration is
+optional, and the rest of the library continues to work without JEI.
+
+The JEI overlay is also registered for all `UiScreen` subclasses.
+By default, `jeiGuiBounds()` reserves the root component's bounds. If the root
+fills the window solely to center a panel, override the method to return the
+panel's bounds, leaving room on the side for the item list:
+
+```java
+@Override
+public Bounds jeiGuiBounds() {
+    return panel.bounds();
+}
+```
 
 ```java
 ItemSlot itemSlot = new ItemSlot().setOnItemChanged(stack -> {
@@ -72,29 +110,30 @@ ItemSlot itemSlot = new ItemSlot().setOnItemChanged(stack -> {
 });
 ```
 
-O callback recebe uma cópia defensiva com quantidade normalizada para um item;
-`ItemStack.EMPTY` representa slot vazio. Também é possível atribuir ou limpar a
-referência com `setItemStack(stack)` e `clear()`. O usuário pode limpar o slot
-com clique direito, Delete ou Backspace quando ele está focado.
+The callback receives a defensive copy with its count normalized to one item;
+`ItemStack.EMPTY` represents an empty slot. You can also assign or clear the
+reference with `setItemStack(stack)` and `clear()`. Users can clear a focused
+slot with right-click, Delete, or Backspace.
 
-O fundo segue o tema por padrão, mas pode receber uma cor local nomeada ou
-qualquer valor ARGB. `UiColor.named(...)` reconhece nomes básicos como `white`,
-`black`, `red`, `green`, `blue`, `yellow`, `cyan`, `magenta`, `orange`, `purple`,
-`pink`, `brown` e `gray`; `UiColor.hex(...)` aceita `#RRGGBB` e `#AARRGGBB`.
+The background follows the theme by default, but it can use a local named
+color or any ARGB value. `UiColor.named(...)` recognizes basic names such as
+`white`, `black`, `red`, `green`, `blue`, `yellow`, `cyan`, `magenta`,
+`orange`, `purple`, `pink`, `brown`, and `gray`; `UiColor.hex(...)`
+accepts `#RRGGBB` and `#AARRGGBB`.
 
 ```java
 itemSlot.setBackgroundColor(UiColor.named("black"));
 itemSlot.setBackgroundColor(UiColor.hex("#804080FF"));
-itemSlot.setBackgroundColor(0xFF204060); // ARGB arbitrário
-itemSlot.clearBackgroundColor(); // volta ao tema ativo
+itemSlot.setBackgroundColor(0xFF204060); // arbitrary ARGB
+itemSlot.clearBackgroundColor(); // returns to the active theme
 ```
 
-## Grade de inventário
+## Inventory grid
 
-`InventoryGrid.playerInventory()` exibe o inventário principal e a hotbar do
-jogador local. A hotbar tem uma separação visual sutil. Para exibir outro
-`Container`, use `new InventoryGrid(container)`; por padrão, containers genéricos
-são apresentados em linhas, sem presumir onde começa uma hotbar.
+`InventoryGrid.playerInventory()` displays the local player's main inventory
+and hotbar. The hotbar has a subtle visual separation. To display another
+`Container`, use `new InventoryGrid(container)`; by default, generic containers
+are displayed in rows without assuming where a hotbar begins.
 
 ```java
 InventoryGrid inventory = InventoryGrid.playerInventory()
@@ -106,43 +145,44 @@ content.add(inventory);
 content.add(new ItemSlot().setOnItemChanged(selectedFilter::set));
 ```
 
-No modo `PICKER` (padrão), clique esquerdo carrega uma cópia da pilha e clique
-direito uma unidade. Clique novamente no slot de origem para cancelar, ou solte
-o item em um `ItemSlot` da mesma `UiScreen`. A grade não remove nem altera itens;
-`ItemSlot` guarda uma referência com contagem normalizada para um.
+In `PICKER` mode (the default), left-click picks up a copy of the stack, and
+right-click picks up one item. Click the source slot again to cancel, or drop
+the item onto an `ItemSlot` in the same `UiScreen`. The grid does not remove or
+modify items; `ItemSlot` stores a reference with its count normalized to one.
 
-Use `setInteractionMode(InventoryGrid.InteractionMode.CUSTOM)` para receber
-eventos de pressionar, arrastar e soltar por `setOnInteraction(...)`. Cada evento
-inclui ação, índice, botão e uma cópia defensiva do stack; o consumidor decide
-como alterar o container e sincronizar essas operações com o servidor. A grade
-não escreve diretamente em containers no modo customizado.
+Use `setInteractionMode(InventoryGrid.InteractionMode.CUSTOM)` to receive press,
+drag, and release events through `setOnInteraction(...)`. Each event includes
+the action, index, button, and a defensive copy of the stack; the consumer
+decides how to modify the container and synchronize those operations with the
+server. The grid does not write directly to containers in custom mode.
 
-## Maven local ou repositório Maven
+## Local Maven or a Maven repository
 
-Para consumir pelo Maven local nesta máquina, publique o projeto com:
+To consume the library through local Maven on this machine, publish the project
+with:
 
 ```powershell
 .\gradlew.bat publishToMavenLocal
 ```
 
-No projeto consumidor, adicione `mavenLocal()` aos repositórios e declare:
+In the consuming project, add `mavenLocal()` to the repositories and declare:
 
 ```groovy
 dependencies {
-    implementation "com.radaeli.ruilib:r-ui-lib-neoforge:0.1.0"
+    implementation "com.radaeli.ruilib:r-ui-lib-neoforge:0.3.0"
 }
 ```
 
-Também é possível publicar em qualquer repositório Maven que aceite uploads.
-Configure `MAVEN_RELEASE_URL` e, se necessário, `MAVEN_USERNAME` e
-`MAVEN_PASSWORD` no ambiente, então execute `.\gradlew.bat publish`. Os mesmos
-valores podem ser passados por propriedades Gradle `maven_release_url`,
-`maven_username` e `maven_password`. Nenhum endpoint remoto ou credencial fica
-gravado no repositório.
+You can also publish to any Maven repository that accepts uploads.
+Set `MAVEN_RELEASE_URL` and, if needed, `MAVEN_USERNAME` and `MAVEN_PASSWORD`
+in the environment, then run `.\gradlew.bat publish`. The same values can be
+passed through the Gradle properties `maven_release_url`, `maven_username`,
+and `maven_password`. No remote endpoint or credentials are stored in the
+repository.
 
-## Build dos artefatos
+## Building artifacts
 
-`.\gradlew.bat build` cria o JAR de runtime e o JAR de fontes em `build/libs/`.
-O workflow de release anexa ambos ao release do GitHub quando uma tag de versão
-é criada. Para distribuição em um repositório Maven público, configure o endpoint
-descrito acima.
+`.\gradlew.bat build` creates the runtime JAR and sources JAR in `build/libs/`.
+The release workflow attaches both to the GitHub release when a version tag
+is created. To distribute through a public Maven repository, configure the
+endpoint described above.

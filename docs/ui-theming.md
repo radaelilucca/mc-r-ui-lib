@@ -1,46 +1,46 @@
-# Temas e tokens visuais
+# Themes and visual tokens
 
-R-Ui Lib fornece os temas `UiTheme.DARK` e `UiTheme.LIGHT`. Um mod consumidor
-pode escolher o padrão global uma vez durante a inicialização client-side:
+R-Ui Lib provides the `UiTheme.DARK` and `UiTheme.LIGHT` themes. A consuming mod
+can choose the global default once during client-side initialization:
 
 ```java
 UiThemes.setGlobalTheme(UiTheme.LIGHT);
 ```
 
-Telas criadas sem tema explícito e todos os componentes que recebem o contexto
-dessas telas passam a consumir essa configuração. O valor global pode ser
-atualizado em runtime; telas abertas atualizam o layout na próxima renderização.
-Uma tela pode manter um tema próprio pelo construtor `UiScreen(title, root,
-theme)`. Esse tema substitui o padrão global só naquela tela.
+Screens created without an explicit theme, and all components that receive
+their context, use this configuration. The global value can be updated at
+runtime; open screens update their layout on the next render.
+A screen can retain its own theme through the `UiScreen(title, root,
+theme)` constructor. This theme overrides the global default for that screen only.
 
-## Definição manual
+## Manual configuration
 
-`UiPalette` é um record público com um argumento para cada cor semântica, em
-ordem ARGB:
+`UiPalette` is a public record with one argument for each semantic color,
+using ARGB values:
 
-| Token | Uso |
+| Token | Usage |
 | --- | --- |
-| `screen` | Fundo de tela |
-| `panel`, `card` | Superfícies de painéis e cartões |
-| `border`, `divider` | Contornos e separadores |
-| `text`, `mutedText` | Texto principal e secundário |
-| `accent` | Seleção, progresso e destaque |
-| `button`, `buttonHover`, `buttonPressed` | Estados de botão |
-| `disabled`, `focus` | Estado desabilitado e foco |
-| `overlay` | Fundo atrás de modais |
-| `success`, `warning`, `error` | Estados de toast |
+| `screen` | Screen background |
+| `panel`, `card` | Panel and card surfaces |
+| `border`, `divider` | Outlines and separators |
+| `text`, `mutedText` | Primary and secondary text |
+| `accent` | Selection, progress, and highlights |
+| `button`, `buttonHover`, `buttonPressed` | Button states |
+| `disabled`, `focus` | Disabled state and focus |
+| `overlay` | Backdrop behind modals |
+| `success`, `warning`, `error` | Toast states |
 
-Os outros tokens de aparência são agrupados em `UiTokens`:
+Other appearance tokens are grouped in `UiTokens`:
 
-- Espaçamento: `panelPadding`, `cardPadding`, `buttonPadding` e os gaps pequeno,
-  médio e grande.
-- Tamanho: largura e altura mínimas dos botões.
-- Tipografia: escalas `small`, `body`, `heading` e `title`.
-- Bordas: raios pequeno, médio, grande e pill.
-- Animação: duração padrão e easing (`LINEAR`, `EASE_IN_OUT` ou `EASE_OUT`).
-  Duração zero desativa as transições.
+- Spacing: `panelPadding`, `cardPadding`, `buttonPadding`, and small,
+  medium, and large gaps.
+- Size: minimum button width and height.
+- Typography: `small`, `body`, `heading`, and `title` scales.
+- Corners: small, medium, large, and pill radii.
+- Animation: default duration and easing (`LINEAR`, `EASE_IN_OUT`, or `EASE_OUT`).
+  A duration of zero disables transitions.
 
-Exemplo que mantém as cores escuras e troca os demais tokens:
+This example keeps the Dark colors and replaces the other tokens:
 
 ```java
 UiTokens customTokens = new UiTokens(
@@ -52,8 +52,8 @@ UiTokens customTokens = new UiTokens(
 UiThemes.setGlobalTheme(new UiTheme(UiTheme.DARK.palette(), customTokens));
 ```
 
-Para definir todas as cores manualmente, passe os 17 valores ao construtor de
-`UiPalette` e use esse record na criação do tema:
+To define all colors manually, pass the 17 values to the `UiPalette`
+constructor and use that record when creating the theme:
 
 ```java
 UiPalette colors = new UiPalette(
@@ -63,10 +63,10 @@ UiPalette colors = new UiPalette(
 UiThemes.setGlobalTheme(new UiTheme(colors, customTokens));
 ```
 
-## Customização pontual
+## Local customization
 
-Passe outro `UiTheme` ao construtor de uma tela para isolá-la do padrão global.
-Os componentes também mantêm seus overrides locais, como cor em `Label` e
-`Divider`, cores em `ProgressBar` e padding explícito em `Panel`/`Card`. Sem override, seus
-valores padrão vêm do tema ativo, inclusive quando a tela usa um tema global
-customizado.
+Pass another `UiTheme` to a screen's constructor to give it a theme independent
+of the global default. Components also retain their local overrides, such as
+colors in `Label` and `Divider`, colors in `ProgressBar`, and explicit padding
+in `Panel`/`Card`. Without an override, their defaults come from the active
+theme, including when the screen uses a custom global theme.

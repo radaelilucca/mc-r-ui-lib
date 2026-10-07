@@ -12,6 +12,7 @@ import com.radaeli.ruilib.ui.Label;
 import com.radaeli.ruilib.ui.Modal;
 import com.radaeli.ruilib.ui.ProgressBar;
 import com.radaeli.ruilib.ui.Row;
+import com.radaeli.ruilib.ui.Slider;
 import com.radaeli.ruilib.ui.UiComponent;
 import com.radaeli.ruilib.ui.UiContext;
 import com.radaeli.ruilib.ui.UiPaint;
@@ -101,6 +102,8 @@ public final class UiPlaygroundScreen extends UiScreen {
     private EditBox heightField;
     private EditBox gapField;
     private EditBox rangeField;
+    private EditBox sliderValueField;
+    private EditBox sliderUpperValueField;
     private EditBox itemSlotBackgroundField;
     private final List<AbstractWidget> inspectorWidgets = new ArrayList<>();
     private net.minecraft.client.gui.components.Button horizontalAlignmentButton;
@@ -269,6 +272,9 @@ public final class UiPlaygroundScreen extends UiScreen {
         heightField = createField(panelX + halfWidth + 5, 118, halfWidth, "Height");
         gapField = createField(panelX, 138, fieldWidth, "Gap");
         rangeField = createField(panelX, 160, fieldWidth, "Min, max, step");
+        sliderValueField = createField(panelX, 182, halfWidth, "Slider value / lower endpoint");
+        sliderUpperValueField = createField(panelX + halfWidth + 5, 182, halfWidth, "Upper endpoint (optional)");
+        sliderUpperValueField.setHint(Component.literal("Optional"));
         int alignmentWidth = Math.max(32, (fieldWidth - 4) / 2);
         horizontalAlignmentButton = addInspectorButton(net.minecraft.client.gui.components.Button.builder(
                 Component.literal("H"), button -> cycleAlignment(true))
@@ -326,6 +332,7 @@ public final class UiPlaygroundScreen extends UiScreen {
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
         renderClosingModal(context);
         if (modal() != null) modal().render(context);
+        renderCarriedItem(graphics, mouseX, mouseY);
         UiComponent hovered = (modal() == null ? root() : modal()).hitTest(mouseX, mouseY);
         if (hovered != null && hovered.tooltip() != null) {
             UiPaint.tooltip(context, hovered.tooltip(), mouseX, mouseY);
@@ -407,6 +414,11 @@ public final class UiPlaygroundScreen extends UiScreen {
         if (gapField.visible) UiPaint.text(context, "Gap", x, gapField.getY() - 10, labelColor, UiTextStyle.SMALL);
         if (rangeField.visible) UiPaint.text(context, rangeLabel(), x,
                 rangeField.getY() - 10, labelColor, UiTextStyle.SMALL);
+        if (sliderValueField.visible) {
+            UiPaint.text(context, "Value", x, sliderValueField.getY() - 10, labelColor, UiTextStyle.SMALL);
+            UiPaint.text(context, "Upper", sliderUpperValueField.getX(),
+                    sliderUpperValueField.getY() - 10, labelColor, UiTextStyle.SMALL);
+        }
         if (selected != null) {
             UiPaint.text(context, selected.type.toUpperCase(), x, canvasY + 22,
                     theme().palette().accent(), UiTextStyle.HEADING);
@@ -1057,6 +1069,14 @@ public final class UiPlaygroundScreen extends UiScreen {
                 || selected.type.equals("progressbar")
                 || selected.supportsItemCount() || selected.supportsColumns());
         rangeField.setEditable(rangeEditable);
+        boolean sliderEditable = hasSelection && selected.type.equals("slider");
+        sliderValueField.setValue(sliderEditable ? formatNumber(selected.value) : "0");
+        sliderUpperValueField.setValue(sliderEditable && selected.upperValue != null
+                ? formatNumber(selected.upperValue) : "");
+        sliderValueField.setEditable(sliderEditable && !previewMode);
+        sliderUpperValueField.setEditable(sliderEditable && !previewMode);
+        sliderValueField.visible = sliderEditable && !previewMode;
+        sliderUpperValueField.visible = sliderEditable && !previewMode;
         boolean textEditable = hasSelection && (selected.type.equals("label") || selected.type.equals("button")
                 || selected.type.equals("iconbutton") || selected.type.equals("panel")
                 || selected.type.equals("card") || selected.type.equals("divider")
@@ -1177,6 +1197,11 @@ public final class UiPlaygroundScreen extends UiScreen {
             rangeField.setY(cursorY + 11);
             cursorY += 32;
         }
+        if (sliderValueField.visible) {
+            sliderValueField.setY(cursorY + 11);
+            sliderUpperValueField.setY(cursorY + 11);
+            cursorY += 32;
+        }
         int controlY = cursorY + 2;
         if (horizontalAlignmentButton.visible) {
             horizontalAlignmentButton.setY(controlY);
@@ -1243,6 +1268,7 @@ public final class UiPlaygroundScreen extends UiScreen {
             double nextMinimum = selected.minimum;
             double nextMaximum = selected.maximum;
             double nextValue = selected.value;
+            Double nextUpperValue = selected.upperValue;
             double nextStep = selected.step;
             if (selected.isContainer() && !selected.isAbsolute()) {
                 nextGap = parseBoundedInt(gapField.getValue(), 0, 4096);
@@ -1259,6 +1285,15 @@ public final class UiPlaygroundScreen extends UiScreen {
                 if (nextMaximum <= nextMinimum || (selected.type.equals("slider") && nextStep < 0)) {
                     throw new IllegalArgumentException("Min deve ser menor que max; step não pode ser negativo");
                 }
+            }
+            if (selected.type.equals("slider")) {
+                nextValue = parseFiniteDouble(sliderValueField.getValue());
+                nextUpperValue = sliderUpperValueField.getValue().isBlank()
+                        ? null : parseFiniteDouble(sliderUpperValueField.getValue());
+                Slider slider = new Slider(nextMinimum, nextMaximum, nextValue, nextStep, ignored -> { });
+                if (nextUpperValue != null) slider.setValues(nextValue, nextUpperValue);
+                nextValue = slider.value();
+                nextUpperValue = slider.upperValue();
             }
             if (selected.supportsColumns()) {
                 nextColumns = parseBoundedInt(rangeField.getValue(), 1, 64);
@@ -1289,7 +1324,8 @@ public final class UiPlaygroundScreen extends UiScreen {
                 selected.minimum = nextMinimum;
                 selected.maximum = nextMaximum;
                 selected.step = nextStep;
-                selected.value = normalizeSliderValue(selected.value, nextMinimum, nextMaximum, nextStep);
+                selected.value = nextValue;
+                selected.upperValue = nextUpperValue;
             } else if (selected.type.equals("progressbar")) {
                 selected.minimum = nextMinimum;
                 selected.maximum = nextMaximum;
@@ -1315,15 +1351,6 @@ public final class UiPlaygroundScreen extends UiScreen {
         double parsed = Double.parseDouble(value.trim());
         if (!Double.isFinite(parsed)) throw new IllegalArgumentException("Use valores numéricos finitos");
         return parsed;
-    }
-
-    private static double normalizeSliderValue(double value, double minimum, double maximum, double step) {
-        double normalized = Math.max(minimum, Math.min(maximum, value));
-        double steps = step == 0 ? 0 : (normalized - minimum) / step;
-        if (step > 0 && Double.isFinite(steps) && steps <= Long.MAX_VALUE) {
-            normalized = minimum + Math.round(steps) * step;
-        }
-        return Math.max(minimum, Math.min(maximum, normalized));
     }
 
     private static String formatNumber(double value) {

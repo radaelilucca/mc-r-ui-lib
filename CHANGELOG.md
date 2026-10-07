@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0] - 2026-10-07
+
+### Added
+
+- Added optional two-handle slider selection for ordered ranges, with mouse, scroll, keyboard, and playground editing support.
+- Added optional interactive actions in modal headers.
+
+### Changed
+
+- Added more spacing between toast content and the left accent strip.
+- Translated all documentation into US English and added a project README that clearly identifies the library as alpha and under construction.
+
+### Fixed
+
+- Fixed flickering at the end of toast and text fades, and kept toast accent strips inside rounded borders.
+- Fixed text-field vertical alignment and clicks within field padding.
+- Fixed internal tab corners so adjacent tabs form a continuous strip.
+- Fixed themed tooltip layering over rendered items.
+- Fixed row and column alignment and allowed screens to reserve their visible panel bounds for JEI.
+
 ## [0.2.0] - 2026-10-06
 
 ### Added

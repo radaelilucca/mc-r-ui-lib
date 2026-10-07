@@ -1,6 +1,7 @@
 package com.radaeli.ruilib.client.playground;
 
 import com.radaeli.ruilib.ui.Alignment;
+import com.radaeli.ruilib.ui.Slider;
 import net.minecraft.resources.ResourceLocation;
 
 final class PlaygroundDocument {
@@ -73,16 +74,10 @@ final class PlaygroundDocument {
             if (node.text == null || node.text.isBlank()) node.text = node.itemId;
         }
         if (node.type.equals("slider")) {
-            if (!Double.isFinite(node.minimum) || !Double.isFinite(node.maximum) || !Double.isFinite(node.value)
-                    || !Double.isFinite(node.maximum - node.minimum) || !Double.isFinite(node.step)
-                    || node.maximum <= node.minimum || node.step < 0) {
-                throw new IllegalArgumentException("Slider requires finite min < max and a non-negative step");
-            }
-            node.value = Math.max(node.minimum, Math.min(node.maximum, node.value));
-            if (node.step > 0) {
-                node.value = Math.max(node.minimum, Math.min(node.maximum,
-                        node.minimum + Math.round((node.value - node.minimum) / node.step) * node.step));
-            }
+            Slider slider = new Slider(node.minimum, node.maximum, node.value, node.step, ignored -> { });
+            if (node.upperValue != null) slider.setValues(node.value, node.upperValue);
+            node.value = slider.value();
+            node.upperValue = slider.upperValue();
         }
         if (node.type.equals("progressbar")) {
             if (!Double.isFinite(node.minimum) || !Double.isFinite(node.maximum) || !Double.isFinite(node.value)) {

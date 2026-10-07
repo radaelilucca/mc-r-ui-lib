@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 public final class Modal extends UiComponent {
     private final Component title;
     private final UiComponent content;
+    private UiComponent headerAction;
     private final int preferredDialogWidth;
     private final int preferredDialogHeight;
     private boolean closeOnOutsideClick;
@@ -38,6 +39,12 @@ public final class Modal extends UiComponent {
         return this;
     }
 
+    /** Places an optional interactive component at the top-right of the title heading. */
+    public Modal setHeaderAction(UiComponent action) {
+        this.headerAction = Objects.requireNonNull(action, "action");
+        return this;
+    }
+
     public Component title() { return title; }
     public UiComponent content() { return content; }
     public boolean closeOnOutsideClick() { return closeOnOutsideClick; }
@@ -46,6 +53,7 @@ public final class Modal extends UiComponent {
     @Override
     public void visitComponents(Consumer<UiComponent> visitor) {
         visitor.accept(this);
+        if (headerAction != null) headerAction.visitComponents(visitor);
         content.visitComponents(visitor);
     }
     void beginOpen() {
@@ -58,6 +66,7 @@ public final class Modal extends UiComponent {
     boolean closeTransitionComplete() { return closing && transitionOpacity <= 0.001; }
 
     void clearContentFocus() {
+        if (headerAction != null) headerAction.visitFocusable(component -> component.setFocused(false));
         content.visitFocusable(component -> component.setFocused(false));
     }
 
@@ -77,11 +86,31 @@ public final class Modal extends UiComponent {
     @Override
     protected void layoutChildren(Font font, UiTheme theme) {
         Insets padding = theme.tokens().panelPadding();
-        int titleHeight = UiText.height(font, theme, UiTextStyle.TITLE) + theme.tokens().mediumGap();
+        int headingHeight = headingContentHeight(font, theme);
+        int headingBottom = bounds().y() + padding.top() + headingHeight;
+        if (headerAction != null) {
+            UiSize actionSize = headerAction.measure(font, theme,
+                    Math.max(0, bounds().width() - padding.left() - padding.right()),
+                    Math.max(0, bounds().height() - padding.top() - padding.bottom()));
+            headerAction.layout(font, theme, new Bounds(bounds().right() - padding.right() - actionSize.width(),
+                    bounds().y() + padding.top() + Math.max(0, (headingHeight - actionSize.height()) / 2),
+                    actionSize.width(), actionSize.height()));
+        }
         content.layout(font, theme, new Bounds(bounds().x() + padding.left(),
-                bounds().y() + padding.top() + titleHeight,
+                headingBottom + theme.tokens().mediumGap(),
                 Math.max(0, bounds().width() - padding.left() - padding.right()),
-                Math.max(0, bounds().height() - padding.top() - padding.bottom() - titleHeight)));
+                Math.max(0, bounds().bottom() - padding.bottom() - headingBottom - theme.tokens().mediumGap())));
+    }
+
+    private int headingContentHeight(Font font, UiTheme theme) {
+        int titleHeight = UiText.height(font, theme, UiTextStyle.TITLE);
+        if (headerAction == null) return titleHeight;
+        int availableWidth = Math.max(0, bounds().width() - theme.tokens().panelPadding().left()
+                - theme.tokens().panelPadding().right());
+        int availableHeight = Math.max(0, bounds().height() - theme.tokens().panelPadding().top()
+                - theme.tokens().panelPadding().bottom());
+        return Math.max(titleHeight,
+                headerAction.measure(font, theme, availableWidth, availableHeight).height());
     }
 
     @Override
@@ -95,25 +124,32 @@ public final class Modal extends UiComponent {
         Insets padding = context.theme().tokens().panelPadding();
         UiPaint.text(context, title, bounds().x() + padding.left(), bounds().y() + padding.top(),
                 UiPaint.withAlpha(context.theme().palette().text(), opacity), UiTextStyle.TITLE);
-        int dividerY = bounds().y() + padding.top()
-                + UiText.height(context.font(), context.theme(), UiTextStyle.HEADING)
+        int dividerY = bounds().y() + padding.top() + headingContentHeight(context.font(), context.theme())
                 + context.theme().tokens().smallGap();
         UiPaint.rect(context, new Bounds(bounds().x() + padding.left(), dividerY,
                 Math.max(0, bounds().width() - padding.left() - padding.right()), 1),
                 UiPaint.withAlpha(context.theme().palette().divider(), opacity));
+        if (headerAction != null) headerAction.render(context.withOpacity(opacity));
         content.render(context.withOpacity(opacity));
     }
 
     @Override
     public UiComponent hitTest(double mouseX, double mouseY) {
         if (!bounds().contains(mouseX, mouseY)) return null;
+        if (headerAction != null) {
+            UiComponent target = headerAction.hitTest(mouseX, mouseY);
+            if (target != null) return target;
+        }
         UiComponent target = content.hitTest(mouseX, mouseY);
         return target == null ? this : target;
     }
 
     @Override
     public void visitFocusable(Consumer<UiComponent> visitor) {
-        if (isEnabled()) content.visitFocusable(visitor);
+        if (isEnabled()) {
+            if (headerAction != null) headerAction.visitFocusable(visitor);
+            content.visitFocusable(visitor);
+        }
     }
 
     @Override
