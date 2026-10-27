@@ -1,89 +1,76 @@
-# R-Ui Lib
+<p align="center" style="text-align: center;"><img src="https://media.forgecdn.net/avatars/thumbnails/2149/589/256/256/639285793279083371.png" alt="R-Ui Lib"></p>
 
-> **ALPHA — Under construction.** R-Ui Lib is in active development. Expect
-> unfinished features and API changes between releases.
+<p align="center" style="text-align: center;">Reusable interface components for Minecraft mods</p>
 
-> Build Minecraft mod interfaces from reusable, themed components.
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/what_it_is.png" alt="WHAT IT IS?" width="267"></p>
 
-**R-Ui Lib** is a UI toolkit for Minecraft mod developers. Compose settings
-screens, inventory filters, dashboards, and notifications with shared layouts,
-controls, and themes. Players interact with these interfaces through the mods
-that use the library.
+Mod screens can feel inconsistent and cumbersome when every control is built differently. **R-Ui Lib gives mods a shared set of clear, reusable interface components** for settings, item filters, menus, and other screens.
 
-## What you can build
+R-Ui Lib is a library: it adds no standalone screens, items, or blocks. You see it through the Minecraft mods that use it.
 
-- **Interactive controls:** Buttons, icon buttons, toggles, chips, text and
-  search fields, and sliders with an optional second handle for range selection.
-- **Structured screens:** Rows, columns, grids, stacks, tabs, scrollable content,
-  and freely positioned layouts, with panels, cards, labels, and dividers.
-- **Feedback and navigation:** Toast notifications, tooltips, modal dialogs,
-  progress bars, tables, and radial menus.
-- **Item interfaces:** Item cards and grids, a player inventory picker with a
-  distinct hotbar, and ghost item slots for filters. Players can copy a selection
-  from their inventory without moving the original items, or drag items from
-  **JEI** into supported filter slots.
-- **A shared appearance:** Built-in Dark and Light themes, configurable colors,
-  spacing, text sizes, corner radii, and transition settings. Set a global theme
-  once, then customize individual screens and supported component properties.
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/what_can_it_do.png" alt="WHAT CAN IT DO?" width="375"></p>
 
-## For developers
+### Screens and layouts
 
-The public API lives in `com.radaeli.ruilib.ui`. Compose Java components and
-attach callbacks to your mod's logic; `UiScreen` provides mouse and keyboard
-input, focus navigation, tooltips, and overlays. Use the UI API from client code.
+**Keep information and controls organized.**
 
-For example, compose an inventory picker and a filter slot:
+- Arrange content in rows, columns, grids, tabs, cards, and scrollable areas.
+- Use panels, labels, progress bars, and tables to make screens easier to scan.
+- Choose a Dark or Light theme and adjust colors, spacing, and other visual settings.
 
-```java
-Column content = new Column();
-content.add(new Label(Component.literal("Choose an item")));
-content.add(new ItemSlot());
-content.add(InventoryGrid.playerInventory());
+### Controls and feedback
 
-UiScreen screen = new UiScreen(
-        Component.literal("My mod"), new Panel(content));
-```
+**Give each screen familiar ways to make choices and see what happened.**
 
-Choose a theme during client initialization:
+- Use buttons, toggles, sliders, text fields, dropdowns, and segmented choices.
+- Show dialogs, tooltips, and toast notifications.
+- Selectable cards can contain their own interactive controls.
 
-```java
-UiThemes.setGlobalTheme(UiTheme.DARK); // or UiTheme.LIGHT
-```
+### Item selection
 
-Custom palettes and design tokens let you match your mod's appearance. Source
-JARs are available for browsing the implementation in your IDE.
+**Let players choose items without rearranging their inventory.**
 
-See the [integration guide](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/using-r-ui-lib.md)
-for dependencies and callbacks, and the
-[theme guide](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/ui-theming.md)
-for customization.
+- Show item previews, filter slots, and inventory grids.
+- Pick an item from the inventory and place its reference into a supported filter slot; the original stack stays in the inventory.
+- With **JEI** installed, drag an item from JEI into a supported filter slot.
 
-## Try layouts in game
+### Colors and previews
 
-In development runs, press **F7** to open the visual playground. Add components
-from the categorized palette, arrange and resize them, edit their properties,
-switch between editing and interactive preview, and compare Dark and Light
-themes. Save layouts as local JSON files and reopen them later.
-Use **Load** to open the bundled reference layout for each palette category or
-one of your saved layouts; the examples are available on a fresh run too.
+**Adjust color choices and preview them before applying.**
 
-**F6** demonstrates toasts over the game, and **F8** opens the inventory and
-filter-slot example. These development shortcuts are configurable in Controls.
-See the [playground guide](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/ui-toolkit-playground.md)
-for the full workflow.
+- Pick colors with RGB sliders or hexadecimal input, then apply or cancel the preview.
+- Use color swatches and scalable item previews in a screen.
+- Scroll through wide groups of components without crowding the screen.
 
-## Compatibility
+---
 
-| Minecraft | Loader | Java |
-| --- | --- | --- |
-| 1.21.1 | NeoForge 21.1.236+ | 21 |
-| 1.20.1 | Forge 47.4.20+ | 17 |
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/how-do-i-use-it.png" alt="HOW DO I USE IT?" width="371"></p>
 
-## Links and license
+Install R-Ui Lib alongside a mod that uses it, with matching Minecraft and loader versions. Open that mod's screen to use the controls it provides.
 
-- [Source code](https://github.com/radaelilucca/mc-r-ui-lib)
-- [Report an issue](https://github.com/radaelilucca/mc-r-ui-lib/issues)
-- [Documentation](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/README.md)
+> **Heads up:** R-Ui Lib does not add its own screen or gameplay content. The available interface depends on the mod using the library.
 
-R-Ui Lib is available under the
-[MIT License](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/LICENSE).
+---
+
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/requirements.png" alt="REQUIREMENTS" width="355"></p>
+
+- **Minecraft 1.20.1** with **Forge 47.4.20** or newer
+- **Minecraft 1.21.1** with **NeoForge 21.1.236** or newer
+- Install R-Ui Lib on the client and server when a mod you use requires it.
+- **JEI is optional:** JEI 15 for Forge, or JEI 19+ for NeoForge. It enables dragging items into supported filter slots.
+
+---
+
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/found_a_bug.png" alt="FOUND A BUG?" width="317"></p>
+
+[Report an issue on GitHub](https://github.com/radaelilucca/mc-r-ui-lib/issues). Include your Minecraft version, loader, the mod whose screen is affected, and steps to reproduce the problem. A screenshot or relevant log excerpt can help.
+
+---
+
+<p align="center" style="background-color: #F4ECD0; text-align: center;"><img src="https://raw.githubusercontent.com/radaelilucca/mc-r-ui-lib/main/docs/gallery/section-titles/can_i_use.png" alt="CAN I USE THIS IN A MODPACK?" width="679"></p>
+
+**Yes.** R-Ui Lib is released under the **MIT License**.
+
+---
+
+*Developing a mod with R-Ui Lib? See the [integration guide](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/using-r-ui-lib.md), [technical documentation](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/docs/README.md), and [changelog](https://github.com/radaelilucca/mc-r-ui-lib/blob/main/CHANGELOG.md).*
