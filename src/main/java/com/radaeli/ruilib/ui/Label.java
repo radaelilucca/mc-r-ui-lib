@@ -7,7 +7,7 @@ import java.util.Objects;
 
 /** Single-line text primitive rendered and measured by the Minecraft font. */
 public final class Label extends UiComponent {
-    private final Component text;
+    private Component text;
     private final Integer color;
 
     public Label(Component text) {
@@ -19,6 +19,9 @@ public final class Label extends UiComponent {
         this.text = Objects.requireNonNull(text, "text");
         this.color = color;
     }
+
+    /** Updates dynamic content; relayout the parent if its natural size should change. */
+    public void setText(Component text) { this.text = Objects.requireNonNull(text, "text"); }
 
     @Override
     protected UiSize measureIntrinsic(Font font, UiTheme theme, int maxWidth, int maxHeight) {

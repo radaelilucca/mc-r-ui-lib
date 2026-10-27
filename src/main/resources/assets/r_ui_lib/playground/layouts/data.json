@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "name": "data-components",
+  "root": {
+    "type": "absolute",
+    "width": 0,
+    "height": 0,
+    "children": [
+      {
+        "type": "label",
+        "text": "Data components",
+        "x": 16,
+        "y": 12,
+        "width": 200,
+        "height": 16
+      },
+      {
+        "type": "itemcard",
+        "text": "Diamond stack",
+        "itemId": "minecraft:diamond",
+        "itemCount": 12,
+        "selected": true,
+        "x": 16,
+        "y": 42,
+        "width": 132,
+        "height": 36
+      },
+      {
+        "type": "itemslot",
+        "text": "Empty slot",
+        "itemId": "",
+        "x": 160,
+        "y": 48,
+        "width": 24,
+        "height": 24
+      },
+      {
+        "type": "itemslot",
+        "text": "Filled slot",
+        "itemId": "minecraft:emerald",
+        "x": 196,
+        "y": 48,
+        "width": 24,
+        "height": 24
+      },
+      {
+        "type": "itemgrid",
+        "text": "Inventory grid",
+        "columns": 5,
+        "gap": 4,
+        "width": 148,
+        "height": 82,
+        "x": 16,
+        "y": 94
+      },
+      {
+        "type": "table",
+        "text": "Material, Amount, Status",
+        "columns": 3,
+        "width": 320,
+        "height": 118,
+        "x": 184,
+        "y": 94
+      },
+      {
+        "type": "tabs",
+        "text": "Tabs",
+        "selectedTab": 0,
+        "width": 260,
+        "height": 92,
+        "x": 16,
+        "y": 202,
+        "children": [
+          {
+            "type": "column",
+            "text": "Overview",
+            "gap": 4,
+            "children": [
+              {
+                "type": "label",
+                "text": "First tab content",
+                "width": 180,
+                "height": 16
+              },
+              {
+                "type": "button",
+                "text": "Refresh",
+                "width": 80,
+                "height": 22
+              }
+            ]
+          },
+          {
+            "type": "column",
+            "text": "Details",
+            "gap": 4,
+            "children": [
+              {
+                "type": "label",
+                "text": "Second tab content",
+                "width": 180,
+                "height": 16
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "itempreview",
+        "itemId": "minecraft:oak_log",
+        "x": 340,
+        "y": 210,
+        "width": 64,
+        "height": 64
+      },
+      {
+        "type": "selectablecard",
+        "text": "Selectable card",
+        "selected": true,
+        "x": 420,
+        "y": 226,
+        "width": 200,
+        "height": 80,
+        "children": [
+          {
+            "type": "label",
+            "text": "Independent controls",
+            "width": 160,
+            "height": 16
+          },
+          {
+            "type": "button",
+            "text": "Child action",
+            "width": 140,
+            "height": 24
+          }
+        ]
+      }
+    ]
+  }
+}

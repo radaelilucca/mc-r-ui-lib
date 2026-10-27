@@ -8,6 +8,7 @@ import java.math.RoundingMode;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.DoubleConsumer;
+import java.util.function.DoubleFunction;
 
 /** Horizontal input with an optional second handle for a strictly ordered selection interval. */
 public final class Slider extends UiComponent {
@@ -17,6 +18,7 @@ public final class Slider extends UiComponent {
     private double value;
     private Double upperValue;
     private final DoubleConsumer onChange;
+    private DoubleFunction<String> valueFormatter;
     private BiConsumer<Double, Double> onRangeChange = (lower, upper) -> { };
     private int trackStartX;
     private int trackEndX;
@@ -54,6 +56,13 @@ public final class Slider extends UiComponent {
 
     public double value() {
         return value;
+    }
+
+    /** Customizes the readout, including its reserved width, without changing the numeric value. */
+    public Slider setValueFormatter(DoubleFunction<String> formatter) {
+        valueFormatter = Objects.requireNonNull(formatter, "formatter");
+        refreshTrackLayout();
+        return this;
     }
 
     /** Returns the optional upper endpoint; null means this is a single-value slider. */
@@ -355,6 +364,7 @@ public final class Slider extends UiComponent {
     }
 
     private String formatForDisplay(double value) {
+        if (valueFormatter != null) return valueFormatter.apply(value);
         return BigDecimal.valueOf(value).setScale(displayDecimals(), RoundingMode.HALF_UP)
                 .stripTrailingZeros().toPlainString();
     }

@@ -8,6 +8,8 @@ import java.util.Objects;
 /** Compact keyboard/mouse button with a required narratable name and an icon glyph. */
 public final class IconButton extends UiComponent {
     private final Component accessibleName;
+    public enum Symbol { LOCK_OPEN, LOCK_CLOSED }
+    private Symbol symbol;
     private final Component icon;
     private final Runnable action;
     private boolean pressed;
@@ -20,6 +22,11 @@ public final class IconButton extends UiComponent {
             throw new IllegalArgumentException("IconButton requires a non-empty accessible name");
         }
         tooltip(accessibleName);
+    }
+
+    public IconButton(Component accessibleName, Symbol symbol, Runnable action) {
+        this(accessibleName, Component.literal(" "), action);
+        this.symbol = Objects.requireNonNull(symbol);
     }
 
     public Component accessibleName() { return accessibleName; }
@@ -38,6 +45,15 @@ public final class IconButton extends UiComponent {
         UiPaint.button(context, bounds(), animate(context, "hover", hovered ? 1 : 0),
                 animate(context, "press", pressed ? 1 : 0), isEnabled(),
                 animate(context, "focus", isFocused() ? 1 : 0));
+        if (symbol != null) {
+            int x=bounds().centerX()-5,y=bounds().centerY()-5;
+            int color=isEnabled()?context.theme().palette().text():context.theme().palette().mutedText();
+            UiPaint.outline(context,new Bounds(x,y+4,10,7),color);
+            UiPaint.outline(context,new Bounds(x+2,y,6,6),color);
+            if(symbol==Symbol.LOCK_OPEN) UiPaint.rect(context,new Bounds(x+6,y+2,2,4),context.theme().palette().button());
+            UiPaint.rect(context,new Bounds(x+4,y+7,2,2),color);
+            return;
+        }
         UiPaint.textCentered(context, icon, bounds().centerX(),
                 bounds().centerY() - UiText.height(context) / 2,
                 isEnabled() ? context.theme().palette().text() : context.theme().palette().mutedText());

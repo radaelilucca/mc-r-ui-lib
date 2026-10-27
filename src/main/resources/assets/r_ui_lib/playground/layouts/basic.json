@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "name": "basic-components",
+  "root": {
+    "type": "absolute",
+    "width": 0,
+    "height": 0,
+    "children": [
+      {
+        "type": "label",
+        "text": "Basic components",
+        "x": 16,
+        "y": 12,
+        "width": 200,
+        "height": 16
+      },
+      {
+        "type": "button",
+        "text": "Primary action",
+        "x": 16,
+        "y": 42,
+        "width": 112,
+        "height": 22
+      },
+      {
+        "type": "button",
+        "text": "Disabled",
+        "enabled": false,
+        "x": 140,
+        "y": 42,
+        "width": 92,
+        "height": 22
+      },
+      {
+        "type": "iconbutton",
+        "text": "Settings",
+        "x": 244,
+        "y": 42,
+        "width": 24,
+        "height": 22
+      },
+      {
+        "type": "toggle",
+        "text": "Enabled",
+        "selected": true,
+        "x": 16,
+        "y": 82,
+        "width": 112,
+        "height": 22
+      },
+      {
+        "type": "toggle",
+        "text": "Disabled",
+        "enabled": false,
+        "x": 140,
+        "y": 82,
+        "width": 112,
+        "height": 22
+      },
+      {
+        "type": "chip",
+        "text": "Selected",
+        "selected": true,
+        "x": 16,
+        "y": 122,
+        "width": 72,
+        "height": 20
+      },
+      {
+        "type": "chip",
+        "text": "Available",
+        "x": 96,
+        "y": 122,
+        "width": 76,
+        "height": 20
+      },
+      {
+        "type": "label",
+        "text": "Dynamic labels support setText()",
+        "x": 16,
+        "y": 270,
+        "width": 240,
+        "height": 14
+      },
+      {
+        "type": "iconbutton",
+        "text": "Keep block",
+        "iconSymbol": "LOCK_CLOSED",
+        "x": 280,
+        "y": 42,
+        "width": 24,
+        "height": 22
+      },
+      {
+        "type": "iconbutton",
+        "text": "Release block",
+        "iconSymbol": "LOCK_OPEN",
+        "x": 316,
+        "y": 42,
+        "width": 24,
+        "height": 22
+      }
+    ]
+  }
+}

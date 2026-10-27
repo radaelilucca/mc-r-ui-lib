@@ -1,0 +1,37 @@
+plugins { id 'net.neoforged.moddev' }
+base { archivesName = 'r-ui-lib-neoforge' }
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
+    withSourcesJar()
+}
+tasks.withType(JavaCompile).configureEach { options.release = java_version as int }
+dependencies {
+    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
+    if (project.hasProperty('withJei')) runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+}
+neoForge {
+    version = neoforge_version
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('runs/client')
+            if (project.hasProperty('uiValidation')) systemProperty 'r_ui_lib.validate', 'true'
+            if (project.hasProperty('withJei')) systemProperty 'r_ui_lib.validateJei', 'true'
+        }
+        server {
+            server()
+            gameDirectory = project.file('runs/server')
+            programArgument '--nogui'
+        }
+    }
+    mods { "${mod_id}" { sourceSet sourceSets.main } }
+}
+processResources {
+    def properties = [version: "${mod_version}+${minecraft_version}", mod_id: mod_id,
+        mod_name: mod_name, mod_description: mod_description, mod_authors: mod_authors,
+        mod_license: mod_license, minecraft_version: minecraft_version,
+        neoforge_version: neoforge_version, neoforge_loader_version_range: neoforge_loader_version_range,
+        pack_format: 34]
+    inputs.properties(properties)
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) { expand(properties) }
+}

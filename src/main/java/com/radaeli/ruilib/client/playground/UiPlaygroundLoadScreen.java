@@ -3,7 +3,8 @@ package com.radaeli.ruilib.client.playground;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
+import com.radaeli.ruilib.platform.UiPlatformScreen;
+import com.radaeli.ruilib.platform.UiPlatform;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -11,12 +12,12 @@ import java.io.IOException;
 import java.util.List;
 
 /** File picker for saved UI playground documents. */
-final class UiPlaygroundLoadScreen extends Screen {
+final class UiPlaygroundLoadScreen extends UiPlatformScreen {
     private static final int ROW_HEIGHT = 22;
 
     private final UiPlaygroundScreen editor;
-    private List<String> layouts = List.of();
-    private String selectedLayout;
+    private List<LoadEntry> layouts = List.of();
+    private LoadEntry selectedLayout;
     private String error;
     private int scrollOffset;
     private int listTop;
@@ -26,10 +27,18 @@ final class UiPlaygroundLoadScreen extends Screen {
     UiPlaygroundLoadScreen(UiPlaygroundScreen editor, String preferredSelection) {
         super(Component.literal("Load UI Layout"));
         this.editor = editor;
+        List<LoadEntry> entries = new java.util.ArrayList<>();
+        UiPlaygroundScreen.builtInLayouts().forEach(layout ->
+                entries.add(new LoadEntry(layout.id(), layout.label(), true)));
+        layouts = List.copyOf(entries);
+        if (!layouts.isEmpty()) selectedLayout = layouts.get(0);
         try {
-            layouts = UiPlaygroundScreen.savedLayoutNames();
-            if (layouts.contains(preferredSelection)) selectedLayout = preferredSelection;
-            else if (!layouts.isEmpty()) selectedLayout = layouts.get(0);
+            UiPlaygroundScreen.savedLayoutNames().forEach(name ->
+                    entries.add(new LoadEntry(name, "Saved — " + name, false)));
+            layouts = List.copyOf(entries);
+            selectedLayout = layouts.stream().filter(entry -> !entry.builtIn()
+                    && entry.id().equals(preferredSelection)).findFirst()
+                    .orElse(selectedLayout);
         } catch (IOException exception) {
             error = "Could not list layouts: " + message(exception);
         }
@@ -59,15 +68,16 @@ final class UiPlaygroundLoadScreen extends Screen {
             int index = scrollOffset + row;
             if (index >= layouts.size()) break;
             int y = listTop + row * ROW_HEIGHT;
-            String name = layouts.get(index);
-            boolean selected = name.equals(selectedLayout);
+            LoadEntry entry = layouts.get(index);
+            boolean selected = entry.equals(selectedLayout);
             boolean hovered = mouseX >= 8 && mouseX < width - 8
                     && mouseY >= y && mouseY < y + ROW_HEIGHT;
             int background = selected ? 0xFF344D65 : hovered ? 0xFF2A3542 : 0xFF202832;
             graphics.fill(8, y, width - 8, y + ROW_HEIGHT - 1, background);
-            graphics.renderOutline(8, y, width - 16, ROW_HEIGHT - 1,
+            UiPlatform.outline(graphics, 8, y, width - 16, ROW_HEIGHT - 1,
                     selected ? 0xFF67B7F7 : 0xFF35404D);
-            graphics.drawString(font, name + ".json", 16, y + 6, 0xFFF0F3F7, false);
+            graphics.drawString(font, entry.label() + (entry.builtIn() ? "" : ".json"),
+                    16, y + 6, 0xFFF0F3F7, false);
         }
         graphics.disableScissor();
 
@@ -129,7 +139,9 @@ final class UiPlaygroundLoadScreen extends Screen {
     }
 
     private void loadSelected() {
-        if (selectedLayout != null && editor.loadSavedLayout(selectedLayout)) {
+        if (selectedLayout != null && (selectedLayout.builtIn()
+                ? editor.loadBuiltInLayout(selectedLayout.id())
+                : editor.loadSavedLayout(selectedLayout.id()))) {
             Minecraft.getInstance().setScreen(editor);
         } else if (selectedLayout != null) {
             error = editor.loadStatus();
@@ -153,6 +165,8 @@ final class UiPlaygroundLoadScreen extends Screen {
     private static String message(Exception exception) {
         return exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
     }
+
+    private record LoadEntry(String id, String label, boolean builtIn) { }
 
     @Override
     public boolean isPauseScreen() {

@@ -1,7 +1,7 @@
 package com.radaeli.ruilib.ui;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import com.radaeli.ruilib.platform.UiPlatformScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Thin bridge from a component tree to Minecraft's client Screen lifecycle. */
-public class UiScreen extends Screen {
+public class UiScreen extends UiPlatformScreen {
     private static final float CARRIED_ITEM_Z_INDEX = 450.0F;
     private final UiComponent root;
     private final UiTheme themeOverride;
@@ -65,8 +65,21 @@ public class UiScreen extends Screen {
         renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partialTick));
         renderClosingModal(context);
         if (modal != null) modal.render(context);
+        Select<?> select = openSelect();
+        if (select != null) {
+            graphics.pose().pushPose();
+            graphics.pose().translate(0, 0, 400);
+            select.renderPopup(context);
+            graphics.pose().popPose();
+        }
         renderCarriedItem(graphics, mouseX, mouseY);
+        if (select != null && select.popupContains(mouseX, mouseY)) {
+            Tooltip tooltip = select.popupTooltip(mouseX, mouseY);
+            if (tooltip != null) UiPaint.tooltip(context, tooltip, mouseX, mouseY);
+            return;
+        }
         UiComponent hovered = closingModal == null ? activeRoot().hitTest(mouseX, mouseY) : null;
+        if (hovered instanceof ItemPreview preview) preview.renderTooltip(context);
         if (hovered != null && hovered.tooltip() != null) {
             UiPaint.tooltip(context, hovered.tooltip(), mouseX, mouseY);
         }
@@ -99,6 +112,16 @@ public class UiScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         ensureThemeLayout();
+        Select<?> select = openSelect();
+        if (select != null) {
+            pressedComponent = null;
+            if (select.bounds().contains(mouseX, mouseY)) {
+                if (select.mouseClicked(mouseX, mouseY, button)) pressedComponent = select;
+            } else if (select.popupContains(mouseX, mouseY)) {
+                if (button == GLFW.GLFW_MOUSE_BUTTON_LEFT) select.chooseAt(mouseX, mouseY);
+            } else select.close();
+            return true;
+        }
         if (modal != null) {
             if (modal.shouldCloseFromOutsideClick(mouseX, mouseY)) {
                 closeModal();
@@ -158,6 +181,11 @@ public class UiScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         ensureThemeLayout();
+        Select<?> select = openSelect();
+        if (select != null) {
+            select.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+            return true;
+        }
         if (modal != null) {
             modal.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
             return true;
@@ -171,6 +199,8 @@ public class UiScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         ensureThemeLayout();
         if (closingModal != null) return true;
+        Select<?> select = openSelect();
+        if (select != null && select.keyPressed(keyCode, scanCode, modifiers)) return true;
         if (modal != null && keyCode == GLFW.GLFW_KEY_ESCAPE) {
             closeModal();
             return true;
@@ -210,6 +240,15 @@ public class UiScreen extends Screen {
         focus(focusable.get(next));
     }
 
+    /** Current toolkit focus, for hosts that rebuild their component tree after an action. */
+    protected final UiComponent focusedComponent() { return focusedComponent; }
+
+    /** Moves focus to a replacement component after relayout; null clears it. */
+    protected final void focusComponent(UiComponent component) {
+        if (component == null) clearToolkitFocus();
+        else focus(component);
+    }
+
     private void focus(UiComponent component) {
         clearToolkitFocus();
         if (component.isFocusable() && component.isEnabled()) {
@@ -227,6 +266,19 @@ public class UiScreen extends Screen {
 
     private UiComponent activeRoot() {
         return modal == null ? root : modal;
+    }
+
+    /** Only a focused, still-visible select can own an overlay or intercept input. */
+    private Select<?> openSelect() {
+        if (closingModal != null || !(focusedComponent instanceof Select<?> select) || !select.isOpen()) return null;
+        boolean[] attached = {false};
+        activeRoot().visitFocusable(component -> { if (component == select) attached[0] = true; });
+        if (!attached[0] || select.bounds().width() == 0 || select.bounds().height() == 0) {
+            clearToolkitFocus();
+            return null;
+        }
+        select.layoutPopup(font, theme(), width, height);
+        return select.isOpen() ? select : null;
     }
 
     public void showModal(Modal modal) {
@@ -251,12 +303,14 @@ public class UiScreen extends Screen {
         closing.beginClose();
         closingModal = closing;
         pressedComponent = null;
+        clearToolkitFocus();
         focusedComponent = null;
         closing.closed();
     }
 
     @Override
     public void removed() {
+        clearToolkitFocus();
         clearCarriedItem();
         super.removed();
     }

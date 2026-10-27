@@ -36,7 +36,7 @@ final class PlaygroundDocument {
         if (node == null || node.type == null) throw new IllegalArgumentException("Layout contains an empty node");
         if (++count[0] > 512) throw new IllegalArgumentException("Layout has more than 512 components");
         if (node.children == null) node.children = new java.util.ArrayList<>();
-        if (!(node.type.equals("label") || node.type.equals("button")
+        if (!(node.type.equals("segmented") || node.type.equals("itempreview") || node.type.equals("colorswatch") || node.type.equals("colorpicker") || node.type.equals("label") || node.type.equals("button")
                 || node.type.equals("iconbutton") || node.type.equals("divider")
                 || node.type.equals("toggle") || node.type.equals("chip")
                 || node.type.equals("textfield") || node.type.equals("searchfield")
@@ -49,6 +49,8 @@ final class PlaygroundDocument {
         if (!node.isContainer() && !node.children.isEmpty()) {
             throw new IllegalArgumentException("Only layout containers can have children");
         }
+        if (node.iconSymbol == null) node.iconSymbol="";
+        if (!node.iconSymbol.isBlank()) com.radaeli.ruilib.ui.IconButton.Symbol.valueOf(node.iconSymbol);
         if (node.text == null) node.text = node.type;
         if (node.horizontalAlignment == null) node.horizontalAlignment = Alignment.START;
         if (node.verticalAlignment == null) node.verticalAlignment = Alignment.STRETCH;

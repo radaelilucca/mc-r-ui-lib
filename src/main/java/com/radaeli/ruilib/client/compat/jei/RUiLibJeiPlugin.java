@@ -6,11 +6,12 @@ import com.radaeli.ruilib.ui.UiScreen;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
-import mezz.jei.api.gui.handlers.IGuiProperties;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.resources.ResourceLocation;
+import com.radaeli.ruilib.platform.UiPlatform;
+import com.radaeli.ruilib.platform.UiJeiProperties;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
 /** Optional JEI bridge that exposes every visible R-Ui Lib ItemSlot as a ghost target. */
 @JeiPlugin
 public final class RUiLibJeiPlugin implements IModPlugin {
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(
+    private static final ResourceLocation UID = UiPlatform.id(
             "r_ui_lib", "item_slot_ghost_ingredients");
 
     @Override
@@ -29,45 +30,7 @@ public final class RUiLibJeiPlugin implements IModPlugin {
 
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
-        registration.addGuiScreenHandler(UiScreen.class, screen -> {
-            var bounds = screen.jeiGuiBounds();
-            return new IGuiProperties() {
-                @Override
-                public Class<? extends net.minecraft.client.gui.screens.Screen> screenClass() {
-                    return screen.getClass();
-                }
-
-                @Override
-                public int guiLeft() {
-                    return bounds.x();
-                }
-
-                @Override
-                public int guiTop() {
-                    return bounds.y();
-                }
-
-                @Override
-                public int guiXSize() {
-                    return bounds.width();
-                }
-
-                @Override
-                public int guiYSize() {
-                    return bounds.height();
-                }
-
-                @Override
-                public int screenWidth() {
-                    return screen.width;
-                }
-
-                @Override
-                public int screenHeight() {
-                    return screen.height;
-                }
-            };
-        });
+        registration.addGuiScreenHandler(UiScreen.class, UiJeiProperties::new);
         registration.addGhostIngredientHandler(UiScreen.class, new IGhostIngredientHandler<>() {
             @Override
             public <I> List<Target<I>> getTargetsTyped(UiScreen screen,

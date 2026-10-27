@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.7.0] - 2026-10-26
+
+### Added
+
+- Added selectable cards with independent child controls and keyboard focus.
+- Added segmented selection with disabled options and keyboard navigation.
+- Added built-in open and closed lock icons.
+
+### Fixed
+
+- Fixed custom tooltips on color swatches.
+
+## [0.6.0] - 2026-10-26
+
+### Added
+
+- Added scalable item previews and selectable color swatches.
+- Added an RGB and hexadecimal color picker with preview, apply and cancel.
+- Added horizontal scrolling and optional local panel backgrounds.
+
+### Fixed
+
+- Fixed item previews appearing over modal dialogs.
+
+## [0.5.0] - 2026-10-14
+
+### Added
+
+- Added Forge 1.20.1 support alongside NeoForge 1.21.1, with the same component API and development playground.
+- Added a ready-to-load reference layout for every playground component category, available even before saving a layout.
+
+### Fixed
+
+- Fixed text selection by dragging and cursor timing in text fields across both supported loaders.
+
+## [0.4.0] - 2026-10-09
+
+### Added
+
+- Added dropdown selection with option descriptions, keyboard navigation, mouse-wheel scrolling, and menus that stay visible outside scrolling panels.
+- Added customizable slider readouts for percentages and other units.
+- Added centered tab alignment and helpers for updating buttons and item pickers.
+
+### Fixed
+
+- Added a small gap between toast text lines for easier reading.
+
 ## [0.3.0] - 2026-10-07
 
 ### Added

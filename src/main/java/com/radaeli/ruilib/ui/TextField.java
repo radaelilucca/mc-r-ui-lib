@@ -1,7 +1,6 @@
 package com.radaeli.ruilib.ui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 
 import java.util.Objects;
@@ -13,7 +12,7 @@ public class TextField extends UiComponent {
     private String value = "";
     private int maxLength = 256;
     private Consumer<String> responder = ignored -> { };
-    private EditBox editBox;
+    private UiEditBox editBox;
     private float textScale = 1;
 
     public TextField() {
@@ -68,7 +67,7 @@ public class TextField extends UiComponent {
         int editorY = bounds().y() + Math.max(0, (bounds().height() - renderedTextHeight) / 2);
         editBox.setX(bounds().x() + 4 + inset);
         editBox.setY(editorY);
-        editBox.setSize(Math.max(1, bounds().width() - 8 - inset), Math.max(8, font.lineHeight));
+        editBox.resizeEditor(Math.max(1, (int) Math.floor((bounds().width() - 8 - inset) / textScale)), Math.max(8, font.lineHeight));
     }
 
     protected int editorInsetLeft() {
@@ -77,7 +76,7 @@ public class TextField extends UiComponent {
 
     private void ensureEditBox(Font font) {
         if (editBox != null) return;
-        editBox = new EditBox(font, bounds().x() + 4 + editorInsetLeft(),
+        editBox = new UiEditBox(font, bounds().x() + 4 + editorInsetLeft(),
                 bounds().y(), Math.max(1, bounds().width() - 8 - editorInsetLeft()),
                 Math.max(8, font.lineHeight), hint);
         editBox.setBordered(false);
@@ -91,7 +90,7 @@ public class TextField extends UiComponent {
         if (editBox == null) return;
         editBox.active = isEnabled();
         editBox.setEditable(isEnabled());
-        editBox.setFocused(isFocused());
+        if (editBox.isFocused() != isFocused()) editBox.setFocused(isFocused());
         editBox.visible = true;
     }
 
@@ -110,7 +109,7 @@ public class TextField extends UiComponent {
         pose.translate(editBox.getX(), editBox.getY(), 0);
         pose.scale(textScale, textScale, 1);
         pose.translate(-editBox.getX(), -editBox.getY(), 0);
-        editBox.render(context.graphics(), logicalMouseX(context.mouseX()), logicalMouseY(context.mouseY()), 0);
+        editBox.renderEditor(context.graphics(), context.frameTimeNanos());
         pose.popPose();
     }
 
@@ -134,12 +133,12 @@ public class TextField extends UiComponent {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return editBox != null && editBox.mouseReleased(mouseX, mouseY, button);
+        return editBox != null && editBox.mouseReleased(logicalMouseX(mouseX), logicalMouseY(mouseY), button);
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return editBox != null && editBox.mouseDragged(logicalMouseX(mouseX), logicalMouseY(mouseY),
+        return isEnabled() && isFocused() && editBox != null && editBox.mouseDragged(logicalMouseX(mouseX), logicalMouseY(mouseY),
                 button, dragX / textScale, dragY / textScale);
     }
 

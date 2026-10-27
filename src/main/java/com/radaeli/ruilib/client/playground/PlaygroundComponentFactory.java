@@ -56,11 +56,21 @@ final class PlaygroundComponentFactory {
         UiComponent component = switch (node.type) {
             case "label" -> new Label(Component.literal(node.text), node.color);
             case "button" -> new Button(Component.literal(node.text), () -> onButtonClick.accept(node));
-            case "iconbutton" -> new IconButton(Component.literal(node.text),
+            case "iconbutton" -> !node.iconSymbol.isBlank() ? new IconButton(Component.literal(node.text), IconButton.Symbol.valueOf(node.iconSymbol), () -> onButtonClick.accept(node)) : new IconButton(Component.literal(node.text),
                     Component.literal(node.text.isBlank() ? "?" : node.text.substring(0, 1)),
                     () -> onButtonClick.accept(node));
             case "divider" -> new Divider(Divider.Orientation.HORIZONTAL, Math.max(1, node.height), null);
-            case "panel" -> new Panel(new Column(node.gap));
+            case "panel" -> new Panel(new Column(node.gap)).setBackground(node.background);
+            case "colorswatch" -> new com.radaeli.ruilib.ui.ColorSwatch(node.color, node.selected, () -> onButtonClick.accept(node));
+            case "colorpicker" -> new com.radaeli.ruilib.ui.ColorPicker(node.color, color -> {node.color=color;onButtonClick.accept(node);}, () -> onButtonClick.accept(node));
+            case "itempreview" -> new com.radaeli.ruilib.ui.ItemPreview(new net.minecraft.world.item.ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(node.itemId))), Math.max(1, Math.min(512,node.width)));
+            case "hscroll" -> new com.radaeli.ruilib.ui.HorizontalScrollView(node.gap);
+            case "selectablecard" -> new com.radaeli.ruilib.ui.SelectableCard(new Column(node.gap), node.selected, () -> {node.selected=!node.selected;onSelectionChange.accept(node,node.selected);});
+            case "segmented" -> new com.radaeli.ruilib.ui.SegmentedControl<>(List.of(
+                new com.radaeli.ruilib.ui.SegmentedControl.Option<>(0, Component.literal("Free")),
+                new com.radaeli.ruilib.ui.SegmentedControl.Option<>(1, Component.literal("Block")),
+                new com.radaeli.ruilib.ui.SegmentedControl.Option<>(2, Component.literal("Color"), node.enabled)),
+                Math.floorMod(node.selectedTab,3), value -> {node.selectedTab=value;onButtonClick.accept(node);});
             case "card" -> new Card(Component.literal(node.text), new Column(node.gap)).setSelected(node.selected);
             case "toggle" -> new Toggle(Component.literal(node.text), node.selected,
                     selected -> onSelectionChange.accept(node, selected));
@@ -104,6 +114,8 @@ final class PlaygroundComponentFactory {
 
         if (component instanceof Panel panel) {
             addChildren(node, components, onButtonClick, onSelectionChange, (UiContainer) panel.contentComponent());
+        } else if (component instanceof com.radaeli.ruilib.ui.SelectableCard card) {
+            addChildren(node, components, onButtonClick, onSelectionChange, (UiContainer) card.contentComponent());
         } else if (component instanceof Card card) {
             addChildren(node, components, onButtonClick, onSelectionChange, (UiContainer) card.contentComponent());
         } else if (component instanceof UiContainer container) {

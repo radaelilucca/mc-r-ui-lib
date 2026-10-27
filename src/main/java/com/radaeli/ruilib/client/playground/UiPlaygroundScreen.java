@@ -50,14 +50,22 @@ public final class UiPlaygroundScreen extends UiScreen {
     private static final int TOOLBAR_HEIGHT = 28;
     private static final int PALETTE_BOTTOM_PADDING = 12;
     private static final int PROGRESS_PREVIEW_CYCLE_TICKS = 120;
+    private static final String BUILT_IN_LAYOUT_DIRECTORY = "/assets/r_ui_lib/playground/layouts/";
+    private static final List<BuiltInLayout> BUILT_IN_LAYOUTS = List.of(
+            new BuiltInLayout("basic", "Basic — Basic components"),
+            new BuiltInLayout("input", "Input — Input components"),
+            new BuiltInLayout("layout", "Layout — Layout components"),
+            new BuiltInLayout("data", "Data — Data components"),
+            new BuiltInLayout("status", "Status — Status components"),
+            new BuiltInLayout("scroll", "Scroll — Scroll components"));
     private static final List<PaletteCategory> PALETTE_CATEGORIES = List.of(
             new PaletteCategory("Basic", List.of("label", "button", "iconbutton", "toggle", "chip")),
-            new PaletteCategory("Input", List.of("textfield", "searchfield", "slider")),
+            new PaletteCategory("Input", List.of("textfield", "searchfield", "slider", "segmented", "colorswatch", "colorpicker")),
             new PaletteCategory("Layout", List.of("panel", "card", "divider", "row", "column", "stack",
                     "absolute", "grid", "spacer")),
-            new PaletteCategory("Data", List.of("itemcard", "itemslot", "itemgrid", "table", "tabs")),
+            new PaletteCategory("Data", List.of("selectablecard", "itemcard", "itemslot", "itemgrid", "table", "tabs", "itempreview")),
             new PaletteCategory("Status", List.of("progressbar", "radial")),
-            new PaletteCategory("Scroll", List.of("scroll", "clip")));
+            new PaletteCategory("Scroll", List.of("scroll", "clip", "hscroll")));
 
     private PlaygroundDocument document = PlaygroundDocument.empty("untitled");
     private PlaygroundNode selected;
@@ -189,6 +197,10 @@ public final class UiPlaygroundScreen extends UiScreen {
     @Override
     public void tick() {
         super.tick();
+        if (nameField != null) com.radaeli.ruilib.platform.UiPlatform.tickEditor(nameField);
+        for (var widget : inspectorWidgets) {
+            if (widget instanceof EditBox editor) com.radaeli.ruilib.platform.UiPlatform.tickEditor(editor);
+        }
         if (previewMode) {
             progressPreviewTicks++;
             // Feed the tween every client tick so the theme's transition overlaps updates
@@ -780,6 +792,8 @@ public final class UiPlaygroundScreen extends UiScreen {
 
     private record PaletteCategory(String name, List<String> types) { }
 
+    record BuiltInLayout(String id, String label) { }
+
     private record PaletteEntry(String category, String type) { }
 
     private void rebuildCanvas() {
@@ -905,6 +919,38 @@ public final class UiPlaygroundScreen extends UiScreen {
             return true;
         } catch (IOException | JsonParseException | IllegalArgumentException exception) {
             status = "Falha ao carregar: " + shortMessage(exception);
+            return false;
+        }
+    }
+
+    static List<BuiltInLayout> builtInLayouts() {
+        return BUILT_IN_LAYOUTS;
+    }
+
+    boolean loadBuiltInLayout(String layoutId) {
+        BuiltInLayout layout = BUILT_IN_LAYOUTS.stream()
+                .filter(candidate -> candidate.id().equals(layoutId)).findFirst().orElse(null);
+        if (layout == null) {
+            status = "Layout de exemplo desconhecido: " + layoutId;
+            return false;
+        }
+        String resource = BUILT_IN_LAYOUT_DIRECTORY + layout.id() + ".json";
+        try (var stream = UiPlaygroundScreen.class.getResourceAsStream(resource)) {
+            if (stream == null) throw new IOException("Recurso ausente: " + resource);
+            try (Reader reader = new java.io.InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                document = GSON.fromJson(reader, PlaygroundDocument.class);
+            }
+            if (document == null) throw new JsonParseException("Documento vazio");
+            document.normalize();
+            nameField.setValue(document.name);
+            selected = null;
+            clickCount = 0;
+            rebuildCanvas();
+            refreshInspector();
+            status = "Exemplo carregado: " + layout.label();
+            return true;
+        } catch (IOException | JsonParseException | IllegalArgumentException exception) {
+            status = "Falha ao carregar exemplo: " + shortMessage(exception);
             return false;
         }
     }

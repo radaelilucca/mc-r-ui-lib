@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "name": "input-components",
+  "root": {
+    "type": "absolute",
+    "width": 0,
+    "height": 0,
+    "children": [
+      {
+        "type": "label",
+        "text": "Input components",
+        "x": 16,
+        "y": 12,
+        "width": 200,
+        "height": 16
+      },
+      {
+        "type": "label",
+        "text": "Text field",
+        "x": 16,
+        "y": 42,
+        "width": 100,
+        "height": 14
+      },
+      {
+        "type": "textfield",
+        "text": "Edit this text",
+        "x": 16,
+        "y": 60,
+        "width": 180,
+        "height": 24
+      },
+      {
+        "type": "label",
+        "text": "Search field",
+        "x": 220,
+        "y": 42,
+        "width": 100,
+        "height": 14
+      },
+      {
+        "type": "searchfield",
+        "text": "Find an item",
+        "x": 220,
+        "y": 60,
+        "width": 180,
+        "height": 24
+      },
+      {
+        "type": "slider",
+        "text": "Volume",
+        "value": 35,
+        "minimum": 0,
+        "maximum": 100,
+        "step": 1,
+        "x": 16,
+        "y": 112,
+        "width": 220,
+        "height": 28
+      },
+      {
+        "type": "slider",
+        "text": "Range",
+        "value": 25,
+        "upperValue": 75,
+        "minimum": 0,
+        "maximum": 100,
+        "step": 5,
+        "x": 16,
+        "y": 166,
+        "width": 280,
+        "height": 28
+      },
+      {
+        "type": "slider",
+        "text": "Disabled",
+        "value": 50,
+        "minimum": 0,
+        "maximum": 100,
+        "enabled": false,
+        "x": 16,
+        "y": 220,
+        "width": 220,
+        "height": 28
+      },
+      {
+        "type": "colorswatch",
+        "color": -4500481,
+        "selected": true,
+        "x": 330,
+        "y": 110,
+        "width": 32,
+        "height": 32,
+        "text": "#4E91BD - 65% example tooltip"
+      },
+      {
+        "type": "colorpicker",
+        "color": -4500481,
+        "x": 420,
+        "y": 42,
+        "width": 220,
+        "height": 220
+      },
+      {
+        "type": "segmented",
+        "text": "Exclusive mode",
+        "selectedTab": 1,
+        "x": 280,
+        "y": 290,
+        "width": 250,
+        "height": 26
+      }
+    ]
+  }
+}

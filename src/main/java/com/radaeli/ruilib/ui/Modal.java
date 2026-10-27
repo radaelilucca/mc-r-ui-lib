@@ -118,6 +118,11 @@ public final class Modal extends UiComponent {
         double opacity = animateFrom(context, "modal-opacity", closing ? 0 : 1, closing ? 1 : 0);
         transitionOpacity = opacity;
         if (opacity <= 0) return;
+        // Vanilla items render near z=150. Place the entire modal above background items,
+        // while keeping its own item icons below UiScreen's z=400 select overlay.
+        context.graphics().pose().pushPose();
+        context.graphics().pose().translate(0, 0, 200);
+        try {
         UiPaint.rect(context, new Bounds(0, 0, context.screenWidth(), context.screenHeight()),
                 UiPaint.withAlpha(context.theme().palette().overlay(), opacity));
         UiPaint.panel(context, bounds(), opacity);
@@ -131,6 +136,7 @@ public final class Modal extends UiComponent {
                 UiPaint.withAlpha(context.theme().palette().divider(), opacity));
         if (headerAction != null) headerAction.render(context.withOpacity(opacity));
         content.render(context.withOpacity(opacity));
+        } finally { context.graphics().pose().popPose(); }
     }
 
     @Override

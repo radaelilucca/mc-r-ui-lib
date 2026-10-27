@@ -2,51 +2,173 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "R-Ui Lib: Build",
-      "type": "process",
-      "command": "${workspaceFolder}\\gradlew.bat",
-      "args": [
-        "--no-daemon",
-        "--no-parallel",
-        "build",
-        "--console=plain"
-      ],
+      "command": "powershell.exe",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-r-ui-lib"
-        }
+        "cwd": "${workspaceFolder}"
       },
-      "group": "build",
+      "type": "process",
+      "label": "R-Ui Lib: Build All",
       "problemMatcher": "$gradle",
+      "group": "build",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        "buildAll"
+      ],
       "presentation": {
-        "reveal": "always",
+        "clear": true,
         "panel": "dedicated",
-        "clear": true
+        "reveal": "always"
       }
     },
     {
-      "label": "R-Ui Lib: Run NeoForge Client",
-      "type": "process",
-      "command": "${workspaceFolder}\\gradlew.bat",
-      "args": [
-        "--no-daemon",
-        "--no-parallel",
-        "runClient",
-        "--console=plain"
-      ],
+      "command": "powershell.exe",
       "options": {
-        "cwd": "${workspaceFolder}",
-        "env": {
-          "GRADLE_USER_HOME": "${workspaceFolder}\\.gradle-r-ui-lib"
-        }
+        "cwd": "${workspaceFolder}"
       },
-      "group": "test",
+      "type": "process",
+      "label": "R-Ui Lib: Build Forge 1.20.1",
       "problemMatcher": "$gradle",
+      "group": "build",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":forge:build"
+      ],
       "presentation": {
-        "reveal": "always",
+        "clear": true,
         "panel": "dedicated",
-        "clear": true
+        "reveal": "always"
+      }
+    },
+    {
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "type": "process",
+      "label": "R-Ui Lib: Build NeoForge 1.21.1",
+      "problemMatcher": "$gradle",
+      "group": "build",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":neoforge:build"
+      ],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "type": "process",
+      "label": "R-Ui Lib: Run Forge Client",
+      "problemMatcher": "$gradle",
+      "group": "test",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":forge:runClient"
+      ],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "type": "process",
+      "label": "R-Ui Lib: Run NeoForge Client",
+      "problemMatcher": "$gradle",
+      "group": "test",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":neoforge:runClient"
+      ],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "type": "process",
+      "label": "R-Ui Lib: Validate Forge",
+      "problemMatcher": "$gradle",
+      "group": "test",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":forge:runClient",
+        "-Validate"
+      ],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
+      }
+    },
+    {
+      "command": "powershell.exe",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "type": "process",
+      "label": "R-Ui Lib: Validate NeoForge",
+      "problemMatcher": "$gradle",
+      "group": "test",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}\\scripts\\dev.ps1",
+        "-Task",
+        ":neoforge:runClient",
+        "-Validate"
+      ],
+      "presentation": {
+        "clear": true,
+        "panel": "dedicated",
+        "reveal": "always"
       }
     }
   ]

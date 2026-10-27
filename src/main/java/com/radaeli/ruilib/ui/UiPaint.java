@@ -1,6 +1,7 @@
 package com.radaeli.ruilib.ui;
 
 import net.minecraft.client.gui.GuiGraphics;
+import com.radaeli.ruilib.platform.UiPlatform;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -23,7 +24,7 @@ public final class UiPaint {
 
     public static void outline(UiContext context, Bounds bounds, int color) {
         if (bounds.width() > 0 && bounds.height() > 0) {
-            context.graphics().renderOutline(bounds.x(), bounds.y(), bounds.width(), bounds.height(),
+            UiPlatform.outline(context.graphics(), bounds.x(), bounds.y(), bounds.width(), bounds.height(),
                     withAlpha(color, context.opacity()));
         }
     }

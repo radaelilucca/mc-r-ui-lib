@@ -1,6 +1,6 @@
 # Using R-Ui Lib in another mod
 
-R-Ui Lib is a NeoForge dependency installed as a separate mod. A mod that uses
+R-Ui Lib is a Forge 1.20.1 or NeoForge 1.21.1 dependency installed as a separate mod. A mod that uses
 its components compiles against the library JAR and declares the dependency
 so the client loads both JARs. The library JAR is not embedded in the
 consumer's JAR.
@@ -22,7 +22,7 @@ it to the Gradle classpath:
 
 ```groovy
 dependencies {
-    implementation files("libs/r_ui_lib-1.21.1-neoforge-0.3.0.jar")
+    implementation files("libs/r-ui-lib-neoforge-0.5.0.jar")
 }
 ```
 
@@ -37,7 +37,7 @@ is required on the client:
 [[dependencies.${mod_id}]]
 modId="r_ui_lib"
 type="required"
-versionRange="[0.3.0,)"
+versionRange="[0.5.0,)"
 ordering="AFTER"
 side="CLIENT"
 ```
@@ -54,7 +54,32 @@ UiThemes.setGlobalTheme(UiTheme.DARK); // or UiTheme.LIGHT
 See [Themes and visual tokens](ui-theming.md) for the palette and token API,
 as well as screen and component overrides.
 
+## Dropdown selection
+
+`Select<T>` chooses one value from a non-empty list. Each option can include a
+tooltip explaining its value. `UiScreen` renders the open menu above the
+component tree, including inside scroll views and modals, and keeps it within
+the viewport by opening upwards when needed.
+
+```java
+Select<String> mode = new Select<>(List.of(
+        new Select.Option<>("last", Component.literal("Last mode"),
+                Tooltip.of(Component.literal("Resume the mode you last used."))),
+        new Select.Option<>("free", Component.literal("Free flow"))
+), "last", value -> saveMode(value));
+```
+
+Click to open and choose an option. Arrow keys, Home and End move the highlight;
+Enter or Space confirms it. The mouse wheel moves through options. Escape or
+an outside click dismisses the menu without changing the value; Tab closes it
+and moves focus. `setValue(value)` updates selection without firing the callback.
+The selected option's tooltip is also available when the menu is closed.
+Use the select inside `UiScreen` to receive popup rendering and input routing.
+
 ## Slider with an optional range selection
+
+For a percentage readout, use `slider.setValueFormatter(value -> Math.round(value) + "%")`.
+This changes only the displayed text; callbacks still receive numeric values.
 
 `Slider` constructors still create a single handle. `setValues(lower, upper)`
 enables selection with two handles; `value()` returns the lower value, and
@@ -182,7 +207,9 @@ repository.
 
 ## Building artifacts
 
-`.\gradlew.bat build` creates the runtime JAR and sources JAR in `build/libs/`.
+`.\gradlew.bat buildAll` creates runtime and sources JARs in `forge/build/libs/`
+and `neoforge/build/libs/`. See [the multi-version guide](forge-neoforge.md)
+for Forge dependencies, separate runs, and parity validation.
 The release workflow attaches both to the GitHub release when a version tag
 is created. To distribute through a public Maven repository, configure the
 endpoint described above.

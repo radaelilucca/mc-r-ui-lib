@@ -15,6 +15,7 @@ public final class ToastHost extends UiComponent {
     private static final int MAX_WIDTH = 240;
     private static final int MIN_WIDTH = 96;
     private static final int MAX_LINES = 3;
+    private static final int LINE_GAP = 1;
     private static final AtomicLong NEXT_TOAST_ID = new AtomicLong();
 
     private final List<ActiveToast> activeToasts = new ArrayList<>();
@@ -98,10 +99,12 @@ public final class ToastHost extends UiComponent {
             UiPaint.toast(visualContext, visualBounds, accentColor(active.toast.level(), context));
             Insets padding = contentPadding(context.theme());
             int textY = active.bounds.y() + padding.top();
-            for (FormattedCharSequence line : active.lines) {
+            for (int lineIndex = 0; lineIndex < active.lines.size(); lineIndex++) {
+                FormattedCharSequence line = active.lines.get(lineIndex);
                 UiPaint.text(visualContext, line,
                         visualBounds.x() + padding.left(), textY, context.theme().palette().text(), UiTextStyle.SMALL);
                 textY += UiText.height(context.font(), context.theme(), UiTextStyle.SMALL);
+                if (lineIndex < active.lines.size() - 1) textY += LINE_GAP;
             }
         }
         if (removedToast) layoutToasts();
@@ -143,7 +146,7 @@ public final class ToastHost extends UiComponent {
             int width = Math.min(availableWidth,
                     Math.max(Math.min(MIN_WIDTH, availableWidth), contentWidth + padding.left() + padding.right()));
             int height = active.lines.size() * UiText.height(layoutFont, layoutTheme, UiTextStyle.SMALL)
-                    + padding.top() + padding.bottom();
+                    + Math.max(0, active.lines.size() - 1) * LINE_GAP + padding.top() + padding.bottom();
             if (availableWidth == 0 || y + height > bottom) {
                 active.bounds = Bounds.EMPTY;
                 continue;

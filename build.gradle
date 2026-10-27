@@ -1,129 +1,72 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.144'
-    id 'maven-publish'
+    id 'base'
+    id 'net.minecraftforge.gradle' version '6.0.54' apply false
+    id 'net.neoforged.moddev' version '2.0.144' apply false
 }
-
-repositories {
-    maven { url = 'https://maven.blamejared.com' }
+allprojects {
+    group = mod_group_id
+    version = mod_version
 }
-
-dependencies {
-    compileOnly "mezz.jei:jei-1.21.1-common-api:${jei_version}"
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Build and verify Forge 1.20.1 and NeoForge 1.21.1.'
+    dependsOn ':forge:build', ':neoforge:build', 'verifyArtifacts'
 }
-
-group = mod_group_id
-version = mod_version
-
-base {
-    archivesName = 'r-ui-lib-neoforge'
-}
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
-    withSourcesJar()
-}
-
-neoForge {
-    version = neoforge_version
-
-    runs {
-        client {
-            client()
-            gameDirectory = project.file('runs/client')
-            programArgument '--quickPlaySingleplayer'
-            programArgument 'New World'
-        }
-        server {
-            server()
-            gameDirectory = project.file('runs/server')
-            programArgument '--nogui'
-        }
-    }
-
-    mods {
-        "${mod_id}" {
-            sourceSet sourceSets.main
-        }
+tasks.register('verifyArtifacts', Exec) {
+    group = 'verification'
+    description = 'Verify loader metadata, Java bytecode, shared assets and source JARs.'
+    dependsOn ':forge:assemble', ':neoforge:assemble'
+    doFirst {
+        def launcher = project(':neoforge').javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(21)
+        }.get()
+        executable launcher.executablePath.asFile.absolutePath
+        args rootProject.file('scripts/VerifyArtifacts.java').absolutePath, rootProject.projectDir.absolutePath, mod_version
     }
 }
-
-processResources {
-    def properties = [
-        version: "${mod_version}+${minecraft_version}",
-        mod_id: mod_id,
-        mod_name: mod_name,
-        mod_description: mod_description,
-        mod_authors: mod_authors,
-        mod_license: mod_license,
-        minecraft_version: minecraft_version,
-        neoforge_version: neoforge_version,
-        neoforge_loader_version_range: neoforge_loader_version_range
-    ]
-    inputs.properties(properties)
-    filesMatching('META-INF/neoforge.mods.toml') {
-        expand(properties)
-    }
-    filesMatching('pack.mcmeta') {
-        expand(properties)
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.release = java_version as int
-}
-
-publishing {
-    publications {
-        rUiLib(MavenPublication) {
-            from components.java
-            groupId = mod_group_id
-            artifactId = 'r-ui-lib-neoforge'
-            pom {
-                name = mod_name
-                description = mod_description
-                licenses {
-                    license {
-                        name = mod_license
-                        url = 'https://opensource.org/license/mit'
-                        distribution = 'repo'
+tasks.named('build') { dependsOn 'buildAll' }
+tasks.named('check') { dependsOn ':forge:check', ':neoforge:check' }
+tasks.named('assemble') { dependsOn ':forge:assemble', ':neoforge:assemble' }
+tasks.named('clean') { dependsOn ':forge:clean', ':neoforge:clean' }
+tasks.register('runForgeClient') { group = 'application'; dependsOn ':forge:runClient' }
+tasks.register('runNeoForgeClient') { group = 'application'; dependsOn ':neoforge:runClient' }
+tasks.register('runClient') { group = 'application'; dependsOn ':neoforge:runClient' }
+tasks.register('runServer') { group = 'application'; dependsOn ':neoforge:runServer' }
+subprojects {
+    apply plugin: 'maven-publish'
+    repositories { maven { url = 'https://maven.blamejared.com' } }
+    plugins.withId('java') {
+        sourceSets.main.java.srcDir rootProject.file('src/main/java')
+        sourceSets.main.resources.srcDir rootProject.file('src/main/resources')
+        tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+        dependencies { testImplementation 'junit:junit:4.13.2' }
+        sourceSets.test.java.srcDir rootProject.file('src/test/java')
+        publishing {
+            publications {
+                rUiLib(MavenPublication) {
+                    from components.java
+                    artifactId = "r-ui-lib-${project.name}"
+                    pom {
+                        name = mod_name
+                        description = mod_description
+                        licenses { license { name = mod_license; url = 'https://opensource.org/license/mit'; distribution = 'repo' } }
+                        developers { developer { id = 'radaeli'; name = mod_authors } }
                     }
                 }
-                developers {
-                    developer {
-                        id = 'radaeli'
-                        name = mod_authors
+            }
+            repositories {
+                mavenLocal()
+                def releaseUrl = providers.gradleProperty('maven_release_url').orElse(providers.environmentVariable('MAVEN_RELEASE_URL')).getOrNull()
+                if (releaseUrl) {
+                    maven {
+                        name = 'release'
+                        url = uri(releaseUrl)
+                        def user = providers.gradleProperty('maven_username').orElse(providers.environmentVariable('MAVEN_USERNAME')).getOrNull()
+                        def pass = providers.gradleProperty('maven_password').orElse(providers.environmentVariable('MAVEN_PASSWORD')).getOrNull()
+                        if (user || pass) credentials { username = user; password = pass }
                     }
                 }
             }
         }
     }
-
-    repositories {
-        mavenLocal()
-
-        def releaseUrl = providers.gradleProperty('maven_release_url')
-                .orElse(providers.environmentVariable('MAVEN_RELEASE_URL'))
-                .getOrNull()
-        if (releaseUrl) {
-            maven {
-                name = 'release'
-                url = uri(releaseUrl)
-
-                def releaseUsername = providers.gradleProperty('maven_username')
-                        .orElse(providers.environmentVariable('MAVEN_USERNAME'))
-                        .getOrNull()
-                def releasePassword = providers.gradleProperty('maven_password')
-                        .orElse(providers.environmentVariable('MAVEN_PASSWORD'))
-                        .getOrNull()
-                if (releaseUsername || releasePassword) {
-                    credentials {
-                        username = releaseUsername
-                        password = releasePassword
-                    }
-                }
-            }
-        }
-    }
-
 }

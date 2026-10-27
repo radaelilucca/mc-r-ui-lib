@@ -64,6 +64,8 @@ In development runs, press **F7** to open the visual playground. Add components
 from the categorized palette, arrange and resize them, edit their properties,
 switch between editing and interactive preview, and compare Dark and Light
 themes. Save layouts as local JSON files and reopen them later.
+Use **Load** to open the bundled reference layout for each palette category or
+one of your saved layouts; the examples are available on a fresh run too.
 
 **F6** demonstrates toasts over the game, and **F8** opens the inventory and
 filter-slot example. These development shortcuts are configurable in Controls.
@@ -75,6 +77,7 @@ for the full workflow.
 | Minecraft | Loader | Java |
 | --- | --- | --- |
 | 1.21.1 | NeoForge 21.1.236+ | 21 |
+| 1.20.1 | Forge 47.4.20+ | 17 |
 
 ## Links and license
 

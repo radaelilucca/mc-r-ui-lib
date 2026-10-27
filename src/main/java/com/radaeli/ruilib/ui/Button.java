@@ -80,6 +80,9 @@ public final class Button extends UiComponent {
         return this;
     }
 
+    /** Current accessible/display label, also useful to inspect composed screens. */
+    public Component label() { return label; }
+
     @Override
     public boolean isFocusable() {
         return true;

@@ -10,6 +10,8 @@ import java.util.List;
 final class PlaygroundNode {
     String type = "label";
     String text = "Label";
+    String iconSymbol = "";
+    Integer background;
     int color = 0xFFF0F3F7;
     boolean enabled = true;
     boolean selected;
@@ -62,11 +64,12 @@ final class PlaygroundNode {
                 node.width = 120;
                 node.height = 1;
             }
-            case "panel", "card" -> {
+            case "panel", "card", "selectablecard" -> {
                 node.text = type.equals("card") ? "Card" : "Panel";
                 node.width = 160;
                 node.height = 90;
             }
+            case "segmented" -> { node.text="Mode"; node.width=240; node.height=26; }
             case "toggle" -> {
                 node.text = "Toggle";
                 node.width = 112;
@@ -102,6 +105,10 @@ final class PlaygroundNode {
                 node.width = 144;
                 node.height = 144;
             }
+            case "itempreview" -> { node.width=64; node.height=64; }
+            case "colorswatch" -> { node.width=28; node.height=28; }
+            case "colorpicker" -> { node.width=220; node.height=210; }
+            case "hscroll" -> { node.width=240; node.height=80; }
             case "itemcard" -> {
                 node.text = "Diamond";
                 node.itemId = "minecraft:diamond";
@@ -154,15 +161,15 @@ final class PlaygroundNode {
     }
 
     boolean isContainer() {
-        return type.equals("panel") || type.equals("card")
+        return type.equals("selectablecard") || type.equals("panel") || type.equals("card")
                 || type.equals("row") || type.equals("column")
                 || type.equals("stack") || type.equals("absolute") || type.equals("tabs")
-                || type.equals("scroll") || type.equals("clip") || type.equals("grid")
+                || type.equals("hscroll") || type.equals("scroll") || type.equals("clip") || type.equals("grid")
                 || type.equals("itemgrid");
     }
 
     boolean usesItemStack() {
-        return type.equals("itemcard") || type.equals("itemslot");
+        return type.equals("itempreview") || type.equals("itemcard") || type.equals("itemslot");
     }
 
     boolean supportsItemCount() {
@@ -174,7 +181,7 @@ final class PlaygroundNode {
     }
 
     boolean supportsAlignment() {
-        return type.equals("row") || type.equals("column") || type.equals("stack");
+        return type.equals("hscroll") || type.equals("row") || type.equals("column") || type.equals("stack");
     }
 
     boolean isAbsolute() {

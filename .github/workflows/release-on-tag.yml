@@ -35,7 +35,9 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: |
+            17
+            21
       - uses: gradle/actions/setup-gradle@v4
       - name: Validate tag and build
         shell: bash
@@ -50,14 +52,12 @@ jobs:
           set -euo pipefail
           version="${RELEASE_TAG#v}"
           mod_id="$(sed -nE 's/^mod_id=([^[:space:]]+)$/\1/p' gradle.properties)"
-          minecraft_version="$(sed -nE 's/^minecraft_version=([^[:space:]]+)$/\1/p' gradle.properties)"
           mkdir -p release-artifacts
-          mapfile -t jars < <(find build/libs -maxdepth 1 -type f -name "*-${version}.jar" ! -name '*-sources.jar' -print)
-          mapfile -t sources < <(find build/libs -maxdepth 1 -type f -name "*-${version}-sources.jar" -print)
-          test "${#jars[@]}" -eq 1
-          test "${#sources[@]}" -eq 1
-          cp "${jars[0]}" "release-artifacts/${mod_id}-${minecraft_version}-neoforge-${version}.jar"
-          cp "${sources[0]}" "release-artifacts/${mod_id}-${minecraft_version}-neoforge-${version}-sources.jar"
+          for loader in forge neoforge; do
+            if [[ "$loader" == forge ]]; then mc=1.20.1; else mc=1.21.1; fi
+            cp "$loader/build/libs/r-ui-lib-${loader}-${version}.jar" "release-artifacts/${mod_id}-${mc}-${loader}-${version}.jar"
+            cp "$loader/build/libs/r-ui-lib-${loader}-${version}-sources.jar" "release-artifacts/${mod_id}-${mc}-${loader}-${version}-sources.jar"
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: r-ui-lib-${{ env.RELEASE_TAG }}
